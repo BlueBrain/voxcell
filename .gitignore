@@ -1,0 +1,15 @@
+*.swp
+*.swo
+*.pyc
+*.so
+*.egg-info/
+pep8.txt
+pylint.txt
+.coverage
+coverage.xml
+platform_venv
+ci_dep.txt
+*.req_make
+test-reports
+ContinuousIntegration
+.noseids
