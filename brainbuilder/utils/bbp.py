@@ -51,6 +51,11 @@ def load_recipe_as_layer_distributions(recipe_filename):
     '''
     recipe_tree = etree.parse(recipe_filename)
 
+    sclass_alias = {
+        'INH': 'inhibitory',
+        'EXC': 'excitatory'
+    }
+
     layer_distributions = {}
     for layer in recipe_tree.findall('NeuronTypes')[0].getchildren():
 
@@ -68,7 +73,7 @@ def load_recipe_as_layer_distributions(recipe_filename):
                             'mtype': structural_type.attrib['id'],
                             'etype': electro_type.attrib['id'],
                             'mClass': structural_type.attrib['mClass'],
-                            'sClass': structural_type.attrib['sClass']
+                            'sClass': sclass_alias[structural_type.attrib['sClass']]
                         }
                         layer_distributions.setdefault(layer_id, []).append((percentage, type_def))
 

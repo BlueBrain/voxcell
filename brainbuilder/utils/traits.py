@@ -93,9 +93,10 @@ def load_chosen_traits(filename):
     return chosen
 
 
-def homogeneous_gradient_tait_x(v0, v1, dimsize):
+def homogeneous_gradient_trait_x(v0, v1, dimsize):
     '''synthetically create an homogeneous gradient between two traits along the X axis'''
 
+    # TODO use linspace
     gradient = np.arange(0, 1, 0.01)
     probs_up = zip([v0] * len(gradient), gradient)
     probs_down = zip([v1] * len(gradient), 1 - gradient)
@@ -108,8 +109,8 @@ def homogeneous_gradient_tait_x(v0, v1, dimsize):
     return probabilities, field
 
 
-def assign_from_spacial_distribution(positions, field, probabilities, voxel_dimensions):
-    '''for every cell in positions, chooses a property from a spacial distribution
+def assign_from_spatial_distribution(positions, field, probabilities, voxel_dimensions):
+    '''for every cell in positions, chooses a property from a spatial distribution
     Accepts:
         positions: list of positions for soma centers (x, y, z).
         traits_field: volume data where every voxel is an index in the probabilities list
@@ -132,11 +133,58 @@ def assign_from_spacial_distribution(positions, field, probabilities, voxel_dime
 
     chosen_trait_indices = np.ones_like(probs_idx_per_position) * -1
     for prob_idx in probabilities_idx:
-        if prob_idx != -1:
+        if prob_idx != -1 and probabilities[prob_idx]:
             hit_count = np.count_nonzero(probs_idx_per_position == prob_idx)
-
             trait_indices, trait_probabilities = zip(*probabilities[prob_idx].items())
             chosen = np.random.choice(trait_indices, hit_count, p=trait_probabilities)
             chosen_trait_indices[probs_idx_per_position == prob_idx] = chosen
 
     return chosen_trait_indices
+
+
+# TODO review when we use the terms "probabilities", "distribution", etc and be more consitent
+# A distribution "assigns a probability to each measurable subset of
+# possible outcomes of a random experiment"
+# and here is expressed as: {'a': 0.75, 'b': 0.25}
+# A distribution_collection is a group of different distributions, probably referenced by a
+# volume dataset
+# and here is expressed as: [{'a': 0.75, 'b': 0.25}, {'a': 0.5, 'b': 0.5}]
+def normalize_distribution(dist):
+    '''take a probability distribution for a set of keys and normalize them'''
+    total = float(sum(dist.values()))
+    return dict((key, p / total) for key, p in dist.items())
+
+
+def normalize_distribution_collection(distribution_collection):
+    '''take a collection of probability distributions and normalize them'''
+    return [normalize_distribution(dist) for dist in distribution_collection]
+
+
+def split_distribution_collection(distribution_collection, traits_collection, attribute):
+    '''split a distribution in two or more so that each one only references
+    traits with the same value of attribute.
+    each resulting distribution is renormalised.
+
+    this may be generating distributions that are empty but that should not be a problem
+
+    Note that because for every distribution we are creating a new one,
+    the indexes of any associated field are still valid.
+
+    returns a dictionary where the keys are all of the possible values of attribute in the
+    traits_collection and the values are the resulting distributions.
+    '''
+
+    values = set(t[attribute] for t in traits_collection)
+
+    grouped_distributions = dict((value, []) for value in values)
+
+    for value in values:
+        for distribution in distribution_collection:
+
+            new_dist = dict((trait_idx, prob)
+                            for trait_idx, prob in distribution.iteritems()
+                            if traits_collection[trait_idx][attribute] == value)
+
+            grouped_distributions[value].append(normalize_distribution(new_dist))
+
+    return grouped_distributions

@@ -13,6 +13,8 @@ from brainbuilder.assignment_orientation import assign_orientations
 from brainbuilder.assignment_orientation import randomise_orientations
 from brainbuilder.export_bbp import export_for_bbp
 
+import logging
+
 
 def main(data_dir):  # pylint: disable=R0914
     '''
@@ -59,6 +61,8 @@ def main(data_dir):  # pylint: disable=R0914
     inhibitory_proportion = 0.10
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
+
+    logging.basicConfig()
 
     ################################################################################################
 
