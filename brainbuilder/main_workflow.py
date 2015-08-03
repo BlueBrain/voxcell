@@ -1,4 +1,5 @@
 '''main circuit building worklfow'''
+import os
 import numpy as np
 
 from brainbuilder.utils import genbrain as gb
@@ -13,7 +14,7 @@ from brainbuilder.assignment_orientation import randomise_orientations
 from brainbuilder.export_bbp import export_for_bbp
 
 
-def main():  # pylint: disable=R0914
+def main(data_dir):  # pylint: disable=R0914
     '''
     Most of the workflow steps here replace BlueBuilder.
 
@@ -31,23 +32,31 @@ def main():  # pylint: disable=R0914
     The first two steps are SSCx-specific code. From there, the code is generic.
     '''
 
-    annotation_mhd, annotation_raw = gb.load_meta_io('../data/P56_Mouse_annotation/annotation.mhd',
-                                                     '../data/P56_Mouse_annotation/annotation.raw')
+    annotation_mhd, annotation_raw = gb.load_meta_io(
+        os.path.join(data_dir, 'P56_Mouse_annotation/annotation.mhd'),
+        os.path.join(data_dir, 'P56_Mouse_annotation/annotation.raw'))
+
     annotation = gb.MetaIO(annotation_mhd, annotation_raw)
 
-    hierarchy = gb.load_hierarchy('../data/annotation_hierarchy.json')['msg'][0]
+    hierarchy = gb.load_hierarchy(
+        os.path.join(data_dir, 'P56_Mouse_annotation/annotation_hierarchy.json'))['msg'][0]
 
-    full_density_mhd, full_density_raw = gb.load_meta_io('../data/atlasVolume/atlasVolume.mhd',
-                                                         '../data/atlasVolume/atlasVolume.raw')
+    full_density_mhd, full_density_raw = gb.load_meta_io(
+        os.path.join(data_dir, 'atlasVolume/atlasVolume.mhd'),
+        os.path.join(data_dir, 'atlasVolume/atlasVolume.raw'))
     full_density = gb.MetaIO(full_density_mhd, full_density_raw)
 
-    recipe_filename = '../data/builderRecipeAllPathways.xml'
-    neurondb_filename = '../data/prod_NeuronDB_19726.dat'
+    recipe_filename = os.path.join(data_dir, 'builderRecipeAllPathways.xml')
+    neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
 
     sclass_distribution_filename = '???'  # TODO find dataset in Allen Brain website
 
-    region_name = 'Primary somatosensory area'
-    total_cell_count = 4000000
+    #region_name = 'Primary somatosensory area'
+    #total_cell_count = 4000000
+    #rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
+    #region_acronym = 'SSp-ll'
+    region_name = "Primary somatosensory area, lower limb"
+    total_cell_count = 400000
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
@@ -79,4 +88,4 @@ def main():  # pylint: disable=R0914
 
 
 if __name__ == "__main__":
-    main()
+    main('../data')

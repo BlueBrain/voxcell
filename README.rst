@@ -4,13 +4,8 @@ Getting Started for Developers
 
 1) Prepare the data directory: run download_data.sh
 
-
-
-Ubuntu python modules (unsupported)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-sudo apt get install python-h5py python-numpy python-scipy
-
+2) Get the Allen atlas view, to specify the 
+http://mouse.brain-map.org/static/brainexplorer
 
 
 
