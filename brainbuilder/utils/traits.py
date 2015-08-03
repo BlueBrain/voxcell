@@ -9,6 +9,10 @@ import json
 from brainbuilder.utils import genbrain as gb
 
 
+import logging
+L = logging.getLogger(__name__)
+
+
 def save_traits_collection(filename, all_traits):
     '''save a collection of traits
     all_traits must be a list of dictionaries flat dictionaries, where the keys and values are
@@ -114,14 +118,15 @@ def assign_from_spacial_distribution(positions, field, probabilities, voxel_dime
         probabilites: a list of all possible probability distributions for each value
         voxel_dimensions: the size of the voxels in each dimension
     Returns:
-        a list of sclass values that correspond to each position
+        a list with the same length as positions where each value comes from
+        those proposed as keys in the probabilities distributions.
     '''
     voxel_idx = gb.cell_positions_to_voxel_indices(positions, voxel_dimensions)
 
     voxel_idx_tuple = tuple(voxel_idx.transpose())
     probs_idx_per_position = field[voxel_idx_tuple]
 
-    print np.count_nonzero(probs_idx_per_position == -1), 'total positions in unknown areas'
+    L.debug('%d total positions in unknown areas', np.count_nonzero(probs_idx_per_position == -1))
 
     probabilities_idx = np.unique(probs_idx_per_position)
 

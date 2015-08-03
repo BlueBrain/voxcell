@@ -1,0 +1,12 @@
+<!-- builderConnectivityRecipeAllPathways.xml written by bluerecipe.git
+Commit version hash: a7f78da40ddd118f0da22c439e8e12a220b4a358
+for circuit: /gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/merged_circuit/StructuralCircuitConfig
+
+Generated as follows:
+python Write_Recipe.py /gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/merged_circuit/StructuralCircuitConfig estimate_syns_con &minus;&minus;formula=9*((n-1)**0.5)-2 &minus;&minus;formula_ee=1.5*n experimental_syns_con estimate_bouton_reduction &minus;&minus;target_density=0.2 &minus;&minus;assume_syns_bouton=1.2 estimate_individual_bouton_reduction &minus;&minus;assume_syns_bouton=1.2 generalized_cv override_chc release_recipe.xml
+
+-->
+
+<ConnectionRules>
+<mTypeRule from="L6_BPC" to="L5_STPC" cv_syns_connection= "0.32" bouton_reduction_factor= "0.0752821631635" mean_syns_connection= "2.6336121673" />
+</ConnectionRules>

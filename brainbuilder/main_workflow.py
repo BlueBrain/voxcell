@@ -46,7 +46,7 @@ def main(data_dir):  # pylint: disable=R0914
         os.path.join(data_dir, 'atlasVolume/atlasVolume.raw'))
     full_density = gb.MetaIO(full_density_mhd, full_density_raw)
 
-    recipe_filename = os.path.join(data_dir, 'builderRecipeAllPathways.xml')
+    recipe_filename = os.path.join(data_dir, 'bbp_recipe/builderRecipeAllPathways.xml')
     neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
 
     #region_name = 'Primary somatosensory area'
@@ -75,7 +75,7 @@ def main(data_dir):  # pylint: disable=R0914
     chosen_synapse_class = assign_synapse_class(positions, inhibitory_proportion)
 
     chosen_me = assign_metype(positions, chosen_synapse_class, annotation,
-                              hierarchy, recipe_filename)
+                              hierarchy, recipe_filename, region_name)
 
     chosen_morphology = assign_morphology(positions, chosen_me, annotation, hierarchy,
                                           recipe_filename, neurondb_filename)
