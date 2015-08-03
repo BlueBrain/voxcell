@@ -1,4 +1,19 @@
 
+Getting Started for Developers
+------------------------------
+
+1) Prepare the data directory: run download_data.sh
+
+
+
+Ubuntu python modules (unsupported)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+sudo apt get install python-h5py python-numpy python-scipy
+
+
+
+
 File Formats
 ------------
 
