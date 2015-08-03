@@ -3,10 +3,10 @@
 
 # pylint: disable=W0613
 def assign_metype(positions, chosen_sclass, annotation, hierarchy, recipe_filename):
-    '''for every cell in positions, assign me-type to each cell based on its  sclass
+    '''for every cell in positions, assign me-type to each cell based on its  synapse class
     Accepts:
         positions: list of positions for soma centers (x, y, z).
-        chosen_sclass: a list of sclass values that correspond to each position
+        chosen_sclass: a list of synapse class values that correspond to each position
         annotation: voxel data from Allen Brain Institute (can be crossrefrenced with hierarchy)
         hierarchy: json from Allen Brain Institute
         recipe_filename: BBP brain builder recipe

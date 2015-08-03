@@ -11,7 +11,8 @@ def export_for_bbp(positions, orientations, chosen_traits):
     Accepts:
         positions: list of positions for soma centers (x, y, z).
         orientations: list of orientations (3 vectors: right, up, fwd).
-        chosen_traits: list of chosen properties: morphology, mtype, etype, mClass, sClass
+        chosen_traits: list of chosen properties:
+        morphology, mtype, etype, mClass, synapse slass
     Returns:
         circuit: collection of files importable by bluepy
     '''

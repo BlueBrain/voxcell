@@ -6,7 +6,7 @@ from brainbuilder.utils import genbrain as gb
 from brainbuilder.orientation_fields import compute_sscx_orientation_fields
 from brainbuilder.select_region import select_region
 from brainbuilder.cell_positioning import cell_positioning
-from brainbuilder.assignment_sclass import assign_sclass
+from brainbuilder.assignment_synapse_class import assign_synapse_class
 from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
@@ -49,8 +49,6 @@ def main(data_dir):  # pylint: disable=R0914
     recipe_filename = os.path.join(data_dir, 'builderRecipeAllPathways.xml')
     neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
 
-    sclass_distribution_filename = '???'  # TODO find dataset in Allen Brain website
-
     #region_name = 'Primary somatosensory area'
     #total_cell_count = 4000000
     #rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
@@ -58,6 +56,7 @@ def main(data_dir):  # pylint: disable=R0914
     region_name = "Primary somatosensory area, lower limb"
     total_cell_count = 400000
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
+    inhibitory_proportion = 0.10
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
 
@@ -73,16 +72,18 @@ def main(data_dir):  # pylint: disable=R0914
 
     orientations = randomise_orientations(orientations, rotation_ranges)
 
-    chosen_sclass = assign_sclass(positions, sclass_distribution_filename, voxel_dimensions)
+    chosen_synapse_class = assign_synapse_class(positions, inhibitory_proportion)
 
-    chosen_me = assign_metype(positions, chosen_sclass, annotation, hierarchy, recipe_filename)
+    chosen_me = assign_metype(positions, chosen_synapse_class, annotation,
+                              hierarchy, recipe_filename)
 
     chosen_morphology = assign_morphology(positions, chosen_me, annotation, hierarchy,
                                           recipe_filename, neurondb_filename)
 
     ################################################################################################
 
-    circuit = export_for_bbp(positions, orientations, (chosen_sclass, chosen_me, chosen_morphology))
+    circuit = export_for_bbp(positions, orientations,
+                             (chosen_synapse_class, chosen_me, chosen_morphology))
 
     return circuit
 
