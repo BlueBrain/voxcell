@@ -73,9 +73,9 @@ def test_transform_into_spatial_distribution():
     }
 
     (traits_field, probabilites, traits_collection) = \
-        bbp.transform_into_spatial_distribution(annotation_raw,
-                                                layer_distributions,
-                                                region_layers_map)
+        bbp.transform_recipe_into_spatial_distribution(annotation_raw,
+                                                       layer_distributions,
+                                                       region_layers_map)
 
     eq_(probabilites,
         [{0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25},
@@ -87,3 +87,50 @@ def test_transform_into_spatial_distribution():
     expected_field = np.zeros(shape=(3, 3, 3))
     expected_field[1, 1, 1] = 1
     assert_equal(traits_field, expected_field)
+
+
+def test_load_neurondb_v4():
+    morphs = bbp.load_neurondb_v4(os.path.join(DATA_PATH, 'neuronDBv4.dat'))
+
+    eq_(len(morphs), 6)
+    for m in morphs:
+        eq_(m.keys(), ['layer', 'mtype', 'etype', 'metype', 'morphology', 'placement_hints'])
+
+
+def test_transform_neurondb_into_spatial_distribution_empty():
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        np.ones(shape=(3, 3), dtype=np.int), [], {})
+
+    eq_(sd.traits, [])
+    eq_(sd.distributions, [])
+    assert_equal(sd.field, np.ones(shape=(3, 3)) * -1)
+
+
+def test_transform_neurondb_into_spatial_distribution():
+
+    annotation = np.ones(shape=(3, 3), dtype=np.int) * 10
+    annotation[1, 1] = 20
+
+    regions_layers_map = {
+        10: (1,),
+        20: (1, 2, 3)
+    }
+
+    neurondb = [
+        {'name': 'a', 'layer': 1},
+        {'name': 'b', 'layer': 1},
+        {'name': 'c', 'layer': 2},
+        {'name': 'd', 'layer': 3},
+    ]
+
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, regions_layers_map)
+
+    eq_(sd.traits, neurondb)
+
+    eq_(sd.distributions,
+        [{0: 0.5, 1: 0.5},
+         {0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}])
+
+    expected_field = np.zeros_like(annotation)
+    expected_field[1, 1] = 1
+    assert_equal(sd.field, expected_field)

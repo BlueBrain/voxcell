@@ -1,5 +1,6 @@
 '''compatibility functions with existing BBP formats'''
 import numpy as np
+import itertools
 from collections import OrderedDict, defaultdict
 from lxml import etree
 from brainbuilder.utils import genbrain as gb
@@ -97,7 +98,8 @@ def combine_distributions(distributions):
     return dict((type_id, probability / total) for type_id, probability in combined.iteritems())
 
 
-def transform_into_spatial_distribution(annotation_raw, layer_distributions, region_layers_map):
+def transform_recipe_into_spatial_distribution(annotation_raw,
+                                               layer_distributions, region_layers_map):
     '''take distributions grouped by layer ids and a map from regions to layers
     and build a volumetric dataset that contains the same distributions
 
@@ -136,7 +138,7 @@ def transform_into_spatial_distribution(annotation_raw, layer_distributions, reg
                                   [dict(dist) for dist in unique_type_defs.keys()])
 
 
-def load_recipe_as_spatial_distributions(recipe_filename, annotation_raw, hierarchy, region_name):
+def load_recipe_as_spatial_distribution(recipe_filename, annotation_raw, hierarchy, region_name):
     '''load the bbp recipe and return a spatial voxel-based distribution
     returns: see transform_into_spatial_distribution
     '''
@@ -144,6 +146,90 @@ def load_recipe_as_spatial_distributions(recipe_filename, annotation_raw, hierar
 
     layer_distributions = load_recipe_as_layer_distributions(recipe_filename)
 
-    return transform_into_spatial_distribution(annotation_raw,
-                                               layer_distributions,
-                                               region_layers_map)
+    return transform_recipe_into_spatial_distribution(annotation_raw,
+                                                      layer_distributions,
+                                                      region_layers_map)
+
+
+def load_neurondb_v4(neurondb_filename):
+    '''load a neurondb v4 file as a list of dictionaries where the keys are:
+    morphology, layer, mtype, etype, metype, placement_hints
+    '''
+
+    morphologies = []
+
+    with open(neurondb_filename) as f:
+        for line in f.readlines():
+            fields = line.split()
+            morphology, layer, mtype, etype, metype = fields[:5]
+            placement_hints = fields[5:]
+            morphologies.append({'morphology': morphology,
+                                 'layer': int(layer),
+                                 'mtype': mtype,
+                                 'etype': etype,
+                                 'metype': metype,
+                                 'placement_hints': tuple(placement_hints)})
+
+    return morphologies
+
+
+def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, region_layers_map):
+    '''take the raw data from a neuron db (list of dicts) and build a volumetric dataset
+    that contains the distributions of possible morphologies.
+
+    Args:
+        annotation: voxel data from Allen Brain Institute to identify regions of space.
+        neurondb: list of dicts containing the information extracted from a neurondb v4 file.
+            only the 'layer' attribute is strictly needed
+        region_layers_map: dict that contains the relationship between regions (referenced by
+            the annotation) and layers (referenced by the neurondb). The keys are region ids
+            and the values are tuples of layer ids.
+
+    Returns:
+        A SpatialDistribution object where the properties of the traits_collection are those
+        obtained from the neurondb.
+    '''
+    # TODO use placement hints to determine the probabilities
+
+    unique_trait_id = dict(zip([tuple(n.items()) for n in neurondb], range(len(neurondb))))
+
+    layer_distributions = {}
+    for layer_id, neurons in itertools.groupby(neurondb, lambda m: m['layer']):
+        layer_distributions[layer_id] = dict((unique_trait_id[tuple(n.items())], 1.0)
+                                             for n in neurons)
+
+    field = np.ones_like(annotation_raw, dtype=np.int) * -1
+    unique_dist_id = OrderedDict()
+
+    for region_id, layer_ids in region_layers_map.items():
+
+        # TODO remove the 'layer' property from each trait
+        # this could cause the same morphology being listed twice
+        # (if it can show up in more than one layer)
+        layer_dists = (layer_distributions[layer_id].items() for layer_id in layer_ids)
+        dist = dict(itertools.chain(*layer_dists))
+        dist = tt.normalize_probability_distribution(dist)
+
+        hashable_dist = tuple(dist.items())
+        if hashable_dist not in unique_dist_id:
+            unique_dist_id[hashable_dist] = len(unique_dist_id)
+
+        field[annotation_raw == region_id] = unique_dist_id[hashable_dist]
+
+    return tt.SpatialDistribution(field,
+                                  [dict(dist) for dist in unique_dist_id.iterkeys()],
+                                  neurondb)
+
+
+def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
+                                             annotation_raw, hierarchy, region_name):
+    '''load the bbp recipe and return a spatial voxel-based distribution
+    returns: see transform_into_spatial_distribution
+    '''
+    region_layers_map = map_regions_to_layers(hierarchy, region_name)
+
+    neurondb = load_neurondb_v4(neurondb_filename)
+
+    return transform_neurondb_into_spatial_distribution(annotation_raw,
+                                                        neurondb,
+                                                        region_layers_map)

@@ -65,10 +65,13 @@ def main(data_dir):  # pylint: disable=R0914
 
     # transform BBP recipies into voxel data:
 
-    recipe_sdist = bbp.load_recipe_as_spatial_distributions(recipe_filename,
-                                                            annotation.raw, hierarchy, region_name)
+    recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
+                                                           annotation.raw, hierarchy, region_name)
 
     sclass_sdist = tt.reduce_distribution_collection(recipe_sdist, 'sClass')
+
+    neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation_raw,
+                                                                hierarchy, region_name)
 
     # main circuit building workflow:
 
@@ -87,8 +90,7 @@ def main(data_dir):  # pylint: disable=R0914
 
     chosen_me = assign_metype(positions, chosen_synapse_class, recipe_sdist, voxel_dimensions)
 
-    chosen_morphology = assign_morphology(positions, chosen_me, annotation, hierarchy,
-                                          recipe_filename, neurondb_filename)
+    chosen_morphology = assign_morphology(positions, chosen_me, neuron_sdist, voxel_dimensions)
 
     # export data to file formats from the BBP pipeline:
 
