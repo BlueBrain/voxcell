@@ -63,6 +63,7 @@ def cell_positioning(density_raw, voxel_dimensions, total_cell_count):
             Called "atlasVolume" in their website.
             Each voxel represents a value that once normalised, can be treated as a probability of
             cells appearing in this voxel.
+        voxel_dimensions: tuple with the size of the voxels in microns in each axis
         total_cell_count: an int
 
     Returns:

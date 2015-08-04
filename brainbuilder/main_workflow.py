@@ -3,10 +3,12 @@ import os
 import numpy as np
 
 from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import bbp
+from brainbuilder.utils import traits as tt
 from brainbuilder.orientation_fields import compute_sscx_orientation_fields
 from brainbuilder.select_region import select_region
 from brainbuilder.cell_positioning import cell_positioning
-from brainbuilder.assignment_synapse_class import assign_synapse_class_from_recipe
+from brainbuilder.assignment_synapse_class import assign_synapse_class_from_spatial_dist
 from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
@@ -26,13 +28,10 @@ def main(data_dir):  # pylint: disable=R0914
 
     This leaves out Morphology Repair and Neuron model fitting (OptimizerFramework/ModelManagement).
 
-    The params that have values assigned are actual "workflow parameters"
-    that need to be given by a user.
-
     The variables imply a data dependency: note that many of the steps could be sorted differently.
-
-    The first two steps are SSCx-specific code. From there, the code is generic.
     '''
+
+    # workflow arguments (need to be provided by the user)
 
     annotation_mhd, annotation_raw = gb.load_meta_io(
         os.path.join(data_dir, 'P56_Mouse_annotation/annotation.mhd'),
@@ -58,13 +57,20 @@ def main(data_dir):  # pylint: disable=R0914
     region_name = "Primary somatosensory area, lower limb"
     total_cell_count = 400000
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
-    #inhibitory_proportion = 0.10
+    #inhibitory_fraction = 0.10
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
 
     logging.basicConfig()
 
-    ################################################################################################
+    # transform BBP recipies into voxel data:
+
+    recipe_sdist = bbp.load_recipe_as_spatial_distributions(recipe_filename,
+                                                            annotation.raw, hierarchy, region_name)
+
+    sclass_sdist = tt.reduce_distribution_collection(recipe_sdist, 'sClass')
+
+    # main circuit building workflow:
 
     density_raw = select_region(annotation.raw, full_density.raw, hierarchy, region_name)
 
@@ -76,16 +82,15 @@ def main(data_dir):  # pylint: disable=R0914
 
     orientations = randomise_orientations(orientations, rotation_ranges)
 
-    chosen_synapse_class = assign_synapse_class_from_recipe(positions, annotation,
-                                                            hierarchy, recipe_filename, region_name)
+    chosen_synapse_class = assign_synapse_class_from_spatial_dist(positions, sclass_sdist,
+                                                                  voxel_dimensions)
 
-    chosen_me = assign_metype(positions, chosen_synapse_class, annotation,
-                              hierarchy, recipe_filename, region_name)
+    chosen_me = assign_metype(positions, chosen_synapse_class, recipe_sdist, voxel_dimensions)
 
     chosen_morphology = assign_morphology(positions, chosen_me, annotation, hierarchy,
                                           recipe_filename, neurondb_filename)
 
-    ################################################################################################
+    # export data to file formats from the BBP pipeline:
 
     circuit = export_for_bbp(positions, orientations,
                              (chosen_synapse_class, chosen_me, chosen_morphology))

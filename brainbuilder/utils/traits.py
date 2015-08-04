@@ -37,6 +37,7 @@ import logging
 L = logging.getLogger(__name__)
 
 
+# TODO decide: should voxel_dimensions also be part of SpatialDistribution?
 SpatialDistribution = namedtuple('SpatialDistribution',
                                  'field distributions traits')
 # field: volume data where every voxel is an index in the distributions list
