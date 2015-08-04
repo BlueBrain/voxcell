@@ -26,16 +26,13 @@ def assign_synapse_class_from_recipe(positions, annotation, hierarchy,
         a list of synapse class values that correspond to each position
     '''
 
-    (traits_field, distribution_collection, traits_collection) = \
-        bbp.load_recipe_as_spatial_distributions(recipe_filename,
-                                                 annotation.raw, hierarchy, region_name)
+    recipe_sdist = bbp.load_recipe_as_spatial_distributions(recipe_filename,
+                                                            annotation.raw, hierarchy, region_name)
 
-    sclass_dist_col, sclass_traits_col = tt.reduce_distribution_collection(distribution_collection,
-                                                                           traits_collection,
-                                                                           'sClass')
+    recipe_sdist = tt.reduce_distribution_collection(recipe_sdist, 'sClass')
 
     chosen_sclass = tt.assign_from_spatial_distribution(positions,
-                                                        traits_field, sclass_dist_col,
+                                                        recipe_sdist,
                                                         annotation.mhd['ElementSpacing'])
 
-    return [sclass_traits_col[idx]['sClass'] for idx in chosen_sclass]
+    return [recipe_sdist.traits[idx]['sClass'] for idx in chosen_sclass]

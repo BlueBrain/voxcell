@@ -3,6 +3,7 @@ import numpy as np
 from collections import OrderedDict, defaultdict
 from lxml import etree
 from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import traits as tt
 
 import logging
 L = logging.getLogger(__name__)
@@ -100,13 +101,8 @@ def transform_into_spatial_distribution(annotation_raw, layer_distributions, reg
     '''take distributions grouped by layer ids and a map from regions to layers
     and build a volumetric dataset that contains the same distributions
 
-    returns:
-        traits_field: volume data where every voxel is an index in the probabilities list
-        probabilites: a list of all possible probability distributions for each value.
-            each item is a dictionary where the key is an index in a traits collection and the value
-            a probability [0, 1]
-        traits_collection: a list of possible property values. Each item is a dictionary containing
-            property names and values for: mtype, etype, mClass, sClass
+    returns a SpatialDistribution object where the properties of the traits_collection are:
+    mtype, etype, mClass, sClass
     '''
 
     traits_field = np.ones_like(annotation_raw) * -1
@@ -135,9 +131,9 @@ def transform_into_spatial_distribution(annotation_raw, layer_distributions, reg
 
         traits_field[annotation_raw == region_id] = unique_distributions[hashable_dist]
 
-    return (traits_field,
-            [dict(dist) for dist in unique_distributions.keys()],
-            [dict(dist) for dist in unique_type_defs.keys()])
+    return tt.SpatialDistribution(traits_field,
+                                  [dict(dist) for dist in unique_distributions.keys()],
+                                  [dict(dist) for dist in unique_type_defs.keys()])
 
 
 def load_recipe_as_spatial_distributions(recipe_filename, annotation_raw, hierarchy, region_name):

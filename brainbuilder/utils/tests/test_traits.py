@@ -1,17 +1,18 @@
 from nose.tools import eq_
 from brainbuilder.utils import traits as tt
+from brainbuilder.utils.traits import SpatialDistribution as SD
 
 
 def test_normalize_distribution_empty():
-    eq_(tt.normalize_distribution({}), {})
+    eq_(tt.normalize_probability_distribution({}), {})
 
 
 def test_normalize_distribution_nowork():
-    eq_(tt.normalize_distribution({0: 0.5, 1: 0.5}), {0: 0.5, 1: 0.5})
+    eq_(tt.normalize_probability_distribution({0: 0.5, 1: 0.5}), {0: 0.5, 1: 0.5})
 
 
 def test_normalize_distribution():
-    eq_(tt.normalize_distribution({0: 0.1, 1: 0.4}), {0: 0.2, 1: 0.8})
+    eq_(tt.normalize_probability_distribution({0: 0.1, 1: 0.4}), {0: 0.2, 1: 0.8})
 
 
 def test_normalize_distribution_collection_empty_0():
@@ -32,95 +33,98 @@ def test_split_distribution_collection_empty_0():
     traits_collection = []
     attribute = 'name'
 
-    eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits_collection), attribute),
         {})
 
 
 def test_split_distribution_collection_empty_1():
     probabilities = []
-    traits_collection = [{'name': 'a'}]
+    traits = [{'name': 'a'}]
     attribute = 'name'
 
-    eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
-        {'a': []})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
+        {'a': SD(None, [], traits)})
 
 
 def test_split_distribution_collection_empty_2():
     probabilities = []
-    traits_collection = [{'name': 'a'}, {'name': 'b'}]
+    traits = [{'name': 'a'}, {'name': 'b'}]
     attribute = 'name'
 
-    eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
-        {'a': [], 'b': []})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
+        {'a': SD(None, [], traits), 'b': SD(None, [], traits)})
 
 
 def test_split_distribution_collection_single_0():
     probabilities = [{0: 1}]
-    traits_collection = [{'name': 'a'}]
+    traits = [{'name': 'a'}]
     attribute = 'name'
 
-    eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
-        {'a': [{0: 1}]})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
+        {'a': SD(None, [{0: 1}], traits)})
 
 
 def test_split_distribution_collection_single_1():
     probabilities = [{0: 0.25, 1: 0.75}]
-    traits_collection = [{'name': 'a'}, {'name': 'b'}]
+    traits = [{'name': 'a'}, {'name': 'b'}]
     attribute = 'name'
 
-    eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
-        {'a': [{0: 1.0}], 'b': [{1: 1.0}]})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
+        {'a': SD(None, [{0: 1.0}], traits), 'b': SD(None, [{1: 1.0}], traits)})
 
 
 def test_split_distribution_collection_single_2():
     probabilities = [{0: 0.2, 1: 0.4, 2: 0.4}]
-    traits_collection = [{'name': 'a'}, {'name': 'b'}, {'name': 'b'}]
+    traits = [{'name': 'a'}, {'name': 'b'}, {'name': 'b'}]
     attribute = 'name'
 
-    eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
-        {'a': [{0: 1.0}], 'b': [{1: 0.5, 2: 0.5}]})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
+        {'a': SD(None, [{0: 1.0}], traits), 'b': SD(None, [{1: 0.5, 2: 0.5}], traits)})
 
 
 def test_reduce_distribution_collection_empty_0():
-    eq_(tt.reduce_distribution_collection([], [], 'something'),
-        ([], []))
+    eq_(tt.reduce_distribution_collection(SD(None, [], []), 'something'),
+        SD(None, [], []))
 
 
 def test_reduce_distribution_collection_empty_1():
-    eq_(tt.reduce_distribution_collection([], [{'name': 'a', 'type': 'x'}], 'type'),
-        ([], [{'type': 'x'}]))
+    eq_(tt.reduce_distribution_collection(SD(None, [], [{'name': 'a', 'type': 'x'}]), 'type'),
+        SD(None, [], [{'type': 'x'}]))
 
 
 def test_reduce_distribution_collection_0():
-    traits_collection = [{'name': 'a', 'type': 'x'},
-                         {'name': 'b', 'type': 'x'}]
+    traits = [{'name': 'a', 'type': 'x'},
+              {'name': 'b', 'type': 'x'}]
 
-    distribution_collection = [{0: 0.25, 1: 0.75}]
+    dists = [{0: 0.25, 1: 0.75}]
 
-    eq_(tt.reduce_distribution_collection(distribution_collection, traits_collection, 'type'),
-        ([{0: 1.0}],
-         [{'type': 'x'}]))
+    eq_(tt.reduce_distribution_collection(SD(None, dists, traits), 'type'),
+        SD(None,
+           [{0: 1.0}],
+           [{'type': 'x'}]))
 
 
 def test_reduce_distribution_collection_1():
-    traits_collection = [{'name': 'a', 'type': 'x'},
-                         {'name': 'c', 'type': 'y'}]
+    traits = [{'name': 'a', 'type': 'x'},
+              {'name': 'c', 'type': 'y'}]
 
-    distribution_collection = [{0: 0.75, 1: 0.25}]
+    dists = [{0: 0.75, 1: 0.25}]
 
-    eq_(tt.reduce_distribution_collection(distribution_collection, traits_collection, 'type'),
-        ([{0: 0.75, 1: 0.25}],
-         [{'type': 'x'}, {'type': 'y'}]))
+    eq_(tt.reduce_distribution_collection(SD(None, dists, traits), 'type'),
+        SD(None,
+           [{0: 0.75, 1: 0.25}],
+           [{'type': 'x'}, {'type': 'y'}]))
 
 
 def test_reduce_distribution_collection_2():
-    traits_collection = [{'name': 'a', 'type': 'x'},
-                         {'name': 'b', 'type': 'x'},
-                         {'name': 'c', 'type': 'y'},
-                         {'name': 'd', 'type': 'y'}]
+    traits = [{'name': 'a', 'type': 'x'},
+              {'name': 'b', 'type': 'x'},
+              {'name': 'c', 'type': 'y'},
+              {'name': 'd', 'type': 'y'}]
 
-    distribution_collection = [{0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}]
+    dists = [{0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}]
 
-    eq_(tt.reduce_distribution_collection(distribution_collection, traits_collection, 'type'),
-        ([{0: 0.5, 1: 0.5}],
-         [{'type': 'x'}, {'type': 'y'}]))
+    eq_(tt.reduce_distribution_collection(SD(None, dists, traits), 'type'),
+        SD(None,
+           [{0: 0.5, 1: 0.5}],
+           [{'type': 'x'}, {'type': 'y'}]))

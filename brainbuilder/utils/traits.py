@@ -28,12 +28,21 @@ import h5py
 import json
 from collections import defaultdict
 from collections import OrderedDict
+from collections import namedtuple
 
 from brainbuilder.utils import genbrain as gb
 
 
 import logging
 L = logging.getLogger(__name__)
+
+
+SpatialDistribution = namedtuple('SpatialDistribution',
+                                 'field distributions traits')
+# field: volume data where every voxel is an index in the distributions list
+#        -1 means unavailable data.
+# distributions: a distributions collection, see module docstring
+# traits: a traits collection, see module docstring
 
 
 def save_traits_collection(filename, all_traits):
@@ -132,14 +141,11 @@ def homogeneous_gradient_trait_x(v0, v1, dimsize):
     return probabilities, field
 
 
-def assign_from_spatial_distribution(positions, field, probabilities, voxel_dimensions):
+def assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions):
     '''for every cell in positions, chooses a property from a spatial distribution
     Accepts:
         positions: list of positions for soma centers (x, y, z).
-        traits_field: volume data where every voxel is an index in the probabilities list
-        field: a volume dataset where every voxel contains an index in a list of
-            probability distributions
-        probabilites: a list of all possible probability distributions for each value
+        spatial_dist: a spatial distribution of traits
         voxel_dimensions: the size of the voxels in each dimension
     Returns:
         a list with the same length as positions where each value comes from
@@ -148,19 +154,19 @@ def assign_from_spatial_distribution(positions, field, probabilities, voxel_dime
     voxel_idx = gb.cell_positions_to_voxel_indices(positions, voxel_dimensions)
 
     voxel_idx_tuple = tuple(voxel_idx.transpose())
-    probs_idx_per_position = field[voxel_idx_tuple]
+    dist_idx_per_position = spatial_dist.field[voxel_idx_tuple]
 
-    L.debug('%d total positions in unknown areas', np.count_nonzero(probs_idx_per_position == -1))
+    L.debug('%d total positions in unknown areas', np.count_nonzero(dist_idx_per_position == -1))
 
-    probabilities_idx = np.unique(probs_idx_per_position)
+    dist_indices = np.unique(dist_idx_per_position)
 
-    chosen_trait_indices = np.ones_like(probs_idx_per_position) * -1
-    for prob_idx in probabilities_idx:
-        if prob_idx != -1 and probabilities[prob_idx]:
-            hit_count = np.count_nonzero(probs_idx_per_position == prob_idx)
-            trait_indices, trait_probabilities = zip(*probabilities[prob_idx].items())
+    chosen_trait_indices = np.ones_like(dist_idx_per_position) * -1
+    for dist_idx in dist_indices:
+        if dist_idx != -1 and spatial_dist.distributions[dist_idx]:
+            hit_count = np.count_nonzero(dist_idx_per_position == dist_idx)
+            trait_indices, trait_probabilities = zip(*spatial_dist.distributions[dist_idx].items())
             chosen = np.random.choice(trait_indices, hit_count, p=trait_probabilities)
-            chosen_trait_indices[probs_idx_per_position == prob_idx] = chosen
+            chosen_trait_indices[dist_idx_per_position == dist_idx] = chosen
 
     return chosen_trait_indices
 
@@ -172,7 +178,7 @@ def assign_from_spatial_distribution(positions, field, probabilities, voxel_dime
 # A distribution_collection is a group of different distributions, probably referenced by a
 # volume dataset
 # and here is expressed as: [{'a': 0.75, 'b': 0.25}, {'a': 0.5, 'b': 0.5}]
-def normalize_distribution(dist):
+def normalize_probability_distribution(dist):
     '''take a probability distribution for a set of keys and normalize them'''
     total = float(sum(dist.values()))
     return dict((key, p / total) for key, p in dist.items())
@@ -180,13 +186,13 @@ def normalize_distribution(dist):
 
 def normalize_distribution_collection(distribution_collection):
     '''take a collection of probability distributions and normalize them'''
-    return [normalize_distribution(dist) for dist in distribution_collection]
+    return [normalize_probability_distribution(dist) for dist in distribution_collection]
 
 
-def split_distribution_collection(distribution_collection, traits_collection, attribute):
+def split_distribution_collection(spatial_dist, attribute):
     '''split a distribution in two or more so that each one only references
     traits with the same value of attribute.
-    each resulting distribution is renormalised.
+    Each resulting distribution is renormalised.
 
     this may be generating distributions that are empty but that should not be a problem
 
@@ -197,26 +203,30 @@ def split_distribution_collection(distribution_collection, traits_collection, at
     traits_collection and the values are the resulting distributions.
     '''
 
-    values = set(t[attribute] for t in traits_collection)
+    values = set(t[attribute] for t in spatial_dist.traits)
 
-    grouped_distributions = dict((value, []) for value in values)
+    grouped_distributions = dict((value,
+                                  SpatialDistribution(spatial_dist.field,
+                                                      [],
+                                                      spatial_dist.traits))
+                                 for value in values)
 
     for value in values:
-        for distribution in distribution_collection:
+        for distribution in spatial_dist.distributions:
 
             new_dist = dict((trait_idx, prob)
                             for trait_idx, prob in distribution.iteritems()
-                            if traits_collection[trait_idx][attribute] == value)
+                            if spatial_dist.traits[trait_idx][attribute] == value)
 
-            grouped_distributions[value].append(normalize_distribution(new_dist))
+            grouped_distributions[value].distributions.append(
+                normalize_probability_distribution(new_dist))
 
     return grouped_distributions
 
 
-def reduce_distribution_collection(distribution_collection, traits_collection, attribute):
-    '''given a distributions collection with an associated traits collection,
-    extract what they should be if all of the properties of the traits were removed
-    except for a specific one.
+def reduce_distribution_collection(spatial_dist, attribute):
+    '''given a spatial distribution, extract an equivalent one where all of the properties
+    of the traits collection have been removed except for a specific one.
 
     For example:
 
@@ -242,13 +252,12 @@ def reduce_distribution_collection(distribution_collection, traits_collection, a
     the indexes of any associated field are still valid.
 
     Returns:
-        reduced_distribution_collection
-        reduced_traits_collection
+        a reduced SpatialDistribution
     '''
 
     # trying to preserve ordering for easy testing
     values = OrderedDict()
-    for t in traits_collection:
+    for t in spatial_dist.traits:
         if t[attribute] not in values:
             values[t[attribute]] = len(values)
 
@@ -256,11 +265,15 @@ def reduce_distribution_collection(distribution_collection, traits_collection, a
         '''reduce a single distribution'''
         new_dist = defaultdict(float)
         for trait_idx, prob in d.iteritems():
-            val = traits_collection[trait_idx][attribute]
+            val = spatial_dist.traits[trait_idx][attribute]
             new_trait_idx = values[val]
             new_dist[new_trait_idx] += prob
 
-        return normalize_distribution(new_dist)
+        return normalize_probability_distribution(new_dist)
 
-    return ([reduce_distribution(distribution) for distribution in distribution_collection],
-            [{attribute: v} for v in values.keys()])
+    return SpatialDistribution(
+        field=spatial_dist.field,
+        distributions=[reduce_distribution(distribution)
+                       for distribution in spatial_dist.distributions],
+        traits=[{attribute: v}
+                for v in values.keys()])
