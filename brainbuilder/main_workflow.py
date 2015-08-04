@@ -6,7 +6,7 @@ from brainbuilder.utils import genbrain as gb
 from brainbuilder.orientation_fields import compute_sscx_orientation_fields
 from brainbuilder.select_region import select_region
 from brainbuilder.cell_positioning import cell_positioning
-from brainbuilder.assignment_synapse_class import assign_synapse_class
+from brainbuilder.assignment_synapse_class import assign_synapse_class_from_recipe
 from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
@@ -58,7 +58,7 @@ def main(data_dir):  # pylint: disable=R0914
     region_name = "Primary somatosensory area, lower limb"
     total_cell_count = 400000
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
-    inhibitory_proportion = 0.10
+    #inhibitory_proportion = 0.10
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
 
@@ -76,7 +76,8 @@ def main(data_dir):  # pylint: disable=R0914
 
     orientations = randomise_orientations(orientations, rotation_ranges)
 
-    chosen_synapse_class = assign_synapse_class(positions, inhibitory_proportion)
+    chosen_synapse_class = assign_synapse_class_from_recipe(positions, annotation,
+                                                            hierarchy, recipe_filename, region_name)
 
     chosen_me = assign_metype(positions, chosen_synapse_class, annotation,
                               hierarchy, recipe_filename, region_name)

@@ -29,14 +29,13 @@ def assign_metype(positions, chosen_sclass, annotation, hierarchy, recipe_filena
     subsections = tt.split_distribution_collection(distribution_collection,
                                                    traits_collection, 'sClass')
 
-    chosen_metype = np.ones(shape=(len(chosen_sclass,)), dtype=np.int) * -1
+    chosen_metype = np.ones(shape=(len(chosen_sclass)), dtype=np.int) * -1
 
     for value, distribution_subcollection in subsections.iteritems():
-        assigned = tt.assign_from_spatial_distribution(positions[chosen_sclass == value],
-                                                       traits_field, distribution_subcollection,
-                                                       annotation.mhd['ElementSpacing'])
-
-        chosen_metype[chosen_sclass == value] = assigned
+        mask = np.array(chosen_sclass) == value
+        chosen_metype[mask] = tt.assign_from_spatial_distribution(
+            positions[mask],
+            traits_field, distribution_subcollection, annotation.mhd['ElementSpacing'])
 
     if np.count_nonzero(chosen_metype == -1):
         # this may happen becaues of inconsistencies of the data

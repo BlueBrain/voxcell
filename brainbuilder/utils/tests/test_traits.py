@@ -79,3 +79,48 @@ def test_split_distribution_collection_single_2():
 
     eq_(tt.split_distribution_collection(probabilities, traits_collection, attribute),
         {'a': [{0: 1.0}], 'b': [{1: 0.5, 2: 0.5}]})
+
+
+def test_reduce_distribution_collection_empty_0():
+    eq_(tt.reduce_distribution_collection([], [], 'something'),
+        ([], []))
+
+
+def test_reduce_distribution_collection_empty_1():
+    eq_(tt.reduce_distribution_collection([], [{'name': 'a', 'type': 'x'}], 'type'),
+        ([], [{'type': 'x'}]))
+
+
+def test_reduce_distribution_collection_0():
+    traits_collection = [{'name': 'a', 'type': 'x'},
+                         {'name': 'b', 'type': 'x'}]
+
+    distribution_collection = [{0: 0.25, 1: 0.75}]
+
+    eq_(tt.reduce_distribution_collection(distribution_collection, traits_collection, 'type'),
+        ([{0: 1.0}],
+         [{'type': 'x'}]))
+
+
+def test_reduce_distribution_collection_1():
+    traits_collection = [{'name': 'a', 'type': 'x'},
+                         {'name': 'c', 'type': 'y'}]
+
+    distribution_collection = [{0: 0.75, 1: 0.25}]
+
+    eq_(tt.reduce_distribution_collection(distribution_collection, traits_collection, 'type'),
+        ([{0: 0.75, 1: 0.25}],
+         [{'type': 'x'}, {'type': 'y'}]))
+
+
+def test_reduce_distribution_collection_2():
+    traits_collection = [{'name': 'a', 'type': 'x'},
+                         {'name': 'b', 'type': 'x'},
+                         {'name': 'c', 'type': 'y'},
+                         {'name': 'd', 'type': 'y'}]
+
+    distribution_collection = [{0: 0.25, 1: 0.25, 2: 0.25, 3: 0.25}]
+
+    eq_(tt.reduce_distribution_collection(distribution_collection, traits_collection, 'type'),
+        ([{0: 0.5, 1: 0.5}],
+         [{'type': 'x'}, {'type': 'y'}]))

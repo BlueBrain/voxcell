@@ -1,10 +1,33 @@
 '''
     library to handle traits fields and collections and the logic to assign them
+
+    A "trait" is a set of properties and their values. It's represented as a dict.
+    For instance:
+        {'sclass': 'inhibitory', 'mtype': 'Pyramidal'}
+
+    A "traits collection" is a group of traits. It's represented as a list of dicts.
+    For instance:
+        [{'sclass': 'inhibitory', 'mtype': 'Pyramidal'},
+         {'sclass': 'inhibitory', 'mtype': 'Martinotti'}]
+
+    A "probability distribution" specifies the probability of each trait in a collection
+    being assigned to a given cell. It's represented as a dict where the keys
+    identify particular traits in a traits collection (they are indices)
+    For instance:
+        {0: 0.25, 1: 0.75}
+    That means 25% chances of picking an inhibitory Pyramidal cell, 75% of picking
+    an inhibitory Martinotti cell.
+
+    A "distributions collection" is a group of distributions. For instance:
+        [{0: 0.25, 1: 0.75},
+         {0: 0.5,  1: 0.5}]
 '''
 
 import numpy as np
 import h5py
 import json
+from collections import defaultdict
+from collections import OrderedDict
 
 from brainbuilder.utils import genbrain as gb
 
@@ -188,3 +211,56 @@ def split_distribution_collection(distribution_collection, traits_collection, at
             grouped_distributions[value].append(normalize_distribution(new_dist))
 
     return grouped_distributions
+
+
+def reduce_distribution_collection(distribution_collection, traits_collection, attribute):
+    '''given a distributions collection with an associated traits collection,
+    extract what they should be if all of the properties of the traits were removed
+    except for a specific one.
+
+    For example:
+
+        Taking the traits collection:
+            [{'sclass': 'inhibitory', 'mtype': 'Pyramidal'},
+             {'sclass': 'inhibitory', 'mtype': 'Martinotti'},
+             {'sclass': 'excitatory', 'mtype': 'Martinotti'}]
+
+        And the distributions collection:
+            [{0: 0.2,
+              1: 0.4,
+              2: 0.4}]
+
+        Ignoring all properties except 'sclass' would give the simplified traits collection:
+            [{'sclass': 'inhibitory',
+             {'sclass': 'excitatory'}]
+
+        And the distributions collection:
+            [{0: 0.6,
+              1: 0.4}]
+
+    Note that because for every distribution we are creating a new one,
+    the indexes of any associated field are still valid.
+
+    Returns:
+        reduced_distribution_collection
+        reduced_traits_collection
+    '''
+
+    # trying to preserve ordering for easy testing
+    values = OrderedDict()
+    for t in traits_collection:
+        if t[attribute] not in values:
+            values[t[attribute]] = len(values)
+
+    def reduce_distribution(d):
+        '''reduce a single distribution'''
+        new_dist = defaultdict(float)
+        for trait_idx, prob in d.iteritems():
+            val = traits_collection[trait_idx][attribute]
+            new_trait_idx = values[val]
+            new_dist[new_trait_idx] += prob
+
+        return normalize_distribution(new_dist)
+
+    return ([reduce_distribution(distribution) for distribution in distribution_collection],
+            [{attribute: v} for v in values.keys()])
