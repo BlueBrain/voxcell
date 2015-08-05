@@ -190,9 +190,9 @@ def normalize_distribution_collection(distribution_collection):
     return [normalize_probability_distribution(dist) for dist in distribution_collection]
 
 
-def split_distribution_collection(spatial_dist, attribute):
+def split_distribution_collection(spatial_dist, attributes):
     '''split a distribution in two or more so that each one only references
-    traits with the same value of attribute.
+    traits with the same value for certain attributes.
     Each resulting distribution is renormalised.
 
     this may be generating distributions that are empty but that should not be a problem
@@ -200,24 +200,25 @@ def split_distribution_collection(spatial_dist, attribute):
     Note that because for every distribution we are creating a new one,
     the indexes of any associated field are still valid.
 
-    returns a dictionary where the keys are all of the possible values of attribute in the
-    traits_collection and the values are the resulting distributions.
+    returns a dictionary where the keys are tuples with the values of the attributes found
+    in the traits_collection and the values are the resulting distributions.
     '''
 
-    values = set(t[attribute] for t in spatial_dist.traits)
+    traits_values = [tuple(t[a] for a in attributes) for t in spatial_dist.traits]
+    unique_values = set(traits_values)
 
     grouped_distributions = dict((value,
                                   SpatialDistribution(spatial_dist.field,
                                                       [],
                                                       spatial_dist.traits))
-                                 for value in values)
+                                 for value in unique_values)
 
-    for value in values:
+    for value in unique_values:
         for distribution in spatial_dist.distributions:
 
             new_dist = dict((trait_idx, prob)
                             for trait_idx, prob in distribution.iteritems()
-                            if spatial_dist.traits[trait_idx][attribute] == value)
+                            if value == traits_values[trait_idx])
 
             grouped_distributions[value].distributions.append(
                 normalize_probability_distribution(new_dist))

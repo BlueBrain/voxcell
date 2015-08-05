@@ -1,20 +1,41 @@
 '''algorithm to assign morphologies to a group of cells'''
 
 from brainbuilder.utils import traits as tt
+import numpy as np
+
+import logging
+L = logging.getLogger(__name__)
 
 
-# pylint: disable=W0613
 def assign_morphology(positions, chosen_me, spatial_dist, voxel_dimensions):
     '''for every cell in positions, assign a morphology to each cell based on its metype
     Accepts:
         positions: list of positions for soma centers (x, y, z).
-        chosen_me: a list of metype values that correspond to each position
+        chosen_me: a list of metype values that correspond to each position.
         spatial_dist: SpatialDistribution containing at least the properties:
-            mtype, etype, morphology
-        voxel_dimensions: tuple with the size of the voxels in microns in each axis
+            mtype, etype, morphology.
+        voxel_dimensions: tuple with the size of the voxels in microns in each axis.
     Returns:
-        a list of morpholgies that correspond to each position
+        A list of the morpholgies that correspond to each position.
+        For those positions whose morphology could not be determined, None is used.
     '''
-    # TODO take metype into account
-    chosen_morphs = tt.assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions)
-    return [spatial_dist.traits[idx]['morphology'] for idx in chosen_morphs]
+    subsections = tt.split_distribution_collection(spatial_dist, ('mtype', 'etype'))
+
+    chosen_morphs = np.ones(shape=(len(chosen_me)), dtype=np.int) * -1
+
+    for values_comb, subdist in subsections.iteritems():
+        mask = np.all(np.array(chosen_me) == values_comb, axis=1)
+        chosen_morphs[mask] = tt.assign_from_spatial_distribution(positions[mask],
+                                                                  subdist,
+                                                                  voxel_dimensions)
+
+    if np.count_nonzero(chosen_morphs == -1):
+        # this may happen because of inconsistencies of the data
+        # for example if we assigned the pyramidal mtype to a neuron that is in
+        # a voxel for which we only know the distribution of marttinoti morphologies
+        L.warning('%d / %d cells could not get a valid morphology assigned',
+                  np.count_nonzero(chosen_morphs == -1), len(chosen_morphs))
+
+    return [spatial_dist.traits[idx]['morphology']
+            if idx != -1 else None
+            for idx in chosen_morphs]

@@ -31,55 +31,82 @@ def test_normalize_distribution_collection():
 def test_split_distribution_collection_empty_0():
     probabilities = []
     traits_collection = []
-    attribute = 'name'
+    attributes = ('name',)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits_collection), attribute),
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits_collection), attributes),
         {})
 
 
 def test_split_distribution_collection_empty_1():
     probabilities = []
     traits = [{'name': 'a'}]
-    attribute = 'name'
+    attributes = ('name',)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
-        {'a': SD(None, [], traits)})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a',): SD(None, [], traits)})
 
 
 def test_split_distribution_collection_empty_2():
     probabilities = []
     traits = [{'name': 'a'}, {'name': 'b'}]
-    attribute = 'name'
+    attributes = ('name',)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
-        {'a': SD(None, [], traits), 'b': SD(None, [], traits)})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a',): SD(None, [], traits), ('b',): SD(None, [], traits)})
 
 
 def test_split_distribution_collection_single_0():
     probabilities = [{0: 1}]
     traits = [{'name': 'a'}]
-    attribute = 'name'
+    attributes = ('name',)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
-        {'a': SD(None, [{0: 1}], traits)})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a',): SD(None, [{0: 1}], traits)})
 
 
 def test_split_distribution_collection_single_1():
     probabilities = [{0: 0.25, 1: 0.75}]
     traits = [{'name': 'a'}, {'name': 'b'}]
-    attribute = 'name'
+    attributes = ('name',)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
-        {'a': SD(None, [{0: 1.0}], traits), 'b': SD(None, [{1: 1.0}], traits)})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a',): SD(None, [{0: 1.0}], traits), ('b',): SD(None, [{1: 1.0}], traits)})
 
 
 def test_split_distribution_collection_single_2():
     probabilities = [{0: 0.2, 1: 0.4, 2: 0.4}]
     traits = [{'name': 'a'}, {'name': 'b'}, {'name': 'b'}]
-    attribute = 'name'
+    attributes = ('name',)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attribute),
-        {'a': SD(None, [{0: 1.0}], traits), 'b': SD(None, [{1: 0.5, 2: 0.5}], traits)})
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a',): SD(None, [{0: 1.0}], traits), ('b',): SD(None, [{1: 0.5, 2: 0.5}], traits)})
+
+
+def test_split_distribution_collection_multiattr_0():
+    probabilities = [{0: 0.2, 1: 0.4, 2: 0.4}]
+    traits = [{'name': 'a', 'type': 'x'},
+              {'name': 'b', 'type': 'y'},
+              {'name': 'b', 'type': 'y'}]
+
+    attributes = ('name', 'type')
+
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a', 'x'): SD(None, [{0: 1.0}], traits),
+         ('b', 'y'): SD(None, [{1: 0.5, 2: 0.5}], traits)})
+
+
+def test_split_distribution_collection_multiattr_1():
+    probabilities = [{0: 0.2, 1: 0.4, 2: 0.4}]
+    traits = [{'name': 'a', 'type': 'x'},
+              {'name': 'b', 'type': 'x'},
+              {'name': 'b', 'type': 'y'}]
+
+    attributes = ('name', 'type')
+
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits), attributes),
+        {('a', 'x'): SD(None, [{0: 1.0}], traits),
+         ('b', 'x'): SD(None, [{1: 1.0}], traits),
+         ('b', 'y'): SD(None, [{2: 1.0}], traits)})
 
 
 def test_reduce_distribution_collection_empty_0():
