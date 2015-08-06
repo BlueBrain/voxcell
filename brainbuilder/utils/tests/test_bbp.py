@@ -11,19 +11,19 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def test_map_regions_to_layers_unknown_area():
-    regions_layers_map = bbp.map_regions_to_layers({"id": 997, "name": "mybrain", "children": []},
+    region_layers_map = bbp.map_regions_to_layers({"id": 997, "name": "mybrain", "children": []},
                                                    'Primary somatosensory area, barrel field')
 
-    eq_(regions_layers_map, {})
+    eq_(region_layers_map, {})
 
 
 def test_map_regions_to_layers_complex():
     hierarchy = gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json'))
 
-    regions_layers_map = bbp.map_regions_to_layers(hierarchy,
+    region_layers_map = bbp.map_regions_to_layers(hierarchy,
                                                    'Primary somatosensory area, barrel field')
 
-    eq_(regions_layers_map,
+    eq_(region_layers_map,
         {1062: (6,), 201: (2, 3), 1070: (5,), 1038: (6,), 981: (1,), 1047: (4,)})
 
 
@@ -111,19 +111,19 @@ def test_transform_neurondb_into_spatial_distribution():
     annotation = np.ones(shape=(3, 3), dtype=np.int) * 10
     annotation[1, 1] = 20
 
-    regions_layers_map = {
+    region_layers_map = {
         10: (1,),
         20: (1, 2, 3)
     }
 
     neurondb = [
-        {'name': 'a', 'layer': 1},
-        {'name': 'b', 'layer': 1},
-        {'name': 'c', 'layer': 2},
-        {'name': 'd', 'layer': 3},
+        {'name': 'a', 'layer': 1, 'placement_hints': (1,)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (1,)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 3, 'placement_hints': (1,)},
     ]
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, regions_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
 
     eq_(sd.traits, neurondb)
 
@@ -134,3 +134,215 @@ def test_transform_neurondb_into_spatial_distribution():
     expected_field = np.zeros_like(annotation)
     expected_field[1, 1] = 1
     assert_equal(sd.field, expected_field)
+
+
+def test_get_region_distributions_from_placement_hints_0():
+
+    neurondb = [
+        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},
+    ]
+
+    region_layers_map = {
+        0: (1, 2)
+    }
+
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map)
+
+    eq_(res.keys(), [0])
+
+    eq_(res[0],
+        [{0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+         {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+         {0: 1/6., 1: 2/6., 2: 1/6., 3: 2/6.},
+         {0: 2/6., 1: 1/6., 2: 1/6., 3: 2/6.},
+         {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2},
+         {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2}])
+
+
+def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
+
+    neurondb = [
+        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},
+    ]
+
+    region_layers_map = {
+        1: (1, 2)
+    }
+
+    annotation = np.array([0] + [1] * 6)
+
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+
+    eq_(sd.traits, neurondb)
+
+    eq_(sd.distributions, [
+        {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+        {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+        {0: 1/6.0, 1: 2/6.0, 2: 1/6.0, 3: 2/6.0},
+        {0: 2/6.0, 1: 1/6.0, 2: 1/6.0, 3: 2/6.0},
+        {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2},
+        {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2}
+    ])
+
+    assert_equal(sd.field, np.array([-1, 0, 1, 2, 3, 4, 5]))
+
+
+def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
+
+    neurondb = [
+        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},
+    ]
+
+    region_layers_map = {
+        1: (1, 2)
+    }
+
+    annotation = np.array([0, 0] + [1] * 12)
+
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+
+    eq_(sd.traits, neurondb)
+
+    eq_(sd.distributions, [
+        {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+        {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+        {0: 1/6.0, 1: 2/6.0, 2: 1/6.0, 3: 2/6.0},
+        {0: 2/6.0, 1: 1/6.0, 2: 1/6.0, 3: 2/6.0},
+        {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2},
+        {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2}
+    ])
+
+    assert_equal(sd.field, np.array([-1, -1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]))
+
+
+def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undivisable():
+
+    neurondb = [
+        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},
+    ]
+
+    region_layers_map = {
+        1: (1, 2)
+    }
+
+    annotation = np.array([0, 0] + [1] * 10)
+
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+
+    eq_(sd.traits, neurondb)
+
+    eq_(sd.distributions, [
+        {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+        {0: 0.2, 1: 0.4, 2: 0.2, 3: 0.2},
+        {0: 1/6.0, 1: 2/6.0, 2: 1/6.0, 3: 2/6.0},
+        {0: 2/6.0, 1: 1/6.0, 2: 1/6.0, 3: 2/6.0},
+        {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2},
+        {0: 0.4, 1: 0.2, 2: 0.2, 3: 0.2}
+    ])
+
+    assert_equal(sd.field, np.array([-1, -1, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5]))
+
+
+def test_get_region_distributions_from_placement_hints_multiple_regions():
+
+    neurondb = [
+        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},
+    ]
+
+    region_layers_map = {
+        1: (1,),
+        2: (2,)
+    }
+
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map)
+
+    eq_(res,
+        {1: [{0: 1/3., 1: 2/3.},
+             {0: 2/3., 1: 1/3.}],
+         2: [{2: 0.5, 3: 0.5},
+             {2: 1/3., 3: 2/3.},
+             {2: 0.5, 3: 0.5}]})
+
+
+def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multiple_regions():
+
+    neurondb = [
+        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},
+        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},
+        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},
+    ]
+
+    region_layers_map = {
+        1: (1,),
+        2: (2,)
+    }
+
+    annotation = np.array([0, 0] + [1] * 4 + [2] * 6)
+
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+
+    eq_(sd.traits, neurondb)
+
+    eq_(sd.distributions, [
+        {0: 1/3.0, 1: 2/3.0},
+        {0: 2/3.0, 1: 1/3.0},
+        {2: 1/2.0, 3: 1/2.0},
+        {2: 1/3.0, 3: 2/3.0},
+        {2: 1/2.0, 3: 1/2.0}
+    ])
+
+    assert_equal(sd.field, np.array([-1, -1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4]))
+
+
+def test_assign_distributions_to_voxels_empty_0():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([]), []), np.array([]))
+
+
+def test_assign_distributions_to_voxels_empty_1():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([]), [{0: 1.}]), np.array([]))
+
+
+def test_assign_distributions_to_voxels_empty_2():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([0]), []), np.array([-1]))
+
+
+def test_assign_distributions_to_voxels_single():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([0, 1, 2]), [{0: 1.}]),
+                 np.array([0, 0, 0]))
+
+
+def test_assign_distributions_to_voxels_more_dists_than_voxels():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([0]), [{0: 1.}, {0: 1.}, {0: 1.}]),
+                 np.array([1]))
+
+
+def test_assign_distributions_to_voxels_ascending():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([0, 1, 2, 3]), [{}, {}]),
+                 np.array([0, 0, 1, 1]))
+
+
+def test_assign_distributions_to_voxels_descending():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([3, 2, 1, 0]), [{}, {}]),
+                 np.array([1, 1, 0, 0]))
+
+
+def test_assign_distributions_to_voxels_unordered():
+    assert_equal(bbp.assign_distributions_to_voxels(np.array([3, 1, 2, 0]), [{}, {}]),
+                 np.array([1, 0, 1, 0]))
+
