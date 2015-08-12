@@ -9,16 +9,17 @@ L = logging.getLogger(__name__)
 
 def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
     '''for every cell in positions, assign me-type to each cell based on its  synapse class
-    Accepts:
+
+    Args:
         positions: list of positions for soma centers (x, y, z).
         chosen_sclass: a list of synapse class values that correspond to each position.
         recipe_sdist: SpatialDistribution containing at least the properties: sClass, mtype, etype.
-        voxel_dimensions: tuple with the size of the voxels in microns in each axis.
+        voxel_dimensions: tuple with the size of the voxels in microns in each axis, (x, y, z)
+
     Returns:
         A list of tuples containing the mtype and etype values that correspond to each position.
         For those positions whose me-type could not be determined, None is used.
     '''
-
     subsections = tt.split_distribution_collection(recipe_sdist, ('sClass',))
 
     chosen_metype = np.ones(shape=(len(chosen_sclass)), dtype=np.int) * -1

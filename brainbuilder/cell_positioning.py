@@ -10,6 +10,7 @@ L = logging.getLogger(__name__)
 def _unique_with_counts(array):
     '''return two arrays: the unique values of array and the number of times they appear
     this is equivalent to np.unique(array, return_counts=True)
+
     However, this is a numpy 1.9 function so we need a custom implementation to run on numpy 1.8
     '''
     if array.shape != (0,):
@@ -58,8 +59,8 @@ def cell_counts_to_cell_voxel_indices(cell_counts_per_voxel):
 
 def cell_positioning(density_raw, voxel_dimensions, total_cell_count):
     '''
-    Accepts:
-        density: voxel data from Allen Brain Institute.
+    Args:
+        density_raw: voxel data from Allen Brain Institute.
             Called "atlasVolume" in their website.
             Each voxel represents a value that once normalised, can be treated as a probability of
             cells appearing in this voxel.

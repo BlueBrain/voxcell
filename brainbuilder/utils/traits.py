@@ -1,5 +1,4 @@
-'''
-    library to handle traits fields and collections and the logic to assign them
+'''library to handle traits fields and collections and the logic to assign them
 
     A "trait" is a set of properties and their values. It's represented as a dict.
     For instance:
@@ -87,6 +86,7 @@ def save_traits_field(filename, voxel_dimensions, field, probabilities):
 def load_traits_field(filename):
     '''save a field expressing groups of probability distributions of different traits for each
     one of the voxels.
+
     Returns:
         voxel_dimensions: in microns, how big are the voxels, for example: (25, 25, 25)
         field: volume data where veach voxel value is an index in the probabilites object
@@ -144,10 +144,12 @@ def homogeneous_gradient_trait_x(v0, v1, dimsize):
 
 def assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions):
     '''for every cell in positions, chooses a property from a spatial distribution
-    Accepts:
+
+    Args:
         positions: list of positions for soma centers (x, y, z).
         spatial_dist: a spatial distribution of traits
         voxel_dimensions: the size of the voxels in each dimension
+
     Returns:
         a list with the same length as positions where each value comes from
         those proposed as keys in the probabilities distributions.
@@ -200,8 +202,9 @@ def split_distribution_collection(spatial_dist, attributes):
     Note that because for every distribution we are creating a new one,
     the indexes of any associated field are still valid.
 
-    returns a dictionary where the keys are tuples with the values of the attributes found
-    in the traits_collection and the values are the resulting distributions.
+    Returns:
+        a dictionary where the keys are tuples with the values of the attributes found
+        in the traits_collection and the values are the resulting distributions.
     '''
 
     traits_values = [tuple(t[a] for a in attributes) for t in spatial_dist.traits]

@@ -1,5 +1,4 @@
 '''algorithm to assign a synapse class to a group of cells'''
-
 import numpy as np
 
 from brainbuilder.utils import traits as tt
@@ -7,9 +6,11 @@ from brainbuilder.utils import traits as tt
 
 def assign_synapse_class_randomly(positions, inhibitory_fraction):
     '''for every cell in positions, chooses whether it's an Excitatory or Inhibitory neuron
-    Accepts:
+
+    Args:
         positions: list of positions for soma centers (x, y, z).
         inhibitory_fraction: float [0, 1] fraction of cells that will be tagged as Inhibitory.
+
     Returns:
         a list of synapse class values that correspond to each position
     '''
@@ -20,10 +21,12 @@ def assign_synapse_class_randomly(positions, inhibitory_fraction):
 
 def assign_synapse_class_from_spatial_dist(positions, spatial_dist, voxel_dimensions):
     '''for every cell in positions, chooses whether it's an Excitatory or Inhibitory neuron
-    Accepts:
+
+    Args:
         positions: list of positions for soma centers (x, y, z).
         spatial_dist: SpatialDistribution with at least the property: sClass
         voxel_dimensions: tuple with the size of the voxels in microns in each axis
+
     Returns:
         a list of synapse class values that correspond to each position
     '''

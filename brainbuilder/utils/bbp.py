@@ -176,20 +176,25 @@ def load_neurondb_v4(neurondb_filename):
 
 def get_morphologies_by_layer(neurondb):
     '''group morphologies by layer
+
     Args:
         neurondb: a list of dictionaries representing morphologies and their properties.
             (see load_neurondb_4). The only required property is 'layer'
+
     Returns:
-        a dictionary where the keys are layer ids and the values lists of morphologies'''
+        a dictionary where the keys are layer ids and the values lists of morphologies
+    '''
     return dict((l, list(ns)) for l, ns in itertools.groupby(neurondb, lambda m: m['layer']))
 
 
 def get_morphologies_by_layer_group(morphs_by_layer, layer_ids):
     '''group morphologies by layer group of layers
+
     Args:
         morphs_by_layer: dictionary where the keys are layer ids and the values are
             lists of morphologies
         layer_ids: a collection of layer ids
+
     Returns:
         A list of all of the available morphologies for a group of layers
     '''
@@ -215,6 +220,7 @@ def get_placement_hints_table(morphs):
 
     Args:
         morphs: a collection of morphologies.
+
     Returns:
         A 2D numpy array that contains the placement hint scores for the given morphologies.
         This table has one row for each morphology and one column for each region subdivision
@@ -291,7 +297,7 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
     that contains the distributions of possible morphologies.
 
     Args:
-        annotation: voxel data from Allen Brain Institute to identify regions of space.
+        annotation_raw: voxel data from Allen Brain Institute to identify regions of space.
         neurondb: list of dicts containing the information extracted from a neurondb v4 file.
             only the 'layer' attribute is strictly needed
         region_layers_map: dict that contains the relationship between regions (referenced by

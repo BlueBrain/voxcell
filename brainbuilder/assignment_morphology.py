@@ -1,5 +1,4 @@
 '''algorithm to assign morphologies to a group of cells'''
-
 from brainbuilder.utils import traits as tt
 import numpy as np
 
@@ -9,12 +8,14 @@ L = logging.getLogger(__name__)
 
 def assign_morphology(positions, chosen_me, spatial_dist, voxel_dimensions):
     '''for every cell in positions, assign a morphology to each cell based on its metype
-    Accepts:
+
+    Args:
         positions: list of positions for soma centers (x, y, z).
         chosen_me: a list of metype values that correspond to each position.
         spatial_dist: SpatialDistribution containing at least the properties:
             mtype, etype, morphology.
         voxel_dimensions: tuple with the size of the voxels in microns in each axis.
+
     Returns:
         A list of the morpholgies that correspond to each position.
         For those positions whose morphology could not be determined, None is used.

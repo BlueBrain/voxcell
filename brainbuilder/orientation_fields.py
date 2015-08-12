@@ -1,16 +1,17 @@
 '''algorithm to compute orientation fields for SSCx'''
-
 from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import vector_fields as vf
 import numpy as np
 
 
 def compute_sscx_orientation_fields(annotation, hierarchy, region_name):
-    '''
-    Accepts:
+    '''Computes the orientation field for the somatosensory cortex
+
+    Args:
         annotation: voxel data from Allen Brain Institute (can be crossrefrenced with hierarchy)
         hierarchy: json from Allen Brain Institute
         region_name: the exact name in the hierarchy that the field should be computed for
+
     Returns:
         orientation_field: volume data where every voxel contains 3 vectors: right, up, fwd
     '''

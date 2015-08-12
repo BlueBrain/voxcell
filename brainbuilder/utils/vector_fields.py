@@ -6,7 +6,6 @@ each dimension.
 An orientation field is a list of three vector fields, corresponding to the
 right, up and fwd directions (i, j, k) of a coordinate system.
 '''
-
 import h5py
 import numpy as np
 from scipy.ndimage import morphology
@@ -16,7 +15,6 @@ import brainbuilder.utils.genbrain as gb
 
 ####################################################################################################
 # serialization
-
 
 def save_orientation_fields(filename, voxel_dimensions, orientation_fields):
     '''save an orientation field to h5'''
@@ -51,7 +49,6 @@ def load_orientation_fields(filename):
 
 ####################################################################################################
 # functions to create different types of fields
-
 
 def _mask_fields(fields, mask):
     '''take a vector field set to (0, 0, 0) those vectors outside the given binary mask'''
