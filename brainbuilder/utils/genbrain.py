@@ -2,15 +2,35 @@
 
 import itertools
 import json
-from collections import namedtuple
+import logging
 from collections import OrderedDict
 from os.path import join as joinp
 
 import h5py
 import numpy as np
 
+L = logging.getLogger(__name__)
 
-MetaIO = namedtuple('MetaIO', 'mhd raw')
+
+class MetaIO(object):
+    '''wrap MetaIO files'''
+    def __init__(self, mhd, raw):
+        self.mhd = mhd
+        self.raw = raw
+
+    @classmethod
+    def load(cls, mhd_path, raw_path):
+        '''create a MetaIO object
+
+        Args:
+            mhd_path(string): path to mhd file
+            raw_path(string): path to raw file
+
+        Return:
+            MetaIO object
+        '''
+        mhd, raw = load_meta_io(mhd_path, raw_path)
+        return cls(mhd, raw)
 
 
 def read_mhd(path):
@@ -84,6 +104,12 @@ def load_meta_io(mhd_path, data_path):
     Return:
         tuple of the meta information, and numpy array of correct type
     '''
+    if not mhd_path.endswith('mhd'):
+        L.warning('mhd_path does not end in mhd')
+
+    if not data_path.endswith('raw'):
+        L.warning('data_path does not end in raw')
+
     mhd = read_mhd(mhd_path)
     raw = load_raw(mhd['ElementType'], mhd['DimSize'], data_path)
     return mhd, raw

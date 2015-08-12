@@ -1,6 +1,7 @@
 '''main circuit building worklfow'''
 import os
 import numpy as np
+from os.path import join as joinp
 
 from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import bbp
@@ -33,19 +34,14 @@ def main(data_dir):  # pylint: disable=R0914
 
     # workflow arguments (need to be provided by the user)
 
-    annotation_mhd, annotation_raw = gb.load_meta_io(
-        os.path.join(data_dir, 'P56_Mouse_annotation/annotation.mhd'),
-        os.path.join(data_dir, 'P56_Mouse_annotation/annotation.raw'))
-
-    annotation = gb.MetaIO(annotation_mhd, annotation_raw)
+    annotation = gb.MetaIO.load(joinp(data_dir, 'P56_Mouse_annotation/annotation.mhd'),
+                                joinp(data_dir, 'P56_Mouse_annotation/annotation.raw'))
 
     hierarchy = gb.load_hierarchy(
         os.path.join(data_dir, 'P56_Mouse_annotation/annotation_hierarchy.json'))['msg'][0]
 
-    full_density_mhd, full_density_raw = gb.load_meta_io(
-        os.path.join(data_dir, 'atlasVolume/atlasVolume.mhd'),
-        os.path.join(data_dir, 'atlasVolume/atlasVolume.raw'))
-    full_density = gb.MetaIO(full_density_mhd, full_density_raw)
+    full_density = gb.MetaIO.load(joinp(data_dir, 'atlasVolume/atlasVolume.mhd'),
+                                  joinp(data_dir, 'atlasVolume/atlasVolume.raw'))
 
     recipe_filename = os.path.join(data_dir, 'bbp_recipe/builderRecipeAllPathways.xml')
     neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
@@ -70,7 +66,7 @@ def main(data_dir):  # pylint: disable=R0914
 
     sclass_sdist = tt.reduce_distribution_collection(recipe_sdist, 'sClass')
 
-    neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation_raw,
+    neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation.raw,
                                                                 hierarchy, region_name)
 
     # main circuit building workflow:
