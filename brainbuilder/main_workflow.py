@@ -1,6 +1,10 @@
-'''main circuit building worklfow'''
+'''main circuit building workflow'''
+import argparse
 import os
+import sys
+
 import numpy as np
+
 from os.path import join as joinp
 
 from brainbuilder.utils import genbrain as gb
@@ -17,9 +21,10 @@ from brainbuilder.assignment_orientation import randomise_orientations
 from brainbuilder.export_bbp import export_for_bbp
 
 import logging
+L = logging.getLogger(__name__)
 
 
-def main(data_dir):  # pylint: disable=R0914
+def main(data_dir, region_name, total_cell_count):  # pylint: disable=R0914
     '''
     Most of the workflow steps here replace BlueBuilder.
 
@@ -32,6 +37,8 @@ def main(data_dir):  # pylint: disable=R0914
     The variables imply a data dependency: note that many of the steps could be sorted differently.
     '''
 
+    L.debug('Creating brain, data_dir: "%s", region: "%s", cell count: %d',
+            data_dir, region_name, total_cell_count)
     # workflow arguments (need to be provided by the user)
 
     annotation = gb.MetaIO.load(joinp(data_dir, 'P56_Mouse_annotation/annotation.mhd'),
@@ -46,18 +53,13 @@ def main(data_dir):  # pylint: disable=R0914
     recipe_filename = os.path.join(data_dir, 'bbp_recipe/builderRecipeAllPathways.xml')
     neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
 
-    #region_name = 'Primary somatosensory area'
     #total_cell_count = 4000000
     #rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
     #region_acronym = 'SSp-ll'
-    region_name = "Primary somatosensory area, lower limb"
-    total_cell_count = 400000
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
     #inhibitory_fraction = 0.10
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
-
-    logging.basicConfig()
 
     # transform BBP recipies into voxel data:
 
@@ -96,5 +98,38 @@ def main(data_dir):  # pylint: disable=R0914
     return circuit
 
 
+def get_region_names(data_dir):
+    '''retuns the names of all the regions'''
+    hierarchy = gb.load_hierarchy(
+        joinp(data_dir, 'P56_Mouse_annotation/annotation_hierarchy.json'))['msg'][0]
+    names = sorted(gb.get_in_hierarchy(hierarchy, 'name'))
+    return names
+
+
+def get_parser():
+    '''return the argument parser'''
+    parser = argparse.ArgumentParser(description='Create a brain')
+
+    parser.add_argument('-d', '--data', default='data', required=True,
+                        help='Base path to data directory')
+    parser.add_argument('-c', '--cellcount', default=400000, type=int,
+                        help='Number of cells to place')
+    parser.add_argument('-l', '--lsregion', default=False, action='store_true',
+                        help='List all know regions')
+    parser.add_argument('-r', '--region', default='Primary somatosensory area, lower limb',
+                        help='Name of region to use')
+    parser.add_argument('-v', '--verbose', action='count', dest='verbose',
+                        default=0, help='-v for INFO, -vv for DEBUG')
+    return parser
+
+
 if __name__ == "__main__":
-    main('../data')
+    args = get_parser().parse_args()
+    logging.basicConfig(level=(logging.WARNING,
+                               logging.INFO,
+                               logging.DEBUG)[min(args.verbose, 2)])
+    if args.lsregion:
+        print '\n'.join(get_region_names(args.data))
+        sys.exit(0)
+
+    main(args.data, args.region, args.cellcount)
