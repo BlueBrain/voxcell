@@ -7,19 +7,22 @@
     A "traits collection" is a group of traits. It's represented as a list of dicts.
     For instance:
         [{'sclass': 'inhibitory', 'mtype': 'Pyramidal'},
+         {'sclass': 'excitatory', 'mtype': 'Pyramidal'},
          {'sclass': 'inhibitory', 'mtype': 'Martinotti'}]
 
     A "probability distribution" specifies the probability of each trait in a collection
     being assigned to a given cell. It's represented as a dict where the keys
     identify particular traits in a traits collection (they are indices)
     For instance:
-        {0: 0.25, 1: 0.75}
+        {0: 0.25, 2: 0.75}
     That means 25% chances of picking an inhibitory Pyramidal cell, 75% of picking
     an inhibitory Martinotti cell.
 
     A "distributions collection" is a group of distributions. For instance:
         [{0: 0.25, 1: 0.75},
-         {0: 0.5,  1: 0.5}]
+         {0: 0.5,  1: 0.5},
+         {0: 0.5,  1: 0.25, 2: 0.25},
+         {1: 0.1,  2: 0.9}]
 '''
 
 import numpy as np
