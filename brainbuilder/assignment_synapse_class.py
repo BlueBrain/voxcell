@@ -12,7 +12,7 @@ def assign_synapse_class_randomly(positions, inhibitory_fraction):
         inhibitory_fraction: float [0, 1] fraction of cells that will be tagged as Inhibitory.
 
     Returns:
-        a list of synapse class values that correspond to each position
+        An array of synapse class values that correspond to each position
     '''
     return np.random.choice(np.array(['excitatory', 'inhibitory']),
                             size=positions.shape[0],
@@ -28,7 +28,7 @@ def assign_synapse_class_from_spatial_dist(positions, spatial_dist, voxel_dimens
         voxel_dimensions: tuple with the size of the voxels in microns in each axis
 
     Returns:
-        a list of synapse class values that correspond to each position
+        An array of synapse class values that correspond to each position
     '''
     chosen_sclass = tt.assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions)
-    return [spatial_dist.traits[idx]['sClass'] for idx in chosen_sclass]
+    return spatial_dist.traits['sClass'][chosen_sclass].as_matrix()

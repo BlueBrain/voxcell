@@ -17,8 +17,8 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
         voxel_dimensions: tuple with the size of the voxels in microns in each axis, (x, y, z)
 
     Returns:
-        A list of tuples containing the mtype and etype values that correspond to each position.
-        For those positions whose me-type could not be determined, None is used.
+        An array of tuples containing the mtype and etype values that correspond to each position.
+        For those positions whose me-type could not be determined, nan is used.
     '''
     subsections = tt.split_distribution_collection(recipe_sdist, ('sClass',))
 
@@ -37,6 +37,4 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
         L.warning('%d / %d cells could not get a valid metype assigned',
                   np.count_nonzero(chosen_metype == -1), len(chosen_metype))
 
-    return [(recipe_sdist.traits[idx]['mtype'], recipe_sdist.traits[idx]['etype'])
-            if idx != -1 else None
-            for idx in chosen_metype]
+    return recipe_sdist.traits[['mtype', 'etype']].ix[chosen_metype].as_matrix()

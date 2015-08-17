@@ -1,11 +1,12 @@
 '''compatibility functions with existing BBP formats'''
 import numpy as np
+import pandas as pd
 import itertools
-from collections import OrderedDict, defaultdict
 from lxml import etree
 from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
+
 
 import logging
 L = logging.getLogger(__name__)
@@ -13,8 +14,10 @@ L = logging.getLogger(__name__)
 
 def map_regions_to_layers(hierarchy, region_name):
     '''map regions in the hierarchy to the layer divisions used in BBP
-    returns a dictionary where the key is the region id according to the Allen Brain data
-    and the value is a tuple of the integer indices of the 6 layers used in BBP: 1, 2, 3, 4, 5, 6
+
+    Returns:
+        A dictionary where the key is the region id according to the Allen Brain data and
+        the value is a tuple of the integer indices of the 6 layers used in BBP: 1, 2, 3, 4, 5, 6
     '''
 
     sub_area_names = gb.collect_in_hierarchy(hierarchy, 'name', region_name, 'name')
@@ -44,13 +47,12 @@ def map_regions_to_layers(hierarchy, region_name):
     return layer_groups
 
 
-def load_recipe_as_layer_distributions(recipe_filename):
+def load_recipe(recipe_filename):
     '''take a BBP builder recipe and return the probability distributions for each type
 
-    returns a dictionary where the keys are layer ids (an integer: 1, 2, 3, 4, 5, 6)
-    and the value is a list of tuples of the form (probability, type_def) where
-    probability is a float in [0, 1]
-    type_def is dictionary with the properties: mtype, etype, mClass, sClass
+    Returns:
+        A DataFrame with one row for each posibility and columns:
+            layer, mtype, etype, mClass, sClass, percentage
     '''
     recipe_tree = etree.parse(recipe_filename)
 
@@ -59,130 +61,102 @@ def load_recipe_as_layer_distributions(recipe_filename):
         'EXC': 'excitatory'
     }
 
-    layer_distributions = {}
-    for layer in recipe_tree.findall('NeuronTypes')[0].getchildren():
+    def read_records():
+        '''parse each neuron posibility in the recipe'''
 
-        for structural_type in layer.getchildren():
-            if structural_type.tag == 'StructuralType':
+        for layer in recipe_tree.findall('NeuronTypes')[0].getchildren():
 
-                for electro_type in structural_type.getchildren():
-                    if electro_type.tag == 'ElectroType':
+            for structural_type in layer.getchildren():
+                if structural_type.tag == 'StructuralType':
 
-                        percentage = (float(structural_type.attrib['percentage']) / 100 *
-                                      float(electro_type.attrib['percentage']) / 100)
+                    for electro_type in structural_type.getchildren():
+                        if electro_type.tag == 'ElectroType':
 
-                        layer_id = int(layer.attrib['id'])
-                        type_def = {
-                            'mtype': structural_type.attrib['id'],
-                            'etype': electro_type.attrib['id'],
-                            'mClass': structural_type.attrib['mClass'],
-                            'sClass': sclass_alias[structural_type.attrib['sClass']]
-                        }
-                        layer_distributions.setdefault(layer_id, []).append((percentage, type_def))
+                            percentage = (float(structural_type.attrib['percentage']) / 100 *
+                                          float(electro_type.attrib['percentage']) / 100)
 
-    return layer_distributions
+                            yield [
+                                int(layer.attrib['id']),
+                                structural_type.attrib['id'],
+                                electro_type.attrib['id'],
+                                structural_type.attrib['mClass'],
+                                sclass_alias[structural_type.attrib['sClass']],
+                                percentage
+                            ]
 
-
-def combine_distributions(distributions):
-    '''take a list of distributions and return a single one normalised
-
-    a distribution is represented as a dictionary (type_id, probability) where
-    type_id is a hashable type (example: integer) representing a type definition
-    probability is a float in [0, 1]
-    '''
-    combined = defaultdict(float)
-    for distribution in distributions:
-        for type_id, probability in distribution.items():
-            combined[type_id] += probability / float(len(distributions))
-
-    total = sum(combined.values())
-    return dict((type_id, probability / total) for type_id, probability in combined.iteritems())
+    return pd.DataFrame(read_records(), columns=['layer',
+                                                 'mtype', 'etype',
+                                                 'mClass', 'sClass',
+                                                 'percentage'])
 
 
-def transform_recipe_into_spatial_distribution(annotation_raw,
-                                               layer_distributions, region_layers_map):
+def transform_recipe_into_spatial_distribution(annotation_raw, recipe, region_layers_map):
     '''take distributions grouped by layer ids and a map from regions to layers
     and build a volumetric dataset that contains the same distributions
 
-    returns a SpatialDistribution object where the properties of the traits_collection are:
-    mtype, etype, mClass, sClass
+    Returns:
+        A SpatialDistribution object where the properties of the traits_collection are:
+        mtype, etype, mClass, sClass
     '''
-
-    traits_field = np.ones_like(annotation_raw) * -1
-
-    unique_distributions = OrderedDict()
-    unique_type_defs = OrderedDict()
+    distributions = pd.DataFrame(data=0.0,
+                                 index=recipe.index,
+                                 columns=region_layers_map.keys())
 
     for region_id, layer_ids in region_layers_map.items():
-
-        distributions = []
         for layer_id in layer_ids:
-            dist = {}
-            for p, t in layer_distributions[layer_id]:
-                hashable_type_def = tuple(t.items())
-                if hashable_type_def not in unique_type_defs:
-                    unique_type_defs[hashable_type_def] = len(unique_type_defs)
+            data = recipe[recipe.layer == layer_id]['percentage']
+            distributions.loc[data.index, region_id] = data.values
 
-                dist[unique_type_defs[hashable_type_def]] = p
+    distributions = tt.normalize_distribution_collection(distributions)
 
-            distributions.append(dist)
-
-        hashable_dist = tuple(combine_distributions(distributions).items())
-
-        if hashable_dist not in unique_distributions:
-            unique_distributions[hashable_dist] = len(unique_distributions)
-
-        traits_field[annotation_raw == region_id] = unique_distributions[hashable_dist]
-
-    return tt.SpatialDistribution(traits_field,
-                                  [dict(dist) for dist in unique_distributions.keys()],
-                                  [dict(dist) for dist in unique_type_defs.keys()])
+    return tt.SpatialDistribution(annotation_raw, distributions, recipe)
 
 
 def load_recipe_as_spatial_distribution(recipe_filename, annotation_raw, hierarchy, region_name):
     '''load the bbp recipe and return a spatial voxel-based distribution
-    returns: see transform_into_spatial_distribution
+
+    Returns:
+        see transform_into_spatial_distribution
     '''
     region_layers_map = map_regions_to_layers(hierarchy, region_name)
 
-    layer_distributions = load_recipe_as_layer_distributions(recipe_filename)
+    recipe = load_recipe(recipe_filename)
 
     return transform_recipe_into_spatial_distribution(annotation_raw,
-                                                      layer_distributions,
+                                                      recipe,
                                                       region_layers_map)
 
 
 def load_neurondb_v4(neurondb_filename):
-    '''load a neurondb v4 file as a list of dictionaries where the keys are:
-    morphology, layer, mtype, etype, metype, placement_hints
+    '''load a neurondb v4 file
+
+    Returns:
+        A DataFrame where the columns are:
+            morphology, layer, mtype, etype, metype, placement_hints
     '''
 
-    morphologies = []
+    def read_records(lines):
+        '''parse each record in a neurondb file'''
+        for line in lines:
+            fields = line.split()
+            morphology, layer, mtype, etype, _ = fields[:5]
+            placement_hints = list(float(h) for h in fields[5:])
+            # skipping metype because it's just a combination of the mtype and etype values
+            yield [morphology, int(layer), mtype, etype, placement_hints]
 
     with open(neurondb_filename) as f:
-        for line in f.readlines():
-            fields = line.split()
-            morphology, layer, mtype, etype, metype = fields[:5]
-            placement_hints = fields[5:]
-            morphologies.append({'morphology': morphology,
-                                 'layer': int(layer),
-                                 'mtype': mtype,
-                                 'etype': etype,
-                                 'metype': metype,
-                                 'placement_hints': tuple(placement_hints)})
-
-    return morphologies
+        return pd.DataFrame(read_records(f.readlines()),
+                            columns=['morphology', 'layer', 'mtype', 'etype', 'placement_hints'])
 
 
 def get_morphologies_by_layer(neurondb):
     '''group morphologies by layer
 
     Args:
-        neurondb: a list of dictionaries representing morphologies and their properties.
-            (see load_neurondb_4). The only required property is 'layer'
+        neurondb: A DataFrame with the contents of a neurondbv4.dat (see load_neurondb_4).
 
     Returns:
-        a dictionary where the keys are layer ids and the values lists of morphologies
+        A dictionary where the keys are layer ids and the values lists of morphologies
     '''
     return dict((l, list(ns)) for l, ns in itertools.groupby(neurondb, lambda m: m['layer']))
 
@@ -222,20 +196,44 @@ def get_placement_hints_table(morphs):
         morphs: a collection of morphologies.
 
     Returns:
-        A 2D numpy array that contains the placement hint scores for the given morphologies.
+        A DataFrame array that contains the placement hint scores for the given morphologies.
         This table has one row for each morphology and one column for each region subdivision
     '''
-    subdivision_count = gb.lcmm(len(m['placement_hints']) for m in morphs)
+    subdivision_count = gb.lcmm(morphs.placement_hints.map(len).as_matrix())
 
-    region_dist_table = np.empty(shape=(len(morphs), subdivision_count))
+    region_dist_table = pd.DataFrame(dtype=np.float,
+                                     index=morphs.index,
+                                     columns=np.arange(subdivision_count))
 
-    for i, m in enumerate(morphs):
-        for hint_idx, hint in enumerate(m['placement_hints']):
-            repetitions = subdivision_count // len(m['placement_hints'])
-            for j in range(repetitions):
-                region_dist_table[i, hint_idx * repetitions + j] = hint
+    groups = morphs.placement_hints.groupby(lambda k: len(morphs.placement_hints[k]))
+    for length, hints_group in groups:
+
+        # TODO find a nicer way to get a 2D array from an array of lists
+        count = len(hints_group)
+        scores = np.array(list(itertools.chain(*hints_group.values))).reshape((count, length))
+
+        repetitions = [subdivision_count // length] * length
+        extended = np.repeat(scores, repetitions, axis=1)
+
+        region_dist_table.ix[hints_group.index] = extended
 
     return region_dist_table
+
+
+def reverse_region_layers_map(region_layers_map):
+    ''' reverse the mapping between layers and regions
+
+    Args:
+        region_layers_map: a dict where the keys are region ids and the values tuples of layer ids
+
+    Returns:
+        A dict where the keys are tuples of layer ids and the keys lists of region ids'''
+    inv_map = {}
+    for k, v in region_layers_map.iteritems():
+        inv_map[v] = inv_map.get(v, [])
+        inv_map[v].append(k)
+
+    return inv_map
 
 
 def get_region_distributions_from_placement_hints(neurondb, region_layers_map):
@@ -245,49 +243,40 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map):
     the same way as the placement hint scores are: from closest to pia to furthest to pia
 
     Returns:
-        A dictionary where each key is a region id and the value a distribution collection.
+        A dict where each key is a tuple of region ids and the value a distribution collection.
     '''
 
-    unique_trait_id = dict(zip([tuple(n.items()) for n in neurondb], range(len(neurondb))))
-
-    morphs_by_layer = get_morphologies_by_layer(neurondb)
-
     regions_dists = {}
+    for layer_ids, region_ids in reverse_region_layers_map(region_layers_map).iteritems():
 
-    for region_id, layer_ids in region_layers_map.items():
-        region_morphs = get_morphologies_by_layer_group(morphs_by_layer, layer_ids)
-        region_dist_table = get_placement_hints_table(region_morphs)
-        morphs_ids = [unique_trait_id[tuple(m.items())] for m in region_morphs]
+        region_morphs = neurondb[np.in1d(neurondb.layer, layer_ids)]
 
-        for scores in region_dist_table.transpose():
-            dist = dict(zip(morphs_ids, scores))
-            dist = tt.normalize_probability_distribution(dist)
-            regions_dists.setdefault(region_id, []).append(dist)
+        dists = get_placement_hints_table(region_morphs)
+
+        regions_dists[tuple(region_ids)] = tt.normalize_distribution_collection(dists)
 
     return regions_dists
 
 
-def assign_distributions_to_voxels(voxel_scores, dists):
+def assign_distributions_to_voxels(voxel_scores, bins):
     '''group voxels by a their score, and assign a distribution to each group.
     There will be as many groups as distributions. The distribution are assigned in order
     to the groups from the lowest scores to the higher scores
 
     Returns:
-        An array of the same shape as voxel_scores, where each value is an index into
-        the dists list
+        An array of the same shape as voxel_scores, where each value is an index
+        in the interval [0, bins)
     '''
-    count_per_bin, _ = np.histogram(voxel_scores, bins=max(len(dists), 1))
+    count_per_bin, _ = np.histogram(voxel_scores, bins=max(bins, 1))
     voxel_indices = np.argsort(voxel_scores)
 
     region_dist_idxs = np.ones(shape=voxel_scores.shape, dtype=np.int) * -1
-    region_dists = []
 
-    i = 0
-    for bin_count, dist in zip(count_per_bin, dists):
-        indices = voxel_indices[i: i + bin_count]
-        region_dist_idxs[indices] = len(region_dists)
-        i += bin_count
-        region_dists.append(dist)
+    idx = 0
+    for dist_idx, bin_count in enumerate(count_per_bin):
+        indices = voxel_indices[idx: idx + bin_count]
+        region_dist_idxs[indices] = dist_idx
+        idx += bin_count
 
     return region_dist_idxs
 
@@ -313,32 +302,37 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
     # This will calculate, for every voxel, the euclidean distance to
     # the nearest voxel tagged as "outside" the brain
     distance_to_pia = distance_transform_edt(annotation_raw)
+    distance_to_pia = distance_to_pia.flatten()
 
     # TODO take only the top 8% for each mtype-etype combination
     region_dists = get_region_distributions_from_placement_hints(neurondb, region_layers_map)
 
     flat_field = np.ones(shape=np.product(annotation_raw.shape), dtype=np.int) * -1
 
-    all_dists = []
+    all_dists = pd.DataFrame()
 
-    for region_id, dists in region_dists.iteritems():
-        voxel_distances = distance_to_pia[annotation_raw == region_id].flatten()
-        voxel_dist_indices = assign_distributions_to_voxels(voxel_distances, dists)
+    for region_ids, dists in region_dists.iteritems():
+        flat_mask = np.in1d(annotation_raw, region_ids)
 
-        flat_mask = (annotation_raw == region_id).flatten()
-        flat_field[flat_mask] = voxel_dist_indices + len(all_dists)
+        voxel_distances = distance_to_pia[flat_mask]
+        voxel_dist_indices = assign_distributions_to_voxels(voxel_distances, len(dists.columns))
 
-        all_dists.extend(dists)
+        offset = len(all_dists.columns)
+        dists.columns += offset
+        flat_field[flat_mask] = voxel_dist_indices + offset
+        all_dists = pd.concat([all_dists, dists], axis=1)
 
     return tt.SpatialDistribution(flat_field.reshape(annotation_raw.shape),
-                                  all_dists,
+                                  all_dists.fillna(0.0),
                                   neurondb)
 
 
 def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
                                              annotation_raw, hierarchy, region_name):
     '''load the bbp recipe and return a spatial voxel-based distribution
-    returns: see transform_into_spatial_distribution
+
+    Returns:
+        see transform_into_spatial_distribution
     '''
     region_layers_map = map_regions_to_layers(hierarchy, region_name)
 

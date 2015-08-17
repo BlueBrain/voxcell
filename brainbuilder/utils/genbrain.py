@@ -330,6 +330,7 @@ def lcm(a, b):
     return a * b // gcd(a, b)
 
 
+# TODO consider making this a np ufunc
 def lcmm(args):
     '''Return lcm of args.'''
     return reduce(lcm, args)
