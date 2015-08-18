@@ -71,6 +71,33 @@ METAIO_TO_DTYPE = {'MET_UCHAR': np.uint8,
                    'MET_UINT': np.uint32,
                    'MET_FLOAT': np.float32,
                    }
+# conversion of types numpy types to type in .mhd file
+DTYPE_TO_MATAIO = dict((v, k) for k, v in METAIO_TO_DTYPE.items())
+
+
+def get_mhd_info(dimensions, element_type, element_spacing, element_datafile):
+    '''Get a dictionary with all the elements needed for an .MHD file
+
+    Args:
+        dimensions(tuple): (x, y, z)
+        element_type(numpy type): Type of the data
+        element_spacing(tuple): spacing of the elements
+        element_datafile(str): name of the corresponding datafile
+    '''
+    return {'ObjectType': 'Image',
+            'NDims': 3,
+            'BinaryData': True,
+            'BinaryDataByteOrderMSB': False,
+            'CompressedData': False,
+            'TransformMatrix': '1 0 0 0 1 0 0 0 1',
+            'Offset': '0 0 0',
+            'CenterOfRotation': '0 0 0',
+            'AnatomicalOrientation': '??',
+            'DimSize': ' '.join(str(d) for d in dimensions),
+            'ElementType': DTYPE_TO_MATAIO[element_type],
+            'ElementSpacing': ' '.join(str(e) for e in element_spacing),
+            'ElementDataFile': element_datafile,
+            }
 
 
 def load_raw(element_type, shape, data_path):
@@ -258,7 +285,6 @@ def save_orientations(filename, orientations):
     '''serialise a list of tensor fields to h5.
     orientations must be a list of 3 teson fields corresponding to the
     right vectors, up vectors and fwd vectors'''
-
     with h5py.File(filename, 'w') as h5:
         for name, data in zip(('right', 'up', 'fwd'), orientations):
             h5.create_dataset(name=name, data=data)
@@ -266,7 +292,6 @@ def save_orientations(filename, orientations):
 
 def load_orientations(filename):
     '''deserialise a list of tensor fields from h5'''
-
     with h5py.File(filename, 'r') as h5:
         return [np.array(h5[name]) for name in ('right', 'up', 'fwd')]
 
@@ -278,15 +303,15 @@ def cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions):
 
 
 def cell_positions_to_voxel_indices(positions, voxel_dimensions):
-    '''create random position in the selected voxel. Add some random jitter'''
+    '''take positions, and figure out to which voxel they belong'''
     return np.floor(positions / voxel_dimensions).astype(np.int)
 
 
-def cell_density_from_positions(positions, density_dimensions, voxel_dimensions):
+def cell_density_from_positions(positions, density_dimensions, voxel_dimensions, dtype=np.uint8):
     '''calculate cell density from the cell positions'''
     voxel_indices = cell_positions_to_voxel_indices(positions, voxel_dimensions)
 
-    density = np.zeros(density_dimensions, dtype=np.uint8)
+    density = np.zeros(density_dimensions, dtype=dtype)
     for coords in voxel_indices:
         density[coords[0], coords[1], coords[2]] += 1
 
