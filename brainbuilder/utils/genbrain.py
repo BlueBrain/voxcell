@@ -92,7 +92,7 @@ def get_mhd_info(dimensions, element_type, element_spacing, element_datafile):
             'TransformMatrix': '1 0 0 0 1 0 0 0 1',
             'Offset': '0 0 0',
             'CenterOfRotation': '0 0 0',
-            'AnatomicalOrientation': '??',
+            'AnatomicalOrientation': '???',
             'DimSize': ' '.join(str(d) for d in dimensions),
             'ElementType': DTYPE_TO_MATAIO[element_type],
             'ElementSpacing': ' '.join(str(e) for e in element_spacing),
