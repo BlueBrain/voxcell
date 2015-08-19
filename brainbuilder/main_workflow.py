@@ -18,13 +18,13 @@ from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
 from brainbuilder.assignment_orientation import randomise_orientations
-from brainbuilder.export_bbp import export_for_bbp
+from brainbuilder.export_mvd2 import export_mvd2
 
 import logging
 L = logging.getLogger(__name__)
 
 
-def main(data_dir, region_name, total_cell_count):  # pylint: disable=R0914
+def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0914
     '''
     Most of the workflow steps here replace BlueBuilder.
 
@@ -91,9 +91,8 @@ def main(data_dir, region_name, total_cell_count):  # pylint: disable=R0914
     chosen_morphology = assign_morphology(positions, chosen_me, neuron_sdist, voxel_dimensions)
 
     # export data to file formats from the BBP pipeline:
-
-    circuit = export_for_bbp(positions, orientations,
-                             (chosen_synapse_class, chosen_me, chosen_morphology))
+    circuit = export_mvd2(output, 'mpath', positions, orientations,
+                          chosen_synapse_class, chosen_me, chosen_morphology)
 
     return circuit
 
@@ -118,6 +117,8 @@ def get_parser():
                         help='List all know regions')
     parser.add_argument('-r', '--region', default='Primary somatosensory area, lower limb',
                         help='Name of region to use')
+    parser.add_argument('-o', '--output', required=True,
+                        help='Output directory for BBP file formats')
     parser.add_argument('-v', '--verbose', action='count', dest='verbose',
                         default=0, help='-v for INFO, -vv for DEBUG')
     return parser
@@ -132,4 +133,4 @@ if __name__ == "__main__":
         print '\n'.join(get_region_names(args.data))
         sys.exit(0)
 
-    main(args.data, args.region, args.cellcount)
+    main(args.data, args.region, args.cellcount, args.output)
