@@ -67,7 +67,8 @@ def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0
     sclass_sdist = tt.reduce_distribution_collection(recipe_sdist, 'sClass')
 
     neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation.raw,
-                                                                hierarchy, region_name)
+                                                                hierarchy, region_name,
+                                                                percentile=0.92)
 
     # main circuit building workflow:
 

@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+
 from nose.tools import eq_
 from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
@@ -77,7 +78,8 @@ def test_load_neurondb_v4():
 
 def test_transform_neurondb_into_spatial_distribution_empty():
     sd = bbp.transform_neurondb_into_spatial_distribution(
-        np.ones(shape=(3, 3), dtype=np.int), pd.DataFrame(), {})
+        np.ones(shape=(3, 3), dtype=np.int), pd.DataFrame(), {},
+        percentile=0.0)
 
     assert sd.traits.empty
     assert sd.distributions.empty
@@ -95,13 +97,14 @@ def test_transform_neurondb_into_spatial_distribution():
     }
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1,)},
-        {'name': 'b', 'layer': 1, 'placement_hints': (1,)},
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},
-        {'name': 'd', 'layer': 3, 'placement_hints': (1,)},
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1,)},
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (1,)},
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},
+        {'name': 'd', 'layer': 3, 'etype': 4, 'mtype': 4, 'placement_hints': (1,)},
     ])
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                          percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -121,17 +124,17 @@ def test_transform_neurondb_into_spatial_distribution():
 def test_get_region_distributions_from_placement_hints_0():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
-        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},       # 1 1 1 1 1 1
-        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},       # 1 1 1 1 1 1
+        {'name': 'd', 'layer': 2, 'etype': 4, 'mtype': 4, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
     ])
 
     region_layers_map = {
         0: (1, 2)
     }
 
-    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map)
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.0)
 
     eq_(res.keys(), [(0,)])
 
@@ -150,10 +153,10 @@ def test_get_region_distributions_from_placement_hints_0():
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
-        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},       # 1 1 1 1 1 1
-        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},       # 1 1 1 1 1 1
+        {'name': 'd', 'layer': 2, 'etype': 4, 'mtype': 4, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
     ])
 
     region_layers_map = {
@@ -162,7 +165,8 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 
     annotation = np.array([0] + [1] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                          percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -183,10 +187,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
-        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},       # 1 1 1 1 1 1
-        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},       # 1 1 1 1 1 1
+        {'name': 'd', 'layer': 2, 'etype': 4, 'mtype': 4, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
     ])
 
     region_layers_map = {
@@ -195,7 +199,8 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
 
     annotation = np.array([0, 0] + [1] * 12)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                          percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -217,13 +222,13 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
     # bins are numbered from the bottom (further from pia) of the layer
     # towards the top (closer to pia)
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (.25,  # bottom
-                                                      .5,  # middle
-                                                      .75)},  # top
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (.25,  # bottom
+                                                                              .5,  # middle
+                                                                              .75)},  # top
 
-        {'name': 'b', 'layer': 1, 'placement_hints': (.75,  # bottom
-                                                      .5,  # middle
-                                                      .25)},  # top
+        {'name': 'b', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (.75,  # bottom
+                                                                              .5,  # middle
+                                                                              .25)},  # top
     ])
 
     region_layers_map = {
@@ -232,7 +237,8 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
 
     annotation = np.array([1] * 3 + [0])  # [bottom, middle, top, pia]
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                          percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -263,10 +269,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undivisable():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
-        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},       # 1 1 1 1 1 1
-        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 1 1 2 2 2
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (2, 1)},     # 2 2 2 1 1 1
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},       # 1 1 1 1 1 1
+        {'name': 'd', 'layer': 2, 'etype': 4, 'mtype': 4, 'placement_hints': (1, 2, 1)},  # 1 1 2 2 1 1
     ])
 
     region_layers_map = {
@@ -275,7 +281,8 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
 
     annotation = np.array([0, 0] + [1] * 10)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                          percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -296,10 +303,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
 def test_get_region_distributions_from_placement_hints_multiple_regions():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},     # 1 2
-        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},     # 2 1
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},       # 1 1 1
-        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},  # 1 2 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 2
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (2, 1)},     # 2 1
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},       # 1 1 1
+        {'name': 'd', 'layer': 2, 'etype': 4, 'mtype': 4, 'placement_hints': (1, 2, 1)},  # 1 2 1
     ])
 
     region_layers_map = {
@@ -307,7 +314,7 @@ def test_get_region_distributions_from_placement_hints_multiple_regions():
         2: (2,)
     }
 
-    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map)
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.0)
 
     eq_(res.keys(), [(2,), (1,)])
     assert_frame_equal(res[(1,)], pd.DataFrame({0: [2/3., 1/3.],
@@ -318,13 +325,53 @@ def test_get_region_distributions_from_placement_hints_multiple_regions():
                                                 2: [1/2., 1/2.]}, index=[2, 3]))
 
 
+def test_get_region_distributions_from_placement_hints_percentile_selection():
+
+    neurondb = pd.DataFrame([
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 2
+        {'name': 'b', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (2, 1)},     # 2 1
+        {'name': 'c', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (3,)},       # 3 3
+        {'name': 'd', 'layer': 2, 'etype': 2, 'mtype': 2, 'placement_hints': (1, 2, 1)},  # 1 2 1
+    ])
+
+    region_layers_map = {
+        1: (1,),
+        2: (2,)
+    }
+
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.5)
+
+    eq_(res.keys(), [(2,), (1,)])
+
+    #.5 percentile in of [3, 2, 1] includes 2, so where mtype & etype are grouped (ie: (1, 1))
+    # only [3, 2, 0] should survive the culling by percentile
+    assert_frame_equal(res[(1,)], pd.DataFrame({0: [2/5., 0/5., 3/5.],
+                                                1: [0/5., 2/5., 3/5.],
+                                                }))
+    assert_frame_equal(res[(2,)], pd.DataFrame({0: [1.,],
+                                                1: [1.,],
+                                                2: [1.,],
+                                                }, index=[3]))
+
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.51)
+    #.51 percentile in of [3, 2, 1] doesn't includes 2, so where mtype & etype are grouped (ie: (1, 1))
+    # only [3, 0, 0] should survive the culling by percentile
+    assert_frame_equal(res[(1,)], pd.DataFrame({0: [0/3., 0/3., 3/3.],
+                                                1: [0/3., 0/3., 3/3.],
+                                                }))
+    assert_frame_equal(res[(2,)], pd.DataFrame({0: [1.,],
+                                                1: [1.,],
+                                                2: [1.,],
+                                                }, index=[3]))
+
+
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multiple_regions():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'placement_hints': (1, 2)},     # 1 2
-        {'name': 'b', 'layer': 1, 'placement_hints': (2, 1)},     # 2 1
-        {'name': 'c', 'layer': 2, 'placement_hints': (1,)},       # 1 1 1
-        {'name': 'd', 'layer': 2, 'placement_hints': (1, 2, 1)},  # 1 2 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 2
+        {'name': 'b', 'layer': 1, 'etype': 2, 'mtype': 2, 'placement_hints': (2, 1)},     # 2 1
+        {'name': 'c', 'layer': 2, 'etype': 3, 'mtype': 3, 'placement_hints': (1,)},       # 1 1 1
+        {'name': 'd', 'layer': 2, 'etype': 4, 'mtype': 4, 'placement_hints': (1, 2, 1)},  # 1 2 1
     ])
 
     region_layers_map = {
@@ -334,7 +381,8 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
 
     annotation = np.array([0, 0] + [1] * 4 + [2] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                          percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -377,3 +425,28 @@ def test_assign_distributions_to_voxels_descending():
 def test_assign_distributions_to_voxels_unordered():
     assert_equal(bbp.assign_distributions_to_voxels(np.array([3, 1, 2, 0]), 2),
                  np.array([1, 0, 1, 0]))
+
+def test_clip_columns_to_percentile():
+    dists = pd.DataFrame([
+        {'0': 0, '1': 4, '2': 0, '3': 1},
+        {'0': 1, '1': 3, '2': 0, '3': 1},
+        {'0': 2, '1': 2, '2': 0, '3': 1},
+        {'0': 3, '1': 1, '2': 4, '3': 1},
+        {'0': 4, '1': 0, '2': 4, '3': 1},
+    ])
+    #should have no change in distribution
+    ret = bbp.clip_columns_to_percentile(dists.copy(), 0.0)
+    assert_equal(dists.values, ret.values)
+
+    ret = bbp.clip_columns_to_percentile(dists.copy(), 1.0)
+    assert_equal(np.sum(ret.values, axis=0), np.array((4, 4, 8, 5)))
+
+    ret = bbp.clip_columns_to_percentile(dists.copy(), 0.90)
+    # 1st two columns, only 4 will be saved, last 2 all elements should be
+    assert_equal(np.sum(ret.values, axis=0), np.array((4, 4, 8, 5)))
+
+    ret = bbp.clip_columns_to_percentile(dists.copy(), 0.75)
+    assert_equal(np.sum(ret.values, axis=0), np.array((7, 7, 8, 5)))
+
+    ret = bbp.clip_columns_to_percentile(dists.copy(), 0.50)
+    assert_equal(np.sum(ret.values, axis=0), np.array((9, 9, 8, 5)))

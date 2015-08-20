@@ -177,12 +177,27 @@ def get_morphologies_by_layer_group(morphs_by_layer, layer_ids):
     return list(itertools.chain(*(morphs_by_layer[layer_id] for layer_id in layer_ids)))
 
 
+def clip_columns_to_percentile(dists, percentile):
+    '''Clip distribution to, by region (ie: column)
+
+        dists(DataFrame): each row is a morphology, each column is a region
+        percentile(float): percentile above which the morphologies are used, below which, their
+            probability is set to 0 (ie: not used) range from (0.0, 1.0]
+    '''
+    # TODO: Should be albe to do this without iterating across columns
+    for col_name in dists:
+        dist = dists[col_name]
+        percentile_value = np.percentile(dist, q=100 * percentile)
+        dist[dist < percentile_value] = 0.0
+    return dists
+
+
 def get_placement_hints_table(morphs):
     '''collect the placement hint scores for a group of morphologies.
 
     Placement hints are a series of numbers associated with each morphology. This numbers
-    represent how good a fit a morphology is to each subsection of space after this has been
-    evenly splitted.
+    represent how good a fit a morphology is to each subsection of space the space is evenly
+    divided
 
     For example, having a morphology with scores [1, 2, 1] means that it is more likely to
     find this morphology in the second third of a space than it is to find it in the first or
@@ -247,11 +262,19 @@ def reverse_region_layers_map(region_layers_map):
     return inv_map
 
 
-def get_region_distributions_from_placement_hints(neurondb, region_layers_map):
+def get_region_distributions_from_placement_hints(neurondb, region_layers_map, percentile):
     '''for every region, return the list of probability distributions for each potential
     morphology. The probabilites are taken from the placement hint scores.
     There is one distribution for each subdivision of the region and they are sorted
     the same way as the placement hint scores are: from furthest to pia to closest to pia
+
+    Args:
+        neurondb(dataframe): columns 'morphology', 'layer', 'mtype', 'etype', 'placement_hints'
+        region_layers_map: dict that contains the relationship between regions (referenced by
+            the annotation) and layers (referenced by the neurondb). The keys are region ids
+            and the values are tuples of layer ids.
+        percentile(float): percentile above which the morphologies are used, below which, their
+            probability is set to 0 (ie: not used)
 
     Returns:
         A dict where each key is a tuple of region ids and the value a distribution collection.
@@ -260,9 +283,14 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map):
     regions_dists = {}
     for layer_ids, region_ids in reverse_region_layers_map(region_layers_map).iteritems():
 
-        region_morphs = neurondb[np.in1d(neurondb.layer, layer_ids)]
+        mask = np.in1d(neurondb.layer, layer_ids)
+        region_morphs = neurondb[mask].copy()
 
         dists = get_placement_hints_table(region_morphs)
+
+        me_groups = region_morphs.groupby(['mtype', 'etype'])
+        for idx in me_groups.indices.values():
+            dists.iloc[idx] = clip_columns_to_percentile(dists.iloc[idx].copy(), percentile)
 
         regions_dists[tuple(region_ids)] = tt.normalize_distribution_collection(dists)
 
@@ -292,7 +320,8 @@ def assign_distributions_to_voxels(voxel_scores, bins):
     return region_dist_idxs
 
 
-def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, region_layers_map):
+def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, region_layers_map,
+                                                 percentile):
     '''take the raw data from a neuron db (list of dicts) and build a volumetric dataset
     that contains the distributions of possible morphologies.
 
@@ -301,11 +330,12 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
 
     Args:
         annotation_raw: voxel data from Allen Brain Institute to identify regions of space.
-        neurondb: list of dicts containing the information extracted from a neurondb v4 file.
-            only the 'layer' attribute is strictly needed
+        neurondb(dataframe): columns 'morphology', 'layer', 'mtype', 'etype', 'placement_hints'
         region_layers_map: dict that contains the relationship between regions (referenced by
             the annotation) and layers (referenced by the neurondb). The keys are region ids
             and the values are tuples of layer ids.
+        percentile(float): percentile above which the morphologies are used, below which, their
+            probability is set to 0 (ie: not used) range from (0.0, 1.0]
 
     Returns:
         A SpatialDistribution object where the properties of the traits_collection are those
@@ -318,8 +348,8 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
     distance_to_pia = distance_transform_edt(annotation_raw)
     distance_to_pia = distance_to_pia.flatten()
 
-    # TODO take only the top 8% for each mtype-etype combination
-    region_dists = get_region_distributions_from_placement_hints(neurondb, region_layers_map)
+    region_dists = get_region_distributions_from_placement_hints(neurondb, region_layers_map,
+                                                                 percentile)
 
     flat_field = np.ones(shape=np.product(annotation_raw.shape), dtype=np.int) * -1
 
@@ -342,7 +372,8 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
 
 
 def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
-                                             annotation_raw, hierarchy, region_name):
+                                             annotation_raw, hierarchy, region_name,
+                                             percentile):
     '''load the bbp recipe and return a spatial voxel-based distribution
 
     Returns:
@@ -354,4 +385,5 @@ def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
 
     return transform_neurondb_into_spatial_distribution(annotation_raw,
                                                         neurondb,
-                                                        region_layers_map)
+                                                        region_layers_map,
+                                                        percentile)
