@@ -14,7 +14,7 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 def test_map_regions_to_layers_unknown_area():
     region_layers_map = bbp.map_regions_to_layers({"id": 997, "name": "mybrain", "children": []},
-                                                   'Primary somatosensory area, barrel field')
+                                                  'Primary somatosensory area, barrel field')
 
     eq_(region_layers_map, {})
 
@@ -23,7 +23,7 @@ def test_map_regions_to_layers_complex():
     hierarchy = gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json'))
 
     region_layers_map = bbp.map_regions_to_layers(hierarchy,
-                                                   'Primary somatosensory area, barrel field')
+                                                  'Primary somatosensory area, barrel field')
 
     eq_(region_layers_map,
         {1062: (6,), 201: (2, 3), 1070: (5,), 1038: (6,), 981: (1,), 1047: (4,)})
@@ -34,7 +34,7 @@ def test_load_recipe_as_layer_distributions_complex():
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'))
 
     eq_(list(layer_dists.keys()),
-                 ['layer', 'mtype', 'etype', 'mClass', 'sClass', 'percentage'])
+        ['layer', 'mtype', 'etype', 'mClass', 'sClass', 'percentage'])
 
     eq_(len(layer_dists.values), 9)
 
@@ -136,12 +136,12 @@ def test_get_region_distributions_from_placement_hints_0():
     eq_(res.keys(), [(0,)])
 
     expected = pd.DataFrame({
-         0: [1., 2., 1., 1.],
-         1: [1., 2., 1., 1.],
-         2: [1., 2., 1., 2.],
-         3: [2., 1., 1., 2.],
-         4: [2., 1., 1., 1.],
-         5: [2., 1., 1., 1.],
+        0: [2., 1., 1., 1.],
+        1: [2., 1., 1., 1.],
+        2: [2., 1., 1., 2.],
+        3: [1., 2., 1., 2.],
+        4: [1., 2., 1., 1.],
+        5: [1., 2., 1., 1.],
     })
     expected /= expected.sum()
     assert_frame_equal(res[(0,)], expected)
@@ -167,12 +167,12 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
     assert_frame_equal(sd.traits, neurondb)
 
     expected = pd.DataFrame({
-         0: [1., 2., 1., 1.],
-         1: [1., 2., 1., 1.],
-         2: [1., 2., 1., 2.],
-         3: [2., 1., 1., 2.],
-         4: [2., 1., 1., 1.],
-         5: [2., 1., 1., 1.],
+        0: [2., 1., 1., 1.],
+        1: [2., 1., 1., 1.],
+        2: [2., 1., 1., 2.],
+        3: [1., 2., 1., 2.],
+        4: [1., 2., 1., 1.],
+        5: [1., 2., 1., 1.],
     })
     expected /= expected.sum()
     assert_frame_equal(sd.distributions, expected)
@@ -200,17 +200,64 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
     assert_frame_equal(sd.traits, neurondb)
 
     expected = pd.DataFrame({
-         0: [1., 2., 1., 1.],
-         1: [1., 2., 1., 1.],
-         2: [1., 2., 1., 2.],
-         3: [2., 1., 1., 2.],
-         4: [2., 1., 1., 1.],
-         5: [2., 1., 1., 1.],
+        0: [2., 1., 1., 1.],
+        1: [2., 1., 1., 1.],
+        2: [2., 1., 1., 2.],
+        3: [1., 2., 1., 2.],
+        4: [1., 2., 1., 1.],
+        5: [1., 2., 1., 1.],
     })
     expected /= expected.sum()
     assert_frame_equal(sd.distributions, expected)
 
     assert_equal(sd.field, np.array([-1, -1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]))
+
+
+def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order():
+    # bins are numbered from the bottom (further from pia) of the layer
+    # towards the top (closer to pia)
+    neurondb = pd.DataFrame([
+        {'name': 'a', 'layer': 1, 'placement_hints': (.25,  # bottom
+                                                      .5,  # middle
+                                                      .75)},  # top
+
+        {'name': 'b', 'layer': 1, 'placement_hints': (.75,  # bottom
+                                                      .5,  # middle
+                                                      .25)},  # top
+    ])
+
+    region_layers_map = {
+        1: (1,)
+    }
+
+    annotation = np.array([1] * 3 + [0])  # [bottom, middle, top, pia]
+
+    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map)
+
+    assert_frame_equal(sd.traits, neurondb)
+
+    a = neurondb[neurondb.name == 'a'].index[0]
+    eq_(sd.distributions[sd.field[0]][a], .25)  # bottom
+    eq_(sd.distributions[sd.field[1]][a],  .5)  # middle
+    eq_(sd.distributions[sd.field[2]][a], .75)  # top
+
+    b = neurondb[neurondb.name == 'b'].index[0]
+    eq_(sd.distributions[sd.field[0]][b], .75)  # bottom
+    eq_(sd.distributions[sd.field[1]][b],  .5)  # middle
+    eq_(sd.distributions[sd.field[2]][b], .25)  # top
+
+    assert_equal(sd.field, np.array([2,  # bottom
+                                     1,  # middle
+                                     0,  # top
+                                     -1]))  # pia
+
+    expected = pd.DataFrame({
+        #     a    b
+        2: [.25, .75],  # bottom
+        1: [.5,   .5],  # midle
+        0: [.75, .25],  # top
+    })
+    assert_frame_equal(sd.distributions, expected)
 
 
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undivisable():
@@ -233,12 +280,12 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
     assert_frame_equal(sd.traits, neurondb)
 
     expected = pd.DataFrame({
-         0: [1., 2., 1., 1.],
-         1: [1., 2., 1., 1.],
-         2: [1., 2., 1., 2.],
-         3: [2., 1., 1., 2.],
-         4: [2., 1., 1., 1.],
-         5: [2., 1., 1., 1.],
+        0: [2., 1., 1., 1.],
+        1: [2., 1., 1., 1.],
+        2: [2., 1., 1., 2.],
+        3: [1., 2., 1., 2.],
+        4: [1., 2., 1., 1.],
+        5: [1., 2., 1., 1.],
     })
     expected /= expected.sum()
     assert_frame_equal(sd.distributions, expected)
@@ -263,8 +310,8 @@ def test_get_region_distributions_from_placement_hints_multiple_regions():
     res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map)
 
     eq_(res.keys(), [(2,), (1,)])
-    assert_frame_equal(res[(1,)], pd.DataFrame({0: [1/3., 2/3.],
-                                                1: [2/3., 1/3.]}))
+    assert_frame_equal(res[(1,)], pd.DataFrame({0: [2/3., 1/3.],
+                                                1: [1/3., 2/3.]}))
 
     assert_frame_equal(res[(2,)], pd.DataFrame({0: [1/2., 1/2.],
                                                 1: [1/3., 2/3.],
@@ -291,14 +338,12 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
 
     assert_frame_equal(sd.traits, neurondb)
 
-    print sd.distributions
-
     assert_frame_equal(sd.distributions, pd.DataFrame({
         0: [0.,     0.,  1/2., 1/2.],
         1: [0.,     0.,  1/3., 2/3.],
         2: [0.,     0.,  1/2., 1/2.],
-        3: [1/3., 2/3.,    0.,   0.],
-        4: [2/3., 1/3.,    0.,   0.]
+        3: [2/3., 1/3.,    0.,   0.],
+        4: [1/3., 2/3.,    0.,   0.],
     }))
 
     assert_equal(sd.field, np.array([-1, -1, 3, 3, 4, 4, 0, 0, 1, 1, 2, 2]))
@@ -332,4 +377,3 @@ def test_assign_distributions_to_voxels_descending():
 def test_assign_distributions_to_voxels_unordered():
     assert_equal(bbp.assign_distributions_to_voxels(np.array([3, 1, 2, 0]), 2),
                  np.array([1, 0, 1, 0]))
-
