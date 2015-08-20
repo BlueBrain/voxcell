@@ -13,3 +13,4 @@ ci_dep.txt
 test-reports
 ContinuousIntegration
 .noseids
+viewer/data/
