@@ -192,6 +192,12 @@ def get_placement_hints_table(morphs):
     much. Here "space" is just a collection of voxels which can be grouped according to some
     metric (distance to exterior).
 
+    Note that this metric is applied to the voxel bins in reverse order because the placement
+    hints are sorted bottom to top which means biggest distance to smallest distance.
+
+    See BlueBuilder function:TinterfaceLayer::createMicrocircuitColumn
+    in Objects/interfaceLayer.cxx: 717
+
     Args:
         morphs: a collection of morphologies.
 
@@ -211,6 +217,9 @@ def get_placement_hints_table(morphs):
         # TODO find a nicer way to get a 2D array from an array of lists
         count = len(hints_group)
         scores = np.array(list(itertools.chain(*hints_group.values))).reshape((count, length))
+
+        # placement hints are organised bottom (high score) to top (low score)
+        scores = np.fliplr(scores)
 
         repetitions = [subdivision_count // length] * length
         extended = np.repeat(scores, repetitions, axis=1)
@@ -240,7 +249,7 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map):
     '''for every region, return the list of probability distributions for each potential
     morphology. The probabilites are taken from the placement hint scores.
     There is one distribution for each subdivision of the region and they are sorted
-    the same way as the placement hint scores are: from closest to pia to furthest to pia
+    the same way as the placement hint scores are: from furthest to pia to closest to pia
 
     Returns:
         A dict where each key is a tuple of region ids and the value a distribution collection.
@@ -260,7 +269,7 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map):
 
 def assign_distributions_to_voxels(voxel_scores, bins):
     '''group voxels by a their score, and assign a distribution to each group.
-    There will be as many groups as distributions. The distribution are assigned in order
+    There will be as many groups as distributions. The distributions are assigned in order
     to the groups from the lowest scores to the higher scores
 
     Returns:
@@ -284,6 +293,9 @@ def assign_distributions_to_voxels(voxel_scores, bins):
 def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, region_layers_map):
     '''take the raw data from a neuron db (list of dicts) and build a volumetric dataset
     that contains the distributions of possible morphologies.
+
+    In the context of layers, the bins for the placement hint are numbered from the bottom of
+    the layer (further from pia) towards the top (closer to pia)
 
     Args:
         annotation_raw: voxel data from Allen Brain Institute to identify regions of space.
