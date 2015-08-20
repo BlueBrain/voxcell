@@ -138,6 +138,8 @@ def load_neurondb_v4(neurondb_filename):
     def read_records(lines):
         '''parse each record in a neurondb file'''
         for line in lines:
+            if not line.strip():
+                continue
             fields = line.split()
             morphology, layer, mtype, etype, _ = fields[:5]
             placement_hints = list(float(h) for h in fields[5:])
