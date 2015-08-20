@@ -32,12 +32,14 @@ def _create_MVD2Neuron(morph_types, electro_types, name=None, # pylint: disable=
                        x=0.0, y=0.0, z=0.0, rotation=0.0, layer=None,
                        metype=None, database=None, hyperColumn=None, miniColumn=None):
     '''Simplify creation fo MVD2Neuron line
+
+    Note: Layer is stored as stored 0 based
     '''
     database = database or 0
     hyperColumn = hyperColumn or 0
     miniColumn = miniColumn or 0
     #guess based on morphology
-    layer = layer or int(morphology[1])
+    layer = int(morphology[1]) - 1 if layer is None else layer
     metype = metype or '%s_%s_%s' % (electrophysiology, morphology, name)
 
     return MVD2Neuron(name=name, database=database, hyperColumn=hyperColumn, miniColumn=miniColumn,
