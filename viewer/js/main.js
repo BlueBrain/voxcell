@@ -83,8 +83,10 @@ function render() {
 
 
 function loadUrl(url) {
-  function addToScene(object) {
-    root.add(object);
+  function addToScene(o) {
+    root.add(o.object);
+    controls.target.copy(o.center);
+    controls.update();
     render();
   }
 
@@ -193,6 +195,8 @@ function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
       mhd['ElementSpacing'][2] * scaleFactor
     );
 
+    averagePoint = new THREE.Vector3(0, 0, 0);
+
     var i = 0;
     for (var z = 0; z < dimsizeZ; z++) {
       for (var y = 0; y < dimsizeY; y++) {
@@ -203,15 +207,15 @@ function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
             var value = getValue(x, y, z);
             if (value > filterMin) {
 
-              geometry.vertices.push(
-                new THREE.Vector3(x, y, z).multiply(scale)
-              );
+              p = new THREE.Vector3(x, y, z).multiply(scale);
+              geometry.vertices.push(p);
 
               var intensity = (value - minValue) / (maxValue - minValue);
               geometry.colors.push(
                 new THREE.Color(intensity, 0, 1 - intensity)
               );
 
+              averagePoint.add(p);
               count++;
             }
           }
@@ -226,7 +230,11 @@ function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
       size: 20 * (scale.x + scale.y + scale.z) / 3,
       vertexColors: THREE.VertexColors
     });
-    return new THREE.PointCloud(geometry, cloudMaterial);
+
+    return {
+      object: new THREE.PointCloud(geometry, cloudMaterial),
+      center: averagePoint.divideScalar(count)
+    };
   };
 }
 
