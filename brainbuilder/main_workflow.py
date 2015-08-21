@@ -18,7 +18,9 @@ from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
 from brainbuilder.assignment_orientation import randomise_orientations
+from brainbuilder.export_viewer import export_viewer
 from brainbuilder.export_mvd2 import export_mvd2
+
 
 import logging
 L = logging.getLogger(__name__)
@@ -53,11 +55,7 @@ def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0
     recipe_filename = os.path.join(data_dir, 'bbp_recipe/builderRecipeAllPathways.xml')
     neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
 
-    #total_cell_count = 4000000
-    #rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
-    #region_acronym = 'SSp-ll'
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
-    #inhibitory_fraction = 0.10
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
 
@@ -85,10 +83,16 @@ def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0
 
     chosen_synapse_class = assign_synapse_class_from_spatial_dist(positions, sclass_sdist,
                                                                   voxel_dimensions)
-
     chosen_me = assign_metype(positions, chosen_synapse_class, recipe_sdist, voxel_dimensions)
 
     chosen_morphology = assign_morphology(positions, chosen_me, neuron_sdist, voxel_dimensions)
+
+    acronym = gb.find_in_hierarchy(hierarchy, 'name', region_name)[0]['acronym']
+    export_viewer(joinp(data_dir, 'intermediates_%s_%d' % (acronym, total_cell_count)),
+                  voxel_dimensions,
+                  positions,
+                  orientation_field,
+                  chosen_synapse_class, chosen_me, chosen_morphology)
 
     # export data to file formats from the BBP pipeline:
     circuit = export_mvd2(output, 'mpath', positions, orientations,
