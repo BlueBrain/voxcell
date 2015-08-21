@@ -93,6 +93,9 @@ function loadUrl(url) {
   if (url.endsWith(".mhd")) {
     loadMetaIO(url).then(addToScene)
   }
+  else if (url.endsWith(".pts")) {
+    getFile(url, 'arraybuffer').then(buildPointCloud).then(addToScene);
+  }
   else {
     console.warn('unknown extension: '+ url);
   }
@@ -235,6 +238,42 @@ function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
       object: new THREE.PointCloud(geometry, cloudMaterial),
       center: averagePoint.divideScalar(count)
     };
+  };
+}
+
+
+function buildPointCloud(data) {
+  var data = new Float32Array(data);
+  var rowLength = 2 * 3;  // point and color (3 components each)
+  var count = data.length / rowLength;
+  var geometry = new THREE.Geometry();
+  var averagePoint = new THREE.Vector3(0, 0, 0);
+
+  for (var i = 0; i < count; ++i) {
+    var offset = i * rowLength;
+    var x = data[offset];
+    var y = data[offset + 1];
+    var z = data[offset + 2];
+
+    offset = i * rowLength + 3;
+    var r = data[offset];
+    var g = data[offset + 1];
+    var b = data[offset + 2];
+
+    var p = new THREE.Vector3(x, y, z);
+    averagePoint.add(p);
+
+    geometry.vertices.push(p);
+    geometry.colors.push(new THREE.Color(r, g, b))
+  }
+
+  console.log('loaded: ' + count + ' points');
+
+  cloudMaterial = new THREE.PointCloudMaterial( { size: 20, vertexColors: THREE.VertexColors } );
+
+  return {
+    object: new THREE.PointCloud(geometry, cloudMaterial),
+    center: averagePoint.divideScalar(count)
   };
 }
 
