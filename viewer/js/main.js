@@ -96,6 +96,9 @@ function loadUrl(url) {
   else if (url.endsWith(".pts")) {
     getFile(url, 'arraybuffer').then(buildPointCloud).then(addToScene);
   }
+  else if (url.endsWith(".vcf")) {
+    getFile(url, 'arraybuffer').then(buildVectorField).then(addToScene);
+  }
   else {
     console.warn('unknown extension: '+ url);
   }
@@ -273,6 +276,63 @@ function buildPointCloud(data) {
 
   return {
     object: new THREE.PointCloud(geometry, cloudMaterial),
+    center: averagePoint.divideScalar(count)
+  };
+}
+
+
+function buildVectorField(data) {
+  var data = new Float32Array(data);
+  var rowLength = 4 * 3;  // p0, color0, p1, color1 (3 components each)
+  var count = data.length / rowLength;
+  var geometry = new THREE.Geometry();
+  var averagePoint = new THREE.Vector3(0, 0, 0);
+  var scale = 0.05;
+  var lineLength = 25;
+
+  for (var i = 0; i < count; ++i) {
+
+    var offset = i * rowLength;
+    var x0 = data[offset] * scale;
+    var y0 = data[offset + 1] * scale;
+    var z0 = data[offset + 2] * scale;
+
+    var p0 = new THREE.Vector3(x0, y0, z0);
+    averagePoint.add(p0);
+    geometry.vertices.push(p0);
+
+    offset = i * rowLength + 3;
+    var r0 = data[offset];
+    var g0 = data[offset + 1];
+    var b0 = data[offset + 2];
+
+    geometry.colors.push(new THREE.Color(r0, g0, b0));
+
+    offset = i * rowLength + 6;
+    var x1 = x0 + data[offset] * lineLength;
+    var y1 = y0 + data[offset + 1] * lineLength;
+    var z1 = z0 + data[offset + 2] * lineLength;
+
+    geometry.vertices.push(new THREE.Vector3(x1, y1, z1));
+
+    offset = i * rowLength + 9;
+    var r1 = data[offset];
+    var g1 = data[offset + 1];
+    var b1 = data[offset + 2];
+
+    geometry.colors.push(new THREE.Color(r1, g1, b1));
+  }
+
+  console.log('loaded: ' + count + ' lines');
+
+  var material = new THREE.LineBasicMaterial( {
+    linewidth: 2,
+    color: 0xffffff,
+    vertexColors: THREE.VertexColors
+  } );
+
+  return {
+    object: new THREE.Line(geometry, material, THREE.LinePieces),
     center: averagePoint.divideScalar(count)
   };
 }
