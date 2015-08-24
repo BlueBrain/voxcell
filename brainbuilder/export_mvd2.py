@@ -1,5 +1,6 @@
 '''export results to MVD2 file
 '''
+import bisect
 import logging
 import os
 
@@ -26,6 +27,26 @@ MorphType = namedtuple('MorphType', 'MName type sclass')
 MVD2Neuron = namedtuple('MVD2Neuron', 'name database hyperColumn miniColumn layer '
                         'morphology electrophysiology x y z rotation metype')
 
+# From
+# /gpfs/bbp.cscs.ch/project/proj1/entities/bionames/
+# SomatosensoryCxS1-v5.r0/builderRecipeAllPathways.xml
+LAYER_THICKNESS = [700.37845971,  # 6
+                   525.05585701,  # 5
+                   189.57183895,  # 4
+                   352.92508322,  # 3
+                   148.87602025,  # 2
+                   164.94915873,  # 1
+                   ]
+LAYER_BOUNDARIES = [sum(LAYER_THICKNESS[:i + 1])
+                    for i in range(len(LAYER_THICKNESS) - 1)]
+
+
+def _position_to_layer(y):
+    '''find the layer, based on the y coordinate
+       returns a layer from 1 - 6
+    '''
+    return 6 - bisect.bisect(LAYER_BOUNDARIES, int(y))
+
 
 def _create_MVD2Neuron(morph_types, electro_types, name=None, # pylint: disable=R0913
                        morphology=None, electrophysiology=None,
@@ -39,7 +60,7 @@ def _create_MVD2Neuron(morph_types, electro_types, name=None, # pylint: disable=
     hyperColumn = hyperColumn or 0
     miniColumn = miniColumn or 0
     #guess based on morphology
-    layer = int(morphology[1]) - 1 if layer is None else layer
+    layer = _position_to_layer(y) - 1 if layer is None else layer
     metype = metype or '%s_%s_%s' % (electrophysiology, morphology, name)
 
     return MVD2Neuron(name=name, database=database, hyperColumn=hyperColumn, miniColumn=miniColumn,
