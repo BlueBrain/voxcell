@@ -45,7 +45,7 @@ def _position_to_layer(y):
     '''find the layer, based on the y coordinate
        returns a layer from 1 - 6
     '''
-    return 6 - bisect.bisect(LAYER_BOUNDARIES, int(y))
+    return 6 - bisect.bisect(LAYER_BOUNDARIES, y)
 
 
 def _create_MVD2Neuron(morph_types, electro_types, name=None, # pylint: disable=R0913
