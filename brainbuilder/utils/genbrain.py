@@ -3,6 +3,8 @@
 import itertools
 import json
 import logging
+import os
+
 from collections import OrderedDict
 from os.path import join as joinp
 
@@ -19,12 +21,13 @@ class MetaIO(object):
         self.raw = raw
 
     @classmethod
-    def load(cls, mhd_path, raw_path):
+    def load(cls, mhd_path, raw_path=None):
         '''create a MetaIO object
 
         Args:
             mhd_path(string): path to mhd file
-            raw_path(string): path to raw file
+            raw_path(string): path to raw file, if None, .mhd file is read
+                and ElementDataFile is used instead
 
         Return:
             MetaIO object
@@ -121,23 +124,29 @@ def load_raw(element_type, shape, data_path):
     return data
 
 
-def load_meta_io(mhd_path, data_path):
+def load_meta_io(mhd_path, data_path=None):
     '''load a meta io image
 
     Args:
         mhd_path(str): path to .mdh file describing data
         data_path(str): path to data file described by .mhd file (usually .raw)
+            if None, .mhd file is read and ElementDataFile is used instead
 
     Return:
         tuple of the meta information, and numpy array of correct type
     '''
-    if not mhd_path.endswith('mhd'):
-        L.warning('mhd_path does not end in mhd')
-
-    if not data_path.endswith('raw'):
-        L.warning('data_path does not end in raw')
+    if not mhd_path.endswith('.mhd'):
+        L.warning('mhd_path does not end in .mhd')
 
     mhd = read_mhd(mhd_path)
+
+    if data_path is None:
+        dirname = os.path.dirname(mhd_path)
+        data_path = joinp(dirname, mhd['ElementDataFile'])
+
+    if not data_path.endswith('.raw'):
+        L.warning('data_path does not end in .raw')
+
     raw = load_raw(mhd['ElementType'], mhd['DimSize'], data_path)
     return mhd, raw
 

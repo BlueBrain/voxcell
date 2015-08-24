@@ -1,6 +1,5 @@
 '''main circuit building workflow'''
 import argparse
-import os
 import sys
 
 import numpy as np
@@ -26,9 +25,20 @@ import logging
 L = logging.getLogger(__name__)
 
 
-def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0914
-    '''
-    Most of the workflow steps here replace BlueBuilder.
+# pylint: disable=R0914
+def main(annotations_path, hierarchy_path, atlas_volume_path,
+         recipe_filename, neurondb_filename,
+         region_name, total_cell_count, output_path):
+    '''Workflow steps replacing BlueBuilder.
+
+    Args:
+        annotations_path(str path): path to .mhd file containing annotations
+        hierarchy_path(str path): path to .json file containing hierarchy mapping
+            related to the annotations_path
+        atlas_volume_path(str path): path to .mhd file containing atlas volume density
+        region_name(str): region of the brain to build, looked up in hierarchy
+        total_cell_count(int): number of cells to place
+        output_path(str path): directory where output files will go
 
     The logic is organised around voxel data.
     The idea being that voxel data allows me to isolate region-specific logic from the general
@@ -39,28 +49,19 @@ def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0
     The variables imply a data dependency: note that many of the steps could be sorted differently.
     '''
 
-    L.debug('Creating brain, data_dir: "%s", region: "%s", cell count: %d',
-            data_dir, region_name, total_cell_count)
-    # workflow arguments (need to be provided by the user)
+    L.debug('Creating brain region: "%s", cell count: %d', region_name, total_cell_count)
 
-    annotation = gb.MetaIO.load(joinp(data_dir, 'P56_Mouse_annotation/annotation.mhd'),
-                                joinp(data_dir, 'P56_Mouse_annotation/annotation.raw'))
+    annotation = gb.MetaIO.load(annotations_path)
 
-    hierarchy = gb.load_hierarchy(
-        os.path.join(data_dir, 'P56_Mouse_annotation/annotation_hierarchy.json'))['msg'][0]
+    hierarchy = gb.load_hierarchy(hierarchy_path)['msg'][0]
 
-    full_density = gb.MetaIO.load(joinp(data_dir, 'atlasVolume/atlasVolume.mhd'),
-                                  joinp(data_dir, 'atlasVolume/atlasVolume.raw'))
-
-    recipe_filename = os.path.join(data_dir, 'bbp_recipe/builderRecipeAllPathways.xml')
-    neurondb_filename = os.path.join(data_dir, 'prod_NeuronDB_19726.dat')
+    full_density = gb.MetaIO.load(atlas_volume_path)
 
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
     voxel_dimensions = full_density.mhd['ElementSpacing']
 
     # transform BBP recipies into voxel data:
-
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
                                                            annotation.raw, hierarchy, region_name)
 
@@ -71,7 +72,6 @@ def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0
                                                                 percentile=0.92)
 
     # main circuit building workflow:
-
     density_raw = select_region(annotation.raw, full_density.raw, hierarchy, region_name)
 
     orientation_field = compute_sscx_orientation_fields(annotation, hierarchy, region_name)
@@ -89,23 +89,21 @@ def main(data_dir, region_name, total_cell_count, output):  # pylint: disable=R0
     chosen_morphology = assign_morphology(positions, chosen_me, neuron_sdist, voxel_dimensions)
 
     acronym = gb.find_in_hierarchy(hierarchy, 'name', region_name)[0]['acronym']
-    export_viewer(joinp(data_dir, 'intermediates_%s_%d' % (acronym, total_cell_count)),
+    export_viewer(joinp(output_path, 'intermediates_%s_%d' % (acronym, total_cell_count)),
                   voxel_dimensions,
                   positions,
                   orientation_field,
                   chosen_synapse_class, chosen_me, chosen_morphology)
 
     # export data to file formats from the BBP pipeline:
-    circuit = export_mvd2(output, 'mpath', positions, orientations,
+    circuit = export_mvd2(output_path, 'mpath', positions, orientations,
                           chosen_synapse_class, chosen_me, chosen_morphology)
 
     return circuit
 
 
-def get_region_names(data_dir):
+def get_region_names(hierarchy):
     '''retuns the names of all the regions'''
-    hierarchy = gb.load_hierarchy(
-        joinp(data_dir, 'P56_Mouse_annotation/annotation_hierarchy.json'))['msg'][0]
     names = sorted(gb.get_in_hierarchy(hierarchy, 'name'))
     return names
 
@@ -114,16 +112,24 @@ def get_parser():
     '''return the argument parser'''
     parser = argparse.ArgumentParser(description='Create a brain')
 
-    parser.add_argument('-d', '--data', default='data', required=True,
-                        help='Base path to data directory')
-    parser.add_argument('-c', '--cellcount', default=400000, type=int,
-                        help='Number of cells to place')
-    parser.add_argument('-l', '--lsregion', default=False, action='store_true',
-                        help='List all know regions')
+    parser.add_argument('-a', '--annotations', required=True,
+                        help='path to annotations MHD')
+    parser.add_argument('-i', '--hierarchy', required=True,
+                        help='path to hierarchy json')
+    parser.add_argument('-d', '--density', required=True,
+                        help='path to density MHD')
+    parser.add_argument('-p', '--recipe', required=True,
+                        help='BBP Recipe .xml')
+    parser.add_argument('-n', '--neurondb', required=True,
+                        help='BBP Neuron DB')
     parser.add_argument('-r', '--region', default='Primary somatosensory area, lower limb',
                         help='Name of region to use')
+    parser.add_argument('-c', '--cellcount', type=int, required=True,
+                        help='Number of cells to place')
     parser.add_argument('-o', '--output', required=True,
                         help='Output directory for BBP file formats')
+    parser.add_argument('-l', '--lsregion', default=False, action='store_true',
+                        help='List all know regions')
     parser.add_argument('-v', '--verbose', action='count', dest='verbose',
                         default=0, help='-v for INFO, -vv for DEBUG')
     return parser
@@ -135,7 +141,9 @@ if __name__ == "__main__":
                                logging.INFO,
                                logging.DEBUG)[min(args.verbose, 2)])
     if args.lsregion:
-        print '\n'.join(get_region_names(args.data))
+        print '\n'.join(get_region_names(args.hierarchy))
         sys.exit(0)
 
-    main(args.data, args.region, args.cellcount, args.output)
+    main(args.annotations, args.hierarchy, args.density,
+         args.recipe, args.neurondb,
+         args.region, args.cellcount, args.output)

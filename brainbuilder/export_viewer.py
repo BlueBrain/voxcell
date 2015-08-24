@@ -16,7 +16,7 @@ def export_viewer(directory, voxel_dimensions,
 
     if not os.path.isdir(directory):
         try:
-            os.mkdir(directory)
+            os.makedirs(directory)
         except OSError:
             L.exception('Need a directory to put circuit')
 
