@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+<head>
+  <title></title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <style type="text/css">
+pre { line-height: 125%; }
+body .hll { background-color: #ffffcc }
+body  { background: #f0f0f0; }
+
+body .s { color: #4070a0 } /* Literal.String */
+body .nf { color: #06287e; font-weight: bold;} /* Name.Function */
+
+body .ref { color: rgb(208,  61, 245); font-style: italic;}
+body .choice { color: rgb( 200,  50, 50) font-style: italic;}
+
+body .orientation_field { color: #d55537 }
+body .orientations { color: rgb(245, 171,  61) }
+body .chosen_synapse_class { color: rgb(245,  61, 171) }
+body .chosen_me { color: rgb( 98, 245,  61)  }
+body .chosen_morphology { color: rgb( 61, 245, 135) }
+body .density_raw { color: rgb(245,  61,  61)  }
+body .positions { color: #062873 }
+div { padding: 9.5px; margin: 0 0 10px; border: 1px solid #ccc; border-radius: 4px; }
+  </style>
+
+  <script src="https://code.jquery.com/jquery-1.7.2.min.js"></script>
+  <script>
+     var classes = ['.ref', '.choice', '.orientation_field', '.orientations',
+                    '.chosen_synapse_class', '.chosen_me', '.chosen_morphology',
+                    '.density_raw', '.positions'];
+
+     $(document).ready(function(){
+      for (i = 0; i < classes.length; i++) { 
+         (function(i){   
+            var klass = classes[i];
+            $(klass).hover(
+               function() {
+                  $('span').not(klass).fadeTo(75, 0.25)
+               },
+               function() {
+                  $('span').fadeTo(75, 1);
+               });
+            })(i);
+         }
+      });
+  </script>
+
+</head>
+<body>
+
+<div>
+   <h3>Legend:</h3>
+   <ul>
+      <li class="ref">Reference</li>
+      <li class="choice">User Chosen</li>
+      <li class="nf">Function</li>
+</div>
+<div id="random" class="highlight">
+   <h3>Random Workflow</h3>
+<pre>
+
+<span class="n density_raw">density_raw</span> <span class="o">=</span> <span class="nf">select_region</span><span class="p">(</span><span class="n ref">annotation</span><span class="p">,</span> <span class="n ref">full_density</span><span class="p">,</span> <span class="n ref">hierarchy</span><span class="p">,</span> <span class="n choice">region_name</span><span class="p">)</span>
+
+<span class="n orientation_field">orientation_field</span> <span class="o">=</span> <span class="nf">compute_sscx_orientation_fields</span><span class="p">(</span><span class="n ref">annotation</span><span class="p">,</span> <span class="n ref">hierarchy</span><span class="p">,</span> <span class="n choice">region_name</span><span class="p">)</span>
+
+<span class="n positions">positions</span> <span class="o">=</span> <span class="nf">cell_positioning</span><span class="p">(</span><span class="n density_raw">density_raw</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">,</span> <span class="n choice">total_cell_count</span><span class="p">)</span>
+
+<span class="n orientations">orientations</span> <span class="o">=</span> <span class="nf">assign_orientations</span><span class="p">(</span><span class="n positions">positions</span><span class="p">,</span> <span class="n orientation_field">orientation_field</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">)</span>
+
+<span class="n chosen_synapse_class">chosen_synapse_class</span> <span class="o">=</span> <span class="nf">assign_synapse_class_randomly</span><span class="p">(</span><span class="n positions">positions</span><span class="p">,</span> <span class="n choice">inhibitory_fraction</span><span class="p">)</span>
+
+<span class="n chosen_me">chosen_me</span> <span class="o">=</span> <span class="nf">assign_metype_random</span><span class="p">(</span><span class="n positions">positions</span><span class="p">,</span> <span class="n">mtypes</span><span class="p">,</span> <span class="n">etypes</span><span class="p">)</span>
+
+<span class="n chosen_morphology">chosen_morphology</span> <span class="o">=</span> <span class="nf">assign_morphology_random</span><span class="p">(</span><span class="n positions">positions</span><span class="p">,</span> <span class="n chosen_me">chosen_me</span><span class="p">,</span> <span class="n">neuron_sdist</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">)</span>
+
+<span class="n">circuit</span> <span class="o">=</span> <span class="nf">export</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="n positions">positions</span><span class="p">,</span> <span class="n orientations">orientations</span><span class="p">,</span> <span class="n chosen_synapse_class">chosen_synapse_class</span><span class="p">,</span> <span class="n chosen_me">chosen_me</span><span class="p">,</span> <span class="n chosen_morphology">chosen_morphology</span><span class="p">)</span>
+</pre>
+</div>
+
+
+<div id="recipe" class="highlight">
+   <h3>Recipe Workflow</h3>
+<pre>
+<span class="density_raw">density_raw</span> <span class="o">=</span> <span class="nf">select_region</span><span class="p">(</span><span class="n ref">annotation</span><span class="p">,</span> <span class="n ref">full_density</span><span class="p">,</span> <span class="n ref">hierarchy</span><span class="p">,</span> <span class="n choice">region_name</span><span class="p">)</span>
+
+<span class="positions">positions</span> <span class="o">=</span> <span class="nf">cell_positioning</span><span class="p">(</span><span class="density_raw">density_raw</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">,</span> <span class="n choice">total_cell_count</span><span class="p">)</span>
+
+<span class="orientation_field">orientation_field</span> <span class="o">=</span> <span class="nf">compute_sscx_orientation_fields</span><span class="p">(</span><span class="n ref">annotation</span><span class="p">,</span> <span class="n ref">hierarchy</span><span class="p">,</span> <span class="n choice">region_name</span><span class="p">)</span>
+
+<span class="orientations">orientations</span> <span class="o">=</span> <span class="nf">assign_orientations</span><span class="p">(</span><span class="positions">positions</span><span class="p">,</span> <span class="orientation_field">orientation_field</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">)</span>
+
+<span class="chosen_synapse_class">chosen_synapse_class</span> <span class="o">=</span> <span class="nf">assign_synapse_class_from_spatial_dist</span><span class="p">(</span><span class="positions">positions</span><span class="p">,</span> <span class="n choice">sclass_sdist</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">)</span>
+
+<span class="chosen_me">chosen_me</span> <span class="o">=</span> <span class="nf">assign_metype</span><span class="p">(</span><span class="positions">positions</span><span class="p">,</span> <span class="chosen_synapse_class">chosen_synapse_class</span><span class="p">,</span> <span class="n choice">recipe_sdist</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">)</span>
+
+<span class="chosen_morphology">chosen_morphology</span> <span class="o">=</span> <span class="nf">assign_morphology</span><span class="p">(</span><span class="positions">positions</span><span class="p">,</span> <span class="chosen_me">chosen_me</span><span class="p">,</span> <span class="n choice">neuron_sdist</span><span class="p">,</span> <span class="n ref">voxel_dimensions</span><span class="p">)</span>
+
+<span class="n">circuit</span> <span class="o">=</span> <span class="nf">export</span><span class="p">(</span><span class="n choice">output_path</span><span class="p">,</span> <span class="positions">positions</span><span class="p">,</span> <span class="n orientations">orientations</span><span class="p">,</span> <span class="n chosen_synapse_class">chosen_synapse_class</span><span class="p">,</span> <span class="n chosen_me">chosen_me</span><span class="p">,</span> <span class="chosen_morphology">chosen_morphology</span><span class="p">)</span>
+</pre>
+</div>
+
+
+</body>
+</html>
