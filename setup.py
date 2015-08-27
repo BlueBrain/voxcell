@@ -24,7 +24,7 @@ setup(
     version=__version__,
     description='code to build brains',
     install_requires=REQS,
-    packages=['brainbuilder'],
+    packages=['brainbuilder', 'brainbuilder.utils'],
     include_package_data=True,
     scripts=[],
 )

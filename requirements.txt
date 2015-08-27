@@ -3,3 +3,4 @@ bbp-scipy-0.13.3-system-numeric-mod==0.13.3.0
 bbp-h5py-2.2.1-system-mod==2.2.1
 bbp-lxml-3.3.2-system-mod==3.3.2
 pandas==0.16.2
+argparse==1.2.1
