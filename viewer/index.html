@@ -14,6 +14,10 @@
 </head>
 
 <body>
+  <div id="info">MOVE mouse &amp; press LEFT/A: rotate, MIDDLE/S: zoom, RIGHT/D: pan</div>
+  <div id="container"></div>
+  <div id="menu"></div>
+
   <script src="/js/jquery.min.js"></script>
   <script src="/js/lodash-2.4.1.js"></script>
   <script src="/js/Detector.js"></script>
@@ -46,11 +50,7 @@
     }
   </script>
 
-  <script>$(function() { main(); })</script>
-
-  <div id="info">MOVE mouse &amp; press LEFT/A: rotate, MIDDLE/S: zoom, RIGHT/D: pan</div>
-  <div id="container"></div>
-  <div id="menu"></div>
+  <script>$(brainBuilderViewer.main)</script>
 
 </body>
 </html>
