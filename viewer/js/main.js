@@ -18,8 +18,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     window.onhashchange = function() {
       loadUrl(window.location.hash.slice(1));
     };
-
-    document.addEventListener('keydown', onKeyDown, false);
+    window.addEventListener("resize", onResize, false);
+    document.addEventListener("keydown", onKeyDown, false);
   };
 
   function initScene() {
@@ -377,5 +377,14 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       console.log('cloudMaterial size', cloudMaterial.size);
       render();
     }
+  }
+
+  function onResize(evt) {
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    renderer.setSize(width, height);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+    controls.handleResize();
   }
 }());
