@@ -1,4 +1,6 @@
 '''algorithm to assign me-types to a group of cells'''
+import itertools
+
 import numpy as np
 
 from brainbuilder.utils import traits as tt
@@ -7,8 +9,29 @@ import logging
 L = logging.getLogger(__name__)
 
 
+def assign_metype_random(positions, mtypes, etypes):
+    '''for every cell in positions, assign me-type to each cell randomly
+    Args:
+        positions: list of positions for soma centers (x, y, z).
+        mtypes: list of all mtypes
+        etypes: list of all etypes
+
+    Returns:
+        An array of tuples containing the mtype and etype values that correspond to each position.
+        For those positions whose me-type could not be determined, nan is used.
+
+    Note:
+        Can get the list of METypes from the recipe:
+        mtypes = list(set(recipe_sdist.traits['mtype'].values))
+        etypes = list(set(recipe_sdist.traits['etype'].values))
+    '''
+    metypes = np.array(list(itertools.product(mtypes, etypes)), dtype='object')
+    choices = np.random.randint(len(metypes), size=len(positions))
+    return metypes[choices]
+
+
 def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
-    '''for every cell in positions, assign me-type to each cell based on its  synapse class
+    '''for every cell in positions, assign me-type to each cell based on its synapse class
 
     Args:
         positions: list of positions for soma centers (x, y, z).
@@ -17,7 +40,7 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
         voxel_dimensions: tuple with the size of the voxels in microns in each axis, (x, y, z)
 
     Returns:
-        An array of tuples containing the mtype and etype values that correspond to each position.
+        An np.array of lists containing the mtype and etype values that correspond to each position.
         For those positions whose me-type could not be determined, nan is used.
     '''
     subsections = tt.split_distribution_collection(recipe_sdist, ('sClass',))
@@ -30,11 +53,13 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
                                                                   subdist,
                                                                   voxel_dimensions)
 
-    if np.count_nonzero(chosen_metype == -1):
+    invalid_metype_count = np.count_nonzero(chosen_metype == -1)
+    if invalid_metype_count:
         # this may happen because of inconsistencies of the data
         # for example if we assigned excitatory neurons to a neuron that is in
         # a voxel for which only inhibitory metype probabilities are known
-        L.warning('%d / %d cells could not get a valid metype assigned',
-                  np.count_nonzero(chosen_metype == -1), len(chosen_metype))
+        L.warning('%d / %d = %f cells could not get a valid metype assigned',
+                  invalid_metype_count, len(chosen_metype),
+                  float(invalid_metype_count) / len(chosen_metype))
 
     return recipe_sdist.traits[['mtype', 'etype']].ix[chosen_metype].as_matrix()
