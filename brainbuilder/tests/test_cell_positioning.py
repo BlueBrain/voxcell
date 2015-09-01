@@ -1,3 +1,4 @@
+import tempfile
 from nose.tools import eq_
 import numpy as np
 from brainbuilder.utils import genbrain as gb
@@ -154,3 +155,14 @@ def test_cell_positioning_full():
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
 
+
+def test_serialization():
+    cell_body_density_raw = np.ones((3, 3, 3))
+    voxel_dimensions = (25, 25, 25)
+    total_cell_count = 3 * 3 * 3
+
+    positions = cp.cell_positioning(cell_body_density_raw, voxel_dimensions, total_cell_count)
+    with tempfile.NamedTemporaryFile() as f:
+        cp.serialize_positions(f.name, positions)
+        new_positions = cp.deserialize_positions(f.name)
+        assert_equal(positions, new_positions)
