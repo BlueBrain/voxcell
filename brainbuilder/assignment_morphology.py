@@ -34,6 +34,7 @@ def assign_morphology(positions, chosen_me, spatial_dist, voxel_dimensions):
                                                                   subdist,
                                                                   voxel_dimensions)
 
+    #TODO: docstring says non represented ones are NaN, but here it's looking for -1?
     if np.count_nonzero(chosen_morphs == -1):
         # this may happen because of inconsistencies of the data
         # for example if we assigned the pyramidal mtype to a neuron that is in
@@ -42,3 +43,36 @@ def assign_morphology(positions, chosen_me, spatial_dist, voxel_dimensions):
                   np.count_nonzero(chosen_morphs == -1), len(chosen_morphs))
 
     return spatial_dist.traits['morphology'].ix[chosen_morphs].as_matrix()
+
+
+def serialize_assign_morphology(dst_file, assigned_morphologies):
+    '''Serialize assigned morphologies
+
+    Args:
+        dst_file(str): fullpath to filename to write
+        assigned_morphologies: list/np.array of strings which are morphology names
+    '''
+    with open(dst_file, 'w') as fd:
+        for morphology in assigned_morphologies:
+            fd.write('%s\n' % morphology)
+
+
+def deserialize_assign_morphology(src_file):
+    '''De-serialize assigned morphologies
+
+    Args:
+        src_file(str): fullpath to filename to write
+
+    Returns:
+        morphologies np.array of strings
+    '''
+    morphologies = []
+    with open(src_file, 'r') as fd:
+        for line in fd.readlines():
+            line = line.strip()
+            if line == 'nan':
+                morphologies.append(np.nan)
+            else:
+                morphologies.append(line)
+
+    return np.array(morphologies)
