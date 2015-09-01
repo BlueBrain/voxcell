@@ -1,14 +1,13 @@
 var renderer, scene, camera, stats, controls, root;
 var cloudMaterial;
 
-
 function main() {
-  if(!Detector.webgl) {
+  if (!Detector.webgl) {
     Detector.addGetWebGLMessage();
   }
   initScene();
 
-  if(window.location.hash) {
+  if (window.location.hash) {
     loadUrl(window.location.hash.slice(1));
   }
 
@@ -16,19 +15,18 @@ function main() {
     loadUrl(window.location.hash.slice(1));
   }
 
-  document.addEventListener("keydown", onKeyDown, false);
+  document.addEventListener('keydown', onKeyDown, false);
 }
 
-
 function initScene() {
-  container = document.getElementById( 'container' );
+  container = document.getElementById('container');
   scene = new THREE.Scene();
 
   var near = 0.1;
   var far = 50000;
   scene.fog = new THREE.Fog(0x000000, near, far);
 
-  camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, near, far );
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, near, far);
   camera.position.z = 150;
 
   controls = new THREE.TrackballControls(camera);
@@ -39,7 +37,7 @@ function initScene() {
   controls.noPan = false;
   controls.staticMoving = true;
   controls.dynamicDampingFactor = 0.3;
-  controls.keys = [ 65, 83, 68 ];
+  controls.keys = [65, 83, 68];
   controls.addEventListener('change', render);
 
   var axisHelper = new THREE.AxisHelper(5);
@@ -50,17 +48,16 @@ function initScene() {
 
   renderer = new THREE.WebGLRenderer({antialias: false});
   renderer.setClearColor(scene.fog.color, 1);
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize(window.innerWidth, window.innerHeight);
 
-  container.appendChild( renderer.domElement );
+  container.appendChild(renderer.domElement);
 
   stats = new Stats();
   stats.domElement.style.position = 'absolute';
   stats.domElement.style.top = '0px';
-  container.appendChild( stats.domElement );
+  container.appendChild(stats.domElement);
   animate();
 }
-
 
 function clearRoot() {
   while (root.children.length > 0) {
@@ -69,18 +66,15 @@ function clearRoot() {
   }
 }
 
-
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
 }
 
-
 function render() {
   renderer.render(scene, camera);
   stats.update();
 }
-
 
 function loadUrl(url) {
   function addToScene(o) {
@@ -90,20 +84,16 @@ function loadUrl(url) {
     render();
   }
 
-  if (url.endsWith(".mhd")) {
+  if (url.endsWith('.mhd')) {
     loadMetaIO(url).then(addToScene)
-  }
-  else if (url.endsWith(".pts")) {
+  } else if (url.endsWith('.pts')) {
     getFile(url, 'arraybuffer').then(buildPointCloud).then(addToScene);
-  }
-  else if (url.endsWith(".vcf")) {
+  } else if (url.endsWith('.vcf')) {
     getFile(url, 'arraybuffer').then(buildVectorField).then(addToScene);
-  }
-  else {
-    console.warn('unknown extension: '+ url);
+  } else {
+    console.warn('unknown extension: ' + url);
   }
 }
-
 
 function getFile(url, responseType) {
   console.log('loading: ' + url);
@@ -121,8 +111,7 @@ function getFile(url, responseType) {
       if (req.status == 200) {
         // Resolve the promise with the response text
         resolve(req.response);
-      }
-      else {
+      } else {
         // Otherwise reject with the status text
         // which will hopefully be a meaningful error
         reject(Error(req.statusText));
@@ -131,7 +120,7 @@ function getFile(url, responseType) {
 
     // Handle network errors
     req.onerror = function() {
-      reject(Error("Network Error"));
+      reject(Error('Network Error'));
     };
 
     // Make the request
@@ -139,15 +128,14 @@ function getFile(url, responseType) {
   });
 }
 
-
 function loadMetaIO(urlMhd) {
   return getFile(urlMhd, 'text').then(function(data) {
-    var lines = data.split('\n').map(function (line) {
+    var lines = data.split('\n').map(function(line) {
       return line.split('=').map(String.trim);
     });
 
     var mhd = {};
-    lines.forEach(function (pair) {
+    lines.forEach(function(pair) {
 
       var NUMERICAL_KEYS = [
         'CenterOfRotation', 'DimSize', 'NDims', 'ElementSpacing',
@@ -156,22 +144,20 @@ function loadMetaIO(urlMhd) {
 
       if (NUMERICAL_KEYS.indexOf(pair[0]) >= 0) {
         mhd[pair[0]] = pair[1].split(' ').map(Number);
-      }
-      else {
+      } else {
         mhd[pair[0]] = pair[1];
       }
     });
 
-    var urlRaw = (urlMhd.substring(0, urlMhd.lastIndexOf("/") + 1) +
+    var urlRaw = (urlMhd.substring(0, urlMhd.lastIndexOf('/') + 1) +
     mhd['ElementDataFile']);
 
     return getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, 1000, 0.01, 0))
   });
 }
 
-
 function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
-  return function (data) {
+  return function(data) {
     var METAIO_TYPE_MAP = {
       'MET_UCHAR': Uint8Array,
       'MET_UINT': Uint32Array,
@@ -189,7 +175,7 @@ function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
     var minValue = Math.max(filterMin, _.min(data));
     var count = 0;
 
-    var getValue = function (x, y, z){
+    var getValue = function(x, y, z) {
       // Fortran order
       var val = data[z * (dimsizeX * dimsizeY) + y * dimsizeX + x];
       return val;
@@ -244,7 +230,6 @@ function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
   };
 }
 
-
 function buildPointCloud(data) {
   var data = new Float32Array(data);
   var rowLength = 2 * 3;  // point and color (3 components each)
@@ -272,14 +257,13 @@ function buildPointCloud(data) {
 
   console.log('loaded: ' + count + ' points');
 
-  cloudMaterial = new THREE.PointCloudMaterial( { size: 20, vertexColors: THREE.VertexColors } );
+  cloudMaterial = new THREE.PointCloudMaterial({size: 20, vertexColors: THREE.VertexColors});
 
   return {
     object: new THREE.PointCloud(geometry, cloudMaterial),
     center: averagePoint.divideScalar(count)
   };
 }
-
 
 function buildVectorField(data) {
   var data = new Float32Array(data);
@@ -325,18 +309,17 @@ function buildVectorField(data) {
 
   console.log('loaded: ' + count + ' lines');
 
-  var material = new THREE.LineBasicMaterial( {
+  var material = new THREE.LineBasicMaterial({
     linewidth: 2,
     color: 0xffffff,
     vertexColors: THREE.VertexColors
-  } );
+  });
 
   return {
     object: new THREE.Line(geometry, material, THREE.LinePieces),
     center: averagePoint.divideScalar(count)
   };
 }
-
 
 function buildWireFrameCuboid(x, y, z) {
   var cuboid = new THREE.Object3D();
@@ -347,17 +330,17 @@ function buildWireFrameCuboid(x, y, z) {
   });
 
   var geometry = new THREE.Geometry();
-  geometry.vertices.push(new THREE.Vector3( dims.x,  dims.y,  dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x,  dims.y,  dims.z));
   geometry.vertices.push(new THREE.Vector3(-dims.x,  dims.y,  dims.z));
   geometry.vertices.push(new THREE.Vector3(-dims.x, -dims.y,  dims.z));
-  geometry.vertices.push(new THREE.Vector3( dims.x, -dims.y,  dims.z));
-  geometry.vertices.push(new THREE.Vector3( dims.x,  dims.y,  dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x, -dims.y,  dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x,  dims.y,  dims.z));
 
-  geometry.vertices.push(new THREE.Vector3( dims.x,  dims.y, -dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x,  dims.y, -dims.z));
   geometry.vertices.push(new THREE.Vector3(-dims.x,  dims.y, -dims.z));
   geometry.vertices.push(new THREE.Vector3(-dims.x, -dims.y, -dims.z));
-  geometry.vertices.push(new THREE.Vector3( dims.x, -dims.y, -dims.z));
-  geometry.vertices.push(new THREE.Vector3( dims.x,  dims.y, -dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x, -dims.y, -dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x,  dims.y, -dims.z));
   var line = new THREE.Line(geometry, material);
   cuboid.add(line);
 
@@ -366,13 +349,14 @@ function buildWireFrameCuboid(x, y, z) {
   geometry.vertices.push(new THREE.Vector3(-dims.x,  dims.y, -dims.z));
   geometry.vertices.push(new THREE.Vector3(-dims.x, -dims.y,  dims.z));
   geometry.vertices.push(new THREE.Vector3(-dims.x, -dims.y, -dims.z));
-  geometry.vertices.push(new THREE.Vector3( dims.x, -dims.y,  dims.z));
-  geometry.vertices.push(new THREE.Vector3( dims.x, -dims.y, -dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x, -dims.y,  dims.z));
+  geometry.vertices.push(new THREE.Vector3(dims.x, -dims.y, -dims.z));
+
   var line = new THREE.Line(geometry, material, THREE.LinePieces);
   cuboid.add(line);
+
   return cuboid;
 }
-
 
 function onKeyDown(evt) {
   // Increase/decrease point size
@@ -381,6 +365,7 @@ function onKeyDown(evt) {
     console.log('cloudMaterial size', cloudMaterial.size);
     render();
   }
+
   if (evt.keyCode == 57 || evt.keyCode == 107) {
     cloudMaterial.size *= 1.1;
     console.log('cloudMaterial size', cloudMaterial.size);
