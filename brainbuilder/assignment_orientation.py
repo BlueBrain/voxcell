@@ -1,6 +1,11 @@
 '''algorithm to assign orientations to a group of cells'''
 from brainbuilder.utils import genbrain as gb
+
+import h5py
 import numpy as np
+
+
+VECTOR_NAMES = ('right', 'up', 'fwd', )
 
 
 def assign_orientations(positions, orientation_fields, voxel_dimensions):
@@ -19,7 +24,7 @@ def assign_orientations(positions, orientation_fields, voxel_dimensions):
     idx = tuple(voxel_idx.transpose())
 
     vectors = []
-    for name in ('right', 'up', 'fwd'):
+    for name in VECTOR_NAMES:
         field = orientation_fields[name]
         vectors.append(np.array([d[idx] for d in field]).transpose())
 
@@ -43,3 +48,32 @@ def randomise_orientations(orientations, ranges):
     '''
     # TODO do
     return orientations
+
+
+def serialize_assigned_orientations(dst_file, assigned_orientations):
+    '''Serialize assigned orientations
+
+    Args:
+        dst_file(str): fullpath to filename to write
+        assigned_orientations: list of orientations (3 vectors: right, up, fwd)
+    '''
+    with h5py.File(dst_file, 'w') as h5:
+        for name, orientations in zip(VECTOR_NAMES, assigned_orientations):
+            h5.create_dataset(name, data=orientations)
+
+
+def deserialize_assigned_orientations(src_file):
+    '''De-serialize assigned orientations
+
+    Args:
+        src_file(str): fullpath to filename to write
+
+    Returns:
+        orientations: list of orientations (3 vectors: right, up, fwd)
+    '''
+    vectors = []
+    with h5py.File(src_file, 'r') as h5:
+        for name in VECTOR_NAMES:
+            vectors.append(np.array(h5[name]))
+
+    return vectors
