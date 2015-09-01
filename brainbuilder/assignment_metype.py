@@ -63,3 +63,32 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
                   float(invalid_metype_count) / len(chosen_metype))
 
     return recipe_sdist.traits[['mtype', 'etype']].ix[chosen_metype].as_matrix()
+
+
+def serialize_assign_metype(dst_file, assigned_metypes):
+    '''Serialize assigned me types
+
+    Args:
+        dst_file(str): fullpath to filename to write
+        assigned_metype: list of 2 element tuples (or lists)
+    '''
+    with open(dst_file, 'w') as fd:
+        for metype in assigned_metypes:
+            fd.write('%s %s\n' % tuple(metype))
+
+
+def deserialze_assign_metype(src_file):
+    '''De-serialize assigned me types
+
+    Args:
+        src_file(str): fullpath to filename to write
+
+    Returns:
+        metypes np.array of tuples
+    '''
+    metypes = []
+    with open(src_file, 'r') as fd:
+        for line in fd.readlines():
+            metypes.append(line.strip().split())
+
+    return np.array(metypes)
