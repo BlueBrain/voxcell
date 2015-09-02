@@ -4,12 +4,23 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 (function() {
   var renderer, scene, camera, stats, controls, root;
   var cloudMaterial;
+  // map of all objects loaded in the scene.
+  var loadedObjects = {};
+
+  // contains all datguiSettings
+  // _datgui property contains the datgui container for that level
+  // since the children folder cannot be retrieved from the root object with datgui API.
+  var datguiSettings = {};
 
   brainBuilderViewer.main = function() {
     if (!Detector.webgl) {
       Detector.addGetWebGLMessage();
     }
+
     initScene();
+    datguiSettings._datgui = new dat.GUI();
+    datguiSettings.opacity = {};
+    datguiSettings.opacity._datgui = datguiSettings._datgui.addFolder('opacity');
 
     if (window.location.hash) {
       loadUrl(window.location.hash.slice(1));
@@ -18,8 +29,9 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     window.onhashchange = function() {
       loadUrl(window.location.hash.slice(1));
     };
-    window.addEventListener("resize", onResize, false);
-    document.addEventListener("keydown", onKeyDown, false);
+    window.addEventListener('resize', onResize, false);
+    document.addEventListener('keydown', onKeyDown, false);
+
   };
 
   function initScene() {
@@ -83,21 +95,53 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
   }
 
   function loadUrl(url) {
-    function addToScene(o) {
-      root.add(o.object);
-      controls.target.copy(o.center);
-      controls.update();
-      render();
+
+    function addToScene(url, o) {
+
+      function addOpacitySetting(url){
+        if (datguiSettings.opacity[url]){
+          return;
+        }
+
+        datguiSettings.opacity[url] = true;
+        var c = datguiSettings.opacity._datgui.add(datguiSettings.opacity, url);
+        c.onFinishChange(function(value) {
+          setShow(url, value);});
+      }
+
+      function addObjectToScene(url, o){
+        if (loadedObjects[url]){
+          root.remove(loadedObjects[url].object);
+        }
+        root.add(o.object);
+        controls.target.copy(o.center);
+        controls.update();
+        render();
+        loadedObjects[url] = o;
+      }
+
+      addOpacitySetting(url);
+      addObjectToScene(url, o);
+
     }
 
     if (url.endsWith('.mhd')) {
-      loadMetaIO(url).then(addToScene);
+      loadMetaIO(url).then(addToScene.bind(null, url));
     } else if (url.endsWith('.pts')) {
-      getFile(url, 'arraybuffer').then(buildPointCloud).then(addToScene);
+      getFile(url, 'arraybuffer').then(buildPointCloud).then(addToScene.bind(null, url));
     } else if (url.endsWith('.vcf')) {
-      getFile(url, 'arraybuffer').then(buildVectorField).then(addToScene);
+      getFile(url, 'arraybuffer').then(buildVectorField).then(addToScene.bind(null, url));
     } else {
       console.warn('unknown extension: ' + url);
+    }
+  }
+
+  function setShow(url, show){
+    var o = loadedObjects[url];
+    if (o && o.object){
+      var mat = o.object.material;
+      mat.opacity = show ? 1 : 0;
+      render();
     }
   }
 
@@ -226,7 +270,9 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
       cloudMaterial = new THREE.PointCloudMaterial({
         size: 20 * (scale.x + scale.y + scale.z) / 3,
-        vertexColors: THREE.VertexColors
+        vertexColors: THREE.VertexColors,
+        transparent: true,
+        opacity: 1
       });
 
       return {
@@ -265,7 +311,9 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
     cloudMaterial = new THREE.PointCloudMaterial({
       size: 20,
-      vertexColors: THREE.VertexColors
+      vertexColors: THREE.VertexColors,
+      transparent: true,
+      opacity: 1
     });
 
     return {
