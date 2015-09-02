@@ -181,7 +181,9 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
   function loadMetaIO(urlMhd) {
     return getFile(urlMhd, 'text').then(function(data) {
       var lines = data.split('\n').map(function(line) {
-        return line.split('=').map(String.trim);
+        return line.split('=').map(function(s) {
+          return s.trim();
+        });
       });
 
       var mhd = {};
