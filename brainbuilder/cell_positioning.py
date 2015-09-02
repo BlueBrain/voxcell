@@ -1,4 +1,5 @@
 '''task that positions cell bodies from a density distribution'''
+import h5py
 from brainbuilder.utils import genbrain as gb
 import numpy as np
 from scipy.stats import itemfreq  # pylint: disable=E0611
@@ -81,3 +82,27 @@ def cell_positioning(density_raw, voxel_dimensions, total_cell_count):
     positions = gb.cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
 
     return positions
+
+
+def serialize_positions(dst_file, positions):
+    '''Serialize positions
+
+    Args:
+        dst_file(str): fullpath to filename to write
+        positions: np.array soma centers (x, y, z)
+    '''
+    with h5py.File(dst_file, 'w') as h5:
+        h5.create_dataset('positions', data=positions)
+
+
+def deserialize_positions(src_file):
+    '''De-serialize positions
+
+    Args:
+        src_file(str): fullpath to filename to read from
+
+    Returns:
+        positions: np.array soma centers (x, y, z)
+    '''
+    with h5py.File(src_file, 'r') as h5:
+        return np.array(h5['positions'])
