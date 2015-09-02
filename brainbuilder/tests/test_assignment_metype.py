@@ -33,5 +33,5 @@ def test_serialize():
     metypes = AM.assign_metype_random(positions, mtypes, etypes)
     with tempfile.NamedTemporaryFile() as f:
         AM.serialize_assign_metype(f.name, metypes)
-        new_metypes = AM.deserialze_assign_metype(f.name)
+        new_metypes = AM.deserialize_assign_metype(f.name)
         assert_equal(metypes, new_metypes)

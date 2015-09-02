@@ -77,7 +77,7 @@ def serialize_assign_metype(dst_file, assigned_metypes):
             fd.write('%s %s\n' % tuple(metype))
 
 
-def deserialze_assign_metype(src_file):
+def deserialize_assign_metype(src_file):
     '''De-serialize assigned me types
 
     Args:
