@@ -45,7 +45,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, near, far);
     camera.position.z = 150;
 
-    controls = new THREE.TrackballControls(camera);
+    controls = new THREE.TrackballControls(camera, container);
     controls.rotateSpeed = 1.0;
     controls.zoomSpeed = 1.2;
     controls.panSpeed = 0.8;
@@ -75,6 +75,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     stats.domElement.style.top = '0px';
     container.appendChild(stats.domElement);
     animate();
+
+    controls.handleResize();
   }
 
   function clearRoot() {
