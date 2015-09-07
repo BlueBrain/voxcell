@@ -436,5 +436,6 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     controls.handleResize();
+    render();
   }
 }());
