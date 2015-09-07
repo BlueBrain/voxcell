@@ -35,7 +35,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
   };
 
   function initScene() {
-    container = document.getElementById('container');
+    var container = document.getElementById('container');
     scene = new THREE.Scene();
 
     var near = 0.1;
@@ -239,7 +239,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
         mhd.ElementSpacing[2] * scaleFactor
       );
 
-      averagePoint = new THREE.Vector3(0, 0, 0);
+      var averagePoint = new THREE.Vector3(0, 0, 0);
 
       var i = 0;
       for (var z = 0; z < dimsizeZ; z++) {
@@ -251,7 +251,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
               var value = getValue(x, y, z);
               if (value > filterMin) {
 
-                p = new THREE.Vector3(x, y, z).multiply(scale);
+                var p = new THREE.Vector3(x, y, z).multiply(scale);
                 geometry.vertices.push(p);
 
                 var intensity = (value - minValue) / (maxValue - minValue);
