@@ -28,6 +28,20 @@ def select_region(annotation_raw, density_raw, hierarchy, region_name, inverse=F
     return density_raw * in_region
 
 
+def select_hemisphere(density_raw, left=True):
+    '''Trim a density voxel dataset to keep only those in one of the two hemispheres.
+
+    Args:
+        density_raw: voxel data from Allen Brain Institute.
+        left: if True select the left hemisphere (default), otherwise select the right one.
+    '''
+    in_region = np.ones_like(density_raw, dtype=np.bool)
+    in_region[:, :, in_region.shape[2] / 2:] = False
+    if not left:
+        in_region = np.negative(in_region)
+    return density_raw * in_region
+
+
 def serialize_region(dst_file, region):
     '''Serialize region
 
