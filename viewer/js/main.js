@@ -22,6 +22,15 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     datguiSettings.opacity = {};
     datguiSettings.opacity._datgui = datguiSettings._datgui.addFolder('opacity');
 
+    datguiSettings.size = Math.log(250  + 1);
+
+    var sizeGui = datguiSettings._datgui.add(
+      datguiSettings, 'size', 0.0, Math.log(5000.0)).step(0.01);
+
+    sizeGui.onChange(function(value) {
+      particleSizeChange(Math.exp(value) - 1);
+    });
+
     if (window.location.hash) {
       loadUrl(window.location.hash.slice(1));
     }
@@ -30,8 +39,6 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       loadUrl(window.location.hash.slice(1));
     };
     window.addEventListener('resize', onResize, false);
-    document.addEventListener('keydown', onKeyDown, false);
-
   };
 
   function initScene() {
@@ -108,7 +115,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
         datguiSettings.opacity[url] = true;
         var c = datguiSettings.opacity._datgui.add(datguiSettings.opacity, url);
         c.onFinishChange(function(value) {
-          setShow(url, value);});
+          setShow(url, value);
+        });
       }
 
       function addObjectToScene(url, o){
@@ -206,7 +214,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       var urlRaw = (urlMhd.substring(0, urlMhd.lastIndexOf('/') + 1) +
         mhd.ElementDataFile);
 
-      return getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, 1000, 0.01, 0));
+      return getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, 1000, 1, 0));
     });
   }
 
@@ -273,7 +281,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       console.log('loaded: ' + count + ' points');
 
       cloudMaterial = new THREE.PointCloudMaterial({
-        size: 20 * (scale.x + scale.y + scale.z) / 3,
+        size: 250,
         vertexColors: THREE.VertexColors,
         transparent: true,
         opacity: 1
@@ -314,7 +322,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     console.log('loaded: ' + count + ' points');
 
     cloudMaterial = new THREE.PointCloudMaterial({
-      size: 20,
+      size: 250,
       vertexColors: THREE.VertexColors,
       transparent: true,
       opacity: 1
@@ -417,18 +425,10 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     return cuboid;
   }
 
-  function onKeyDown(evt) {
-    // Increase/decrease point size
-    if (evt.keyCode == 56 || evt.keyCode == 109) {
-      cloudMaterial.size *= 0.9;
-      console.log('cloudMaterial size', cloudMaterial.size);
-      render();
-    }
-    if (evt.keyCode == 57 || evt.keyCode == 107) {
-      cloudMaterial.size *= 1.1;
-      console.log('cloudMaterial size', cloudMaterial.size);
-      render();
-    }
+  function particleSizeChange(amount) {
+    cloudMaterial.size = amount;
+    console.log('cloudMaterial size', cloudMaterial.size);
+    render();
   }
 
   function onResize(evt) {
