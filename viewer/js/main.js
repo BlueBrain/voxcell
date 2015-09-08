@@ -280,12 +280,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       console.log('max: ' + maxValue + ' min: ' + minValue);
       console.log('loaded: ' + count + ' points');
 
-      cloudMaterial = new THREE.PointCloudMaterial({
-        size: 250,
-        vertexColors: THREE.VertexColors,
-        transparent: true,
-        opacity: 1
-      });
+      cloudMaterial = buildSquareCloudMaterial(250);
 
       return {
         object: new THREE.PointCloud(geometry, cloudMaterial),
@@ -321,12 +316,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
     console.log('loaded: ' + count + ' points');
 
-    cloudMaterial = new THREE.PointCloudMaterial({
-      size: 250,
-      vertexColors: THREE.VertexColors,
-      transparent: true,
-      opacity: 1
-    });
+    cloudMaterial = buildCircleCloudMaterial(250);
 
     return {
       object: new THREE.PointCloud(geometry, cloudMaterial),
@@ -423,6 +413,36 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     var line = new THREE.Line(geometry, material, THREE.LinePieces);
     cuboid.add(line);
     return cuboid;
+  }
+
+  function buildSquareCloudMaterial(size) {
+    return new THREE.PointCloudMaterial({
+      size: size,
+      vertexColors: THREE.VertexColors,
+      transparent: true,
+      opacity: 1
+    });
+  }
+
+  function buildCircleCloudMaterial(size) {
+    var c = $('<canvas width="256" height="256" />').get(0);
+    var ctx = c.getContext('2d');
+    ctx.beginPath();
+    ctx.arc(c.width >> 1, c.height >> 1, c.width >> 1, 2 * Math.PI, false);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    var tex = new THREE.Texture(c);
+    tex.needsUpdate = true;
+
+    return new THREE.PointCloudMaterial({
+      size: size,
+      vertexColors: THREE.VertexColors,
+      transparent: true,
+      opacity: 1,
+      alphaTest: 0.5,
+      map: tex
+    });
   }
 
   function particleSizeChange(amount) {
