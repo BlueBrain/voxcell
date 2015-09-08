@@ -4,6 +4,7 @@ TEST_MODULES=brainbuilder
 INSTALL_MODULES=.
 #packages to cover
 COVER_PACKAGES=brainbuilder
+IGNORE_LINT=notebooks
 # documentation to build, separated by spaces
 #DOC_MODULES=brainbuilder/doc
 
