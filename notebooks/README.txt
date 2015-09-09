@@ -13,22 +13,14 @@ you may need to escape the square brackets: \[notebook\]
 you may experience a error saying it cannot import path when launching the ipython notebook server. In that case, remove the files path.py and path.pyc that are located in the site-packages directory in your virtualenv. I (JDC) haven't found a better workaround for now.
 
 
-Starting the servers
-====================
+Starting the server
+===================
 
 ipython notebook
 ----------------
+The notebook server will serve the notebooks and the static content that is located in the "viewer" directory.
+
 within the virtualenv, in the "BrainBuilder" directory, launch the ipython server:
 
-ipython notebook --ip=put_your_ip_here --port=put_your_port_here
+ipython notebook --NotebookApp.extra_static_paths="['${PWD}/viewer/']" --ip=put_your_ip_here --port=put_your_port_here
 
-viewers
--------
-in the "viewer" directory:
-python -m SimpleHTTPServer put_your_viewer_server_port_here
-
-Configuring the notebook
-========================
-open the BrainBuilderModules.ipynb notebook by navigating to http://your_notebook_ip:your_notebook_port/tree/notebooks
-change the display_server variable to "http://your_viewer_ip:your_viewer_port/"
-change the output_directory variable.

@@ -11,16 +11,11 @@ from IPython.display import HTML, display
 class NotebookViewer(object):
     '''encapsulates the integration of the webgl in an ipython notebook'''
 
-    def __init__(self, display_server):
-        '''
-        Args:
-            display_server: url and port that serves the viewer.
-                For example http://localhost:8080/
-        '''
+    def __init__(self):
+        ''' NotebookViewer '''
         # The location where the output will be stored
         # under the viewer directory
         self.directory = 'out'
-        self.display_server = display_server
         self.output_directory = joinp('..', 'viewer', self.directory)
 
         if not os.path.isdir(self.output_directory):
@@ -28,9 +23,7 @@ class NotebookViewer(object):
 
     def show(self, filename):
         '''display the given local file'''
-        url = joinp(self.display_server,
-                    '#' + joinp(self.directory, filename))
-
+        url = '../../static/index.html#' + joinp(self.directory, filename)
         html = ('<iframe src="{url}"'
                 ' scrolling="no" width="700" height="350"></iframe>\n'
                 '<br>'
