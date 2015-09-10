@@ -95,3 +95,14 @@ def export_multiple_vector_fields(filename, fields, point_count, voxel_dimension
     vectors = reduce(lambda v0, v1: np.append(v0, v1, axis=0), all_vectors)
 
     export_vectors(filename, positions, vectors)
+
+
+def export_positions_vectors(filename, positions, vectors):
+    ''' export position along with vectors to a binary file of float 32'''
+    reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=1), vectors, positions)
+    reduced_all.astype(np.float32).tofile(filename)
+
+
+def export_strings(filename, all_strings):
+    ''' export an array of strings to a txt file '''
+    np.savetxt(filename, all_strings, delimiter=" ", fmt="%s")

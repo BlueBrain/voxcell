@@ -48,6 +48,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     var near = 0.1;
     var far = 50000;
     scene.fog = new THREE.Fog(0x000000, near, far);
+    var light = new THREE.AmbientLight(0xffffff);
+    scene.add(light);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, near, far);
     camera.position.z = 150;
@@ -103,6 +105,11 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     stats.update();
   }
 
+  function updateControls(center){
+    controls.target.copy(center);
+    controls.update();
+  }
+
   function loadUrl(url) {
 
     function addToScene(url, o) {
@@ -124,8 +131,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
           root.remove(loadedObjects[url].object);
         }
         root.add(o.object);
-        controls.target.copy(o.center);
-        controls.update();
+        updateControls(o.center);
         render();
         loadedObjects[url] = o;
       }
@@ -138,9 +144,15 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     if (url.endsWith('.mhd')) {
       loadMetaIO(url).then(addToScene.bind(null, url));
     } else if (url.endsWith('.pts')) {
-      getFile(url, 'arraybuffer').then(buildPointCloud).then(addToScene.bind(null, url));
+      viewerUtils.getFile(url, 'arraybuffer')
+      .then(buildPointCloud)
+      .then(addToScene.bind(null, url));
     } else if (url.endsWith('.vcf')) {
-      getFile(url, 'arraybuffer').then(buildVectorField).then(addToScene.bind(null, url));
+      viewerUtils.getFile(url, 'arraybuffer')
+      .then(buildVectorField)
+      .then(addToScene.bind(null, url));
+    } else if (url.endsWith('.placement')) {
+      new placementViewer.PlacementViewer(scene, render, updateControls).loadPlacement(url);
     } else {
       console.warn('unknown extension: ' + url);
     }
@@ -155,41 +167,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     }
   }
 
-  function getFile(url, responseType) {
-    console.log('loading: ' + url);
-
-    // Return a new promise.
-    return new Promise(function(resolve, reject) {
-      // Do the usual XHR stuff
-      var req = new XMLHttpRequest();
-      req.open('GET', url);
-      req.responseType = responseType;
-
-      req.onload = function() {
-        // This is called even on 404 etc
-        // so check the status
-        if (req.status == 200) {
-          // Resolve the promise with the response text
-          resolve(req.response);
-        } else {
-          // Otherwise reject with the status text
-          // which will hopefully be a meaningful error
-          reject(Error(req.statusText));
-        }
-      };
-
-      // Handle network errors
-      req.onerror = function() {
-        reject(Error('Network Error'));
-      };
-
-      // Make the request
-      req.send();
-    });
-  }
-
   function loadMetaIO(urlMhd) {
-    return getFile(urlMhd, 'text').then(function(data) {
+    return viewerUtils.getFile(urlMhd, 'text').then(function(data) {
       var lines = data.split('\n').map(function(line) {
         return line.split('=').map(function(s) {
           return s.trim();
@@ -214,7 +193,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       var urlRaw = (urlMhd.substring(0, urlMhd.lastIndexOf('/') + 1) +
         mhd.ElementDataFile);
 
-      return getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, 1000, 1, 0));
+      return viewerUtils.getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, 1000, 1, 0));
     });
   }
 

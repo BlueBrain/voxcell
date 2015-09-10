@@ -53,3 +53,11 @@ class NotebookViewer(object):
         fullpath = joinp(self.output_directory, name + '.pts')
         viewer.export_points(fullpath, positions, properties, name)
         self.show(name + '.pts')
+
+    def show_placement(self, name, positions, orientations, chosen_morphologies):
+        '''save a bunch of morphologies placement and display them'''
+        fullpath = joinp(self.output_directory, name + '.placement')
+        viewer.export_positions_vectors(fullpath, positions, orientations)
+        morph_fullpath = joinp(self.output_directory, name + '.txt')
+        viewer.export_strings(morph_fullpath, chosen_morphologies)
+        self.show(name + '.placement')
