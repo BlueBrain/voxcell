@@ -1,70 +1,29 @@
-'''library to transform and handle vector fields and tensors
+'''library to build, transform and handle fields of vectors and orientations
 
-Note that these vector fields are represented as a list of 3D matrices with one matrix for
-each dimension.
+A vector field is a volumetric dataset that expresses a 3D vector for each voxel.
+Vector fields are represented as 4D numpy arrays. The first three dimensions of
+the array represent space, the last dimension is always of size 3 and contains the three components
+(i, j, k) of the vector for that voxel.
 
-An orientation field is a list of three vector fields, corresponding to the
-right, up and fwd directions (i, j, k) of a coordinate system.
+
+An orientation field is a volumetric dataset that expresses a rotation matrix for each voxel.
+Orientation fields are represented as 5D numpy arrays. The first three dimensions of the array
+represent space, the fourth and fifth dimensions contain a 3x3 rotation matrix.
+
+Note that although 3D is our main target, most of these functions should behave correctly for lower
+and higher dimensionality levels.
 '''
-import h5py
 import numpy as np
 from scipy.ndimage import morphology
 
 import brainbuilder.utils.genbrain as gb
 
 
-####################################################################################################
-# serialization
-
-def save_orientation_fields(filename, voxel_dimensions, orientation_fields):
-    '''save an orientation field to h5'''
-    with h5py.File(filename, 'w') as h5:
-        for name, field in orientation_fields.items():
-            for i, data in enumerate(field):
-                h5.create_dataset(name='%s_%d' % (name, i), data=data)
-
-        h5.create_dataset(name='voxel_dimensions', data=voxel_dimensions)
-
-
-def load_orientation_fields(filename):
-    '''load an orientation field from h5'''
-    orientation_fields = {}
-    with h5py.File(filename, 'r') as h5:
-        for k, v in h5.iteritems():
-            if k != 'voxel_dimensions':
-                v = np.array(v)
-                name, i = k.split('_')
-                i = int(i)
-                orientation_fields.setdefault(name, []).append((i, v))
-
-        voxel_dimensions = np.array(h5['voxel_dimensions'])
-
-    for name, field in orientation_fields.items():
-        field = sorted(field, key=lambda x: x[0])
-        field = [f for i, f in field]
-        orientation_fields[name] = field
-
-    return voxel_dimensions, orientation_fields
-
-
-####################################################################################################
-# functions to create different types of fields
-
-def _mask_fields(fields, mask):
-    '''take a vector field set to (0, 0, 0) those vectors outside the given binary mask'''
-    fields = [field.copy() for field in fields]
-
-    for field in fields:
-        field[~mask] = 0
-    return fields
-
-
 def generate_homogeneous_field(mask, direction):
     '''create an homogeneous field from a direction vector replicated according to a binary mask'''
-    fields = [np.ones_like(mask, dtype=np.float32) * direction[d]
-              for d in range(len(direction))]
-
-    return _mask_fields(fields, mask)
+    field = np.zeros(shape=(mask.shape + direction.shape), dtype=direction.dtype)
+    field[mask] = direction
+    return field
 
 
 def _calculate_fields_by_distance(target_mask, reference_mask, direction):
@@ -72,12 +31,20 @@ def _calculate_fields_by_distance(target_mask, reference_mask, direction):
     voxel in reference_mask
 
     direction is multiplied against each vector, allowing for scaling or for
-    switching the sense of the vectors'''
-    distance_to_reference = morphology.distance_transform_edt(~reference_mask)
-    fields = [direction * field
-              for field in np.gradient(distance_to_reference)]
+    switching the sense of the vectors
 
-    return _mask_fields(fields, target_mask)
+    Returns:
+        A 4D numpy array with the same shape as reference_mask but with an extra dimension
+        of size 3 that contains the vectors for each voxel.
+    '''
+    distance_to_reference = morphology.distance_transform_edt(~reference_mask)
+
+    result = np.zeros(shape=(reference_mask.shape + (len(reference_mask.shape),)), dtype=np.float32)
+
+    for i, field in enumerate(np.gradient(distance_to_reference)):
+        result[..., i] = direction * target_mask * field
+
+    return result
 
 
 def calculate_fields_by_distance_from(region_mask, reference_mask):
@@ -92,35 +59,13 @@ def calculate_fields_by_distance_to(region_mask, reference_mask):
     return _calculate_fields_by_distance(region_mask, reference_mask, -1)
 
 
-def normalise_fields(fields):
-    '''ensure that the vectors in a field have unit length'''
-    magnitude = np.sqrt(sum(np.square(field) for field in fields))
-    norm_fields = [(field / magnitude) for field in fields]
-    for field in norm_fields:
-        field[magnitude == 0] = 0
+def compute_cylindrical_tangent_vectors(points, center_point):
+    '''create a vector for each of the points that point as tangents of a cylinder
+    around the X axis
 
-    return norm_fields
-
-
-def get_vectors_list_from_fields(fields, voxel_indices):
-    '''given the voxel_indices, return the relevant vectors from a vector field as a Nx3 matrix '''
-    return np.array([field[voxel_indices] for field in fields]).transpose()
-
-
-def get_fields_from_vectors_list(vectors, voxel_indices, dimensions):
-    '''given an Nx3 matrix representing a list of vectors and the indices of the voxels they
-    belong to, return a vector field (the rest of the voxels will contain the (0,0,0) vector)'''
-    fields = [np.zeros(dimensions, dtype=np.float32) for _ in range(vectors.shape[1])]
-
-    for i, field in enumerate(fields):
-        field[voxel_indices] = vectors[:, i]
-
-    return fields
-
-
-def compute_cylindrical_tangent_field(points, center_point):
-    '''create a vector field where the vectors point as tangets of a cylinder
-    around the X axis'''
+    Returns:
+        A numpy array of the same shape as points (Nx3)
+    '''
     # TODO make this take axis of the cylinder
     from_center = points - center_point
     tangents = np.zeros_like(from_center)
@@ -146,53 +91,62 @@ def compute_cylindrical_tangent_field(points, center_point):
 
 def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
     '''create a vector field as a composition of two cylindrical tangent fields, one
-      for each hemisphere'''
+    for each hemisphere
+
+    Returns:
+        A 4D numpy array representing a vector field with a shape equivalent to annotation_raw.
+    '''
     center_point = np.array(annotation_raw.shape) * 0.5
     center_point[2] *= 1.25
     half_region_mask = region_mask.copy()
     half_region_mask[:, :, np.arange(0, region_mask.shape[2] // 2)] = False
     points_left = gb.get_points_list_from_mask(half_region_mask)
-    tangents_left = compute_cylindrical_tangent_field(points_left, center_point)
+    tangents_left = compute_cylindrical_tangent_vectors(points_left, center_point)
 
     center_point = np.array(annotation_raw.shape) * 0.5
     center_point[2] *= 0.75
     half_region_mask = region_mask.copy()
     half_region_mask[:, :, np.arange(region_mask.shape[2] // 2, region_mask.shape[2])] = False
     points_right = gb.get_points_list_from_mask(half_region_mask)
-    tangents_right = compute_cylindrical_tangent_field(points_right, center_point)
+    tangents_right = compute_cylindrical_tangent_vectors(points_right, center_point)
     tangents_right *= -1
 
     tangents = np.append(tangents_left, tangents_right, axis=0)
     tangents_points = np.append(points_left, points_right, axis=0)
 
-    tangents_field = [np.zeros_like(annotation_raw, dtype=np.float32) for _ in range(3)]
+    tangents_field = np.zeros(shape=(annotation_raw.shape + (tangents.shape[1],)), dtype=np.float32)
     points_idx = tuple(tangents_points.transpose())
-    for i in range(3):
-        tangents_field[i][points_idx] = tangents[:, i]
+    tangents_field[points_idx] = tangents
 
     return tangents_field
 
 
-def combine(fields_list):
-    '''take a vector field expressed as a list of 3D matrices, with one for each dimension of the
-    vectors, and return instead a 4D matrix where the fourth dimension is always 3 (the vector).'''
+def combine_vector_fields(fields):
+    '''given a list of vector fields return an orientation field
 
-    # TODO Change other functions to stop using a list of 3D matrices and start using 4D instead
-    combined = [np.zeros_like(fields_list[0][0]),
-                np.zeros_like(fields_list[0][1]),
-                np.zeros_like(fields_list[0][2])]
+    The vectors from the fields are treated as a new base and will be stored as column vectors so
+    that the matrices of the resulting field (one per voxel) can be used to premultiply vectors
+    for rotation.
 
-    for i, field in enumerate(fields_list):
-        already_taken = (combined[0] != 0) | (combined[1] != 0) | (combined[2] != 0)
-        to_assign = (field[0] != 0) | (field[1] != 0) | (field[2] != 0)
+    Args:
+        fields: a list of vector fields.
+            All of the fields are expected to have the same shape (AxBxCx3)
 
-        overwritten = np.count_nonzero(already_taken & to_assign)
-        if overwritten:
-            print 'field', i, 'assigning', overwritten, 'voxels already assigned'
+    Returns:
+        A 5D numpy array representing an orientation field
+    '''
 
-        idx = np.nonzero(to_assign)
-        combined[0][idx] = field[0][idx]
-        combined[1][idx] = field[1][idx]
-        combined[2][idx] = field[2][idx]
+    if fields:
+        shape = fields[0].shape
 
-    return combined
+        # add a second-to-last dimension: the number of fields
+        result = np.zeros(shape=shape[:-1] + (len(fields),) + (shape[-1],), dtype=fields[0].dtype)
+
+        # abusing numpy broadcasting here saves us having to do an explicit transpose afterwards
+        for i, f in enumerate(fields):
+            result[..., i] = f
+
+        return result
+
+    else:
+        return np.empty((0,))

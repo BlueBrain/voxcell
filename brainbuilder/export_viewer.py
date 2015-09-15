@@ -31,9 +31,9 @@ def export_viewer(directory, voxel_dimensions,
     viewer.export_points(joinp(directory, 'sclass.pts'),
                          positions, chosen_synapse_class, 'sClass')
 
-    for name, field in orientation_field.items():
-        viewer.export_vector_field(joinp(directory, 'field_%s.vcf' % name),
-                                   field, 7000, voxel_dimensions)
+    for i in range(orientation_field.shape[-2]):
+        viewer.export_vector_field(joinp(directory, 'field_%d.vcf' % i),
+                                   orientation_field[..., i, :], 7000, voxel_dimensions)
 
     # TODO export chosen orientation for each point
 

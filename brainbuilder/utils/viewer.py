@@ -54,13 +54,9 @@ def export_vectors(filename, positions, vectors):
     serialize_vectors(filename, positions, vectors, colors0, colors1)
 
 
-def sample_multiple_vector_field(fields, point_count, voxel_dimensions):
-    '''generate a list of points and vectors from a list of vector fields
-
-    each field is represented as a list of arrays, one for each component
-    '''
-    mask = reduce(np.logical_and,
-                  [reduce(np.logical_or, [of != 0.0 for of in field]) for field in fields])
+def sample_vector_field(field, point_count, voxel_dimensions):
+    '''generate a list of points and vectors from a vector field'''
+    mask = np.any(field != 0, axis=-1)
 
     valid_total_count = np.count_nonzero(mask)
     point_count = min(point_count, valid_total_count)
@@ -70,36 +66,23 @@ def sample_multiple_vector_field(fields, point_count, voxel_dimensions):
     idx = np.nonzero(mask)
     idx = tuple(component[chosen] for component in idx)
 
-    all_vectors = []
-    for field in fields:
-        vectors = np.array([component[idx] for component in field]).transpose()
-        vectors = vectors / np.sqrt(np.square(vectors).sum(axis=1))[:, np.newaxis]
-        all_vectors.append(vectors)
+    vectors = field[idx]
+    vectors = vectors / np.sqrt(np.square(vectors).sum(axis=1))[:, np.newaxis]
 
     positions = np.array(idx).transpose() * voxel_dimensions
-    return positions, all_vectors
+    return positions, vectors
 
 
 def export_vector_field(filename, field, point_count, voxel_dimensions):
     '''save a vector field to binary to a format that can be loaded by the JS viewer'''
-    positions, all_vectors = sample_multiple_vector_field([field], point_count, voxel_dimensions)
-    export_vectors(filename, positions, all_vectors[0])
+    positions, all_vectors = sample_vector_field(field, point_count, voxel_dimensions)
+    export_vectors(filename, positions, all_vectors)
 
 
-def export_multiple_vector_fields(filename, fields, point_count, voxel_dimensions):
-    '''save multiple vector fields to binary to a format that can be loaded by the JS viewer'''
-
-    positions, all_vectors = sample_multiple_vector_field(fields, point_count, voxel_dimensions)
-
-    positions = np.tile(positions, (len(all_vectors), 1))
-    vectors = reduce(lambda v0, v1: np.append(v0, v1, axis=0), all_vectors)
-
-    export_vectors(filename, positions, vectors)
-
-
-def export_positions_vectors(filename, positions, vectors):
+def export_positions_vectors(filename, positions, orientations):
     ''' export position along with vectors to a binary file of float 32'''
-    reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=1), vectors, positions)
+    vectors = orientations.reshape((orientations.shape[0], np.prod(orientations.shape[1:])))
+    reduced_all = np.append(positions, vectors, axis=-1)
     reduced_all.astype(np.float32).tofile(filename)
 
 
