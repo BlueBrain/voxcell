@@ -309,8 +309,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     var count = data.length / rowLength;
     var geometry = new THREE.Geometry();
     var averagePoint = new THREE.Vector3(0, 0, 0);
-    var scale = 0.05;
-    var lineLength = 25;
+    var scale = 1.0;
+    var lineLength = 100;
 
     for (var i = 0; i < count; ++i) {
 
