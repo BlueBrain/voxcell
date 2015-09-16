@@ -105,6 +105,8 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     # export data to file formats from the BBP pipeline:
     circuit_path = export_mvd2(output_path, 'mpath', cells)
 
+    cells.serialize(joinp(output_path, 'cells.h5'))
+
     return circuit_path
 
 

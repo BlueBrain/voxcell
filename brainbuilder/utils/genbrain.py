@@ -364,3 +364,59 @@ class CellCollection(object):
             new_properties: a pandas DataFrame object
         '''
         self.properties = pd.concat([self.properties, new_properties], axis=1)
+
+    def serialize(self, filename):
+        '''serialize this cell collection
+
+        Args:
+            filename(str): fullpath to filename to write
+        '''
+        with h5py.File(filename, 'w') as f:
+            f.create_group('cells')
+
+            if self.positions is not None:
+                f.create_dataset('cells/positions', data=self.positions)
+
+            if self.orientations is not None:
+                f.create_dataset('cells/orientations', data=self.orientations)
+
+            for name, series in self.properties.iteritems():
+                data = series.values
+
+                if data.dtype == np.object:
+                    # numpy uses "np.object" to represent variable size strings
+                    # however, h5py doesn't like this.
+                    # doing a cast to np.str changes the column to be fixed-size strings
+                    # (automatically set to the current maximum).
+                    data = data.astype(np.str)
+
+                f.create_dataset('cells/properties/' + name, data=data)
+
+    @classmethod
+    def deserialize(cls, filename):
+        '''de-serialize a cell collection
+
+        Args:
+            filename(str): fullpath to filename to write
+
+        Returns:
+            CellCollection object
+        '''
+
+        cells = cls()
+
+        with h5py.File(filename, 'r') as f:
+            data = f['cells']
+            if 'positions' in data:
+                cells.positions = np.array(data['positions'])
+
+            if 'orientations' in data:
+                cells.orientations = np.array(data['orientations'])
+
+            if 'properties' in data:
+                properties = data['properties']
+
+                for name, data in properties.iteritems():
+                    cells.properties[name] = np.array(data)
+
+        return cells
