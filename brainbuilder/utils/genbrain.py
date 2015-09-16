@@ -10,6 +10,7 @@ from os.path import join as joinp
 
 import h5py
 import numpy as np
+import pandas as pd
 
 L = logging.getLogger(__name__)
 
@@ -343,3 +344,23 @@ def lcm(a, b):
 def lcmm(args):
     '''Return lcm of args.'''
     return reduce(lcm, args)
+
+
+class CellCollection(object):
+    '''Encapsulates all the data related to a collection of cells that compose a circuit.
+
+    Multi-dimensional properties (such as positions and orientations) are attributes.
+    General properties are a in a pandas DataFrame object "properties".
+    '''
+    def __init__(self):
+        self.positions = None
+        self.orientations = None
+        self.properties = pd.DataFrame()
+
+    def add_properties(self, new_properties):
+        '''adds new columns to the properties DataFrame
+
+        Args:
+            new_properties: a pandas DataFrame object
+        '''
+        self.properties = pd.concat([self.properties, new_properties], axis=1)

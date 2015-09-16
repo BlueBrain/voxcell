@@ -1,5 +1,7 @@
 '''algorithm to assign a synapse class to a group of cells'''
 import numpy as np
+import pandas as pd
+
 
 from brainbuilder.utils import traits as tt
 
@@ -12,11 +14,14 @@ def assign_synapse_class_randomly(positions, inhibitory_fraction):
         inhibitory_fraction: float [0, 1] fraction of cells that will be tagged as Inhibitory.
 
     Returns:
-        An array of synapse class values that correspond to each position
+        A pandas DataFrame with one row for each position and one column: sclass.
+        For those positions whose morphology could not be determined, nan is used.
     '''
-    return np.random.choice(np.array(['excitatory', 'inhibitory']),
-                            size=positions.shape[0],
-                            p=np.array([1.0 - inhibitory_fraction, inhibitory_fraction]))
+    chosen = np.random.choice(np.array(['excitatory', 'inhibitory']),
+                              size=positions.shape[0],
+                              p=np.array([1.0 - inhibitory_fraction, inhibitory_fraction]))
+
+    return pd.DataFrame({'sClass': chosen})
 
 
 def assign_synapse_class_from_spatial_dist(positions, spatial_dist, voxel_dimensions):
@@ -28,7 +33,8 @@ def assign_synapse_class_from_spatial_dist(positions, spatial_dist, voxel_dimens
         voxel_dimensions: tuple with the size of the voxels in microns in each axis
 
     Returns:
-        An array of synapse class values that correspond to each position
+        A pandas DataFrame with one row for each position and one column: sClass.
+        For those positions whose morphology could not be determined, nan is used.
     '''
     chosen_sclass = tt.assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions)
-    return spatial_dist.traits['sClass'][chosen_sclass].as_matrix()
+    return pd.DataFrame({'sClass': spatial_dist.traits['sClass'][chosen_sclass].as_matrix()})

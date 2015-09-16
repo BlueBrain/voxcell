@@ -19,8 +19,8 @@ def test_assign_metype_random():
     metypes = AM.assign_metype_random(positions, mtypes, etypes)
 
     eq_(len(metypes), 5)
-    ok_(all(mtype in mtypes for mtype in metypes[:, 0]))
-    ok_(all(etype in etypes for etype in metypes[:, 1]))
+    ok_(all(mtype in mtypes for mtype in metypes.mtype))
+    ok_(all(etype in etypes for etype in metypes.etype))
     res = np.array([['mtype1', 'etype2'],
                     ['mtype0', 'etype0'],
                     ['mtype1', 'etype0'],

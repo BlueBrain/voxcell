@@ -72,34 +72,39 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
                                                                 percentile=0.92)
 
     # main circuit building workflow:
+
     density_raw = select_region(annotation.raw, full_density.raw, hierarchy, region_name)
 
     orientation_field = compute_sscx_orientation_fields(annotation, hierarchy, region_name)
 
-    positions = cell_positioning(density_raw, voxel_dimensions, total_cell_count)
+    cells = gb.CellCollection()
 
-    orientations = assign_orientations(positions, orientation_field, voxel_dimensions)
+    cells.positions = cell_positioning(density_raw, voxel_dimensions, total_cell_count)
 
-    orientations = randomise_orientations(orientations, rotation_ranges)
+    cells.orientations = assign_orientations(cells.positions, orientation_field, voxel_dimensions)
 
-    chosen_synapse_class = assign_synapse_class_from_spatial_dist(positions, sclass_sdist,
-                                                                  voxel_dimensions)
-    chosen_me = assign_metype(positions, chosen_synapse_class, recipe_sdist, voxel_dimensions)
+    cells.orientations = randomise_orientations(cells.orientations, rotation_ranges)
 
-    chosen_morphology = assign_morphology(positions, chosen_me, neuron_sdist, voxel_dimensions)
+    chosen_synapse_class = assign_synapse_class_from_spatial_dist(cells.positions,
+                                                                  sclass_sdist, voxel_dimensions)
+    cells.add_properties(chosen_synapse_class)
+
+    chosen_me = assign_metype(cells.positions, cells.properties.sClass,
+                              recipe_sdist, voxel_dimensions)
+    cells.add_properties(chosen_me)
+
+    chosen_morphology = assign_morphology(cells.positions, cells.properties[['mtype', 'etype']],
+                                          neuron_sdist, voxel_dimensions)
+    cells.add_properties(chosen_morphology)
 
     acronym = gb.find_in_hierarchy(hierarchy, 'name', region_name)[0]['acronym']
     export_viewer(joinp(output_path, 'intermediates_%s_%d' % (acronym, total_cell_count)),
-                  voxel_dimensions,
-                  positions,
-                  orientation_field,
-                  chosen_synapse_class, chosen_me, chosen_morphology)
+                  voxel_dimensions, orientation_field, cells)
 
     # export data to file formats from the BBP pipeline:
-    circuit = export_mvd2(output_path, 'mpath', positions, orientations,
-                          chosen_synapse_class, chosen_me, chosen_morphology)
+    circuit_path = export_mvd2(output_path, 'mpath', cells)
 
-    return circuit
+    return circuit_path
 
 
 def get_region_names(hierarchy):

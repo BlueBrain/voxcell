@@ -87,33 +87,35 @@ Application:'BrainBuilder {version}'
            morphology_path=morphology_path)
 
 
-def _get_mvd2_neurons(morph_types_by_name, electro_types, chosen_morphology, positions, chosen_me):
+def _get_mvd2_neurons(morph_types_by_name, electro_types, chosen_morphology, positions,
+                      chosen_mtype, chosen_etype):
     '''return all the MVD2Neuron objects used in circuit'''
     #TODO: Set the proper y-rotation for cell, currently set to 0.0
     return [_create_MVD2Neuron(morph_types_by_name, electro_types, name=morph,
-                               morphology=metype[0], electrophysiology=metype[1],
+                               morphology=mtype, electrophysiology=etype,
                                rotation=0.0, x=pos[X], y=pos[Y], z=pos[Z])
-            for (morph, pos, metype) in izip(chosen_morphology,
-                                             positions,
-                                             chosen_me)]
+            for (morph, pos, mtype, etype) in izip(chosen_morphology,
+                                                   positions,
+                                                   chosen_mtype,
+                                                   chosen_etype)]
 
 
-def _create_mvd2(mvd2_path, morphology_path, positions, _, # orientations,
-                 chosen_synapse_class, chosen_me, chosen_morphology):
+def _create_mvd2(mvd2_path, morphology_path, positions,
+                 chosen_synapse_class, chosen_mtype, chosen_etype, chosen_morphology):
     '''create an MVD2 file'''
     #mapping from name to position in list
     #TODO need to know if cells are PYR/INT, set all to PYR at the moment
-    morph_types = set(MorphType(me[0], 'PYR', MAP_EXC_INH[sc])
-                      for me, sc in izip(chosen_me, chosen_synapse_class))
+    morph_types = set(MorphType(m, 'PYR', MAP_EXC_INH[sc])
+                      for m, sc in izip(chosen_mtype, chosen_synapse_class))
     morph_types = dict((morph_type, i) for i, morph_type in enumerate(morph_types))
     morph_types_by_name = dict((morph_type.MName, i) for morph_type, i in morph_types.items())
 
     #mapping from name to position in list
-    electro_types = set(e[1] for e in chosen_me)
+    electro_types = set(chosen_etype)
     electro_types = dict((electro_type, i) for i, electro_type in enumerate(electro_types))
 
     neurons = _get_mvd2_neurons(morph_types_by_name, electro_types,
-                                chosen_morphology, positions, chosen_me)
+                                chosen_morphology, positions, chosen_mtype, chosen_etype)
 
     with open(mvd2_path, 'w') as fd:
         fd.write(_create_mvd2_header(morphology_path))
@@ -140,19 +142,14 @@ def _create_mvd2(mvd2_path, morphology_path, positions, _, # orientations,
         #fd.write('0.0 1.0 2.0\n')
 
 
-def export_mvd2(directory, morphology_path, positions, orientations, chosen_synapse_class,
-                chosen_me, chosen_morphology):
+def export_mvd2(directory, morphology_path, cells):
     '''Rest of mesobuilder steps to make the circuit readable by bluepy:
     create a CircutConfig, create sqlite, etc.
 
     Args:
         directory(str path): location where circuit is created
         morphology_path(str path): directory of h5 morphologies
-        positions: list of positions for soma centers (x, y, z).
-        orientations: list of orientations (3 vectors: right, up, fwd).
-        chosen_synapse_class: list of 'excitatory'/'inhibitory' for each cell
-        chosen_me: list of chosen mopho-electro types for each cell
-        chosen_morphology: list of morphology names, one for each cell
+        cells: CellCollection object with at least: positions, sClass, mtype, etype, morphology
 
     Returns:
         MVD2 file
@@ -165,6 +162,10 @@ def export_mvd2(directory, morphology_path, positions, orientations, chosen_syna
 
     mvd2_path = joinp(directory, 'circuit.mvd2')
 
-    _create_mvd2(mvd2_path, morphology_path, positions, orientations,
-                 chosen_synapse_class, chosen_me, chosen_morphology)
+    _create_mvd2(mvd2_path, morphology_path,
+                 cells.positions,
+                 cells.properties.sClass,
+                 cells.properties.mtype,
+                 cells.properties.etype,
+                 cells.properties.morphology)
     return mvd2_path

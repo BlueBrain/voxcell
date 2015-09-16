@@ -1,6 +1,5 @@
 '''algorithm to assign morphologies to a group of cells'''
 from brainbuilder.utils import traits as tt
-import pandas as pd
 import numpy as np
 
 import logging
@@ -12,20 +11,20 @@ def assign_morphology(positions, chosen_me, spatial_dist, voxel_dimensions):
 
     Args:
         positions: list of positions for soma centers (x, y, z).
-        chosen_me: a list of metype values that correspond to each position.
+        chosen_me: dataframe with the mtype and etype values that correspond to each position.
         spatial_dist: SpatialDistribution containing at least the properties:
             mtype, etype, morphology.
         voxel_dimensions: tuple with the size of the voxels in microns in each axis.
 
     Returns:
-        An array of the morpholgies that correspond to each position.
+        A pandas DataFrame with one row for each position and one column: morphology.
         For those positions whose morphology could not be determined, nan is used.
     '''
     subsections = tt.split_distribution_collection(spatial_dist, ('mtype', 'etype'))
 
     chosen_morphs = np.ones(shape=(len(chosen_me)), dtype=np.int) * -1
 
-    unique_me = pd.DataFrame(chosen_me).drop_duplicates()
+    unique_me = chosen_me.drop_duplicates()
 
     for values_comb in unique_me.values:
         subdist = subsections[tuple(values_comb)]
@@ -42,4 +41,5 @@ def assign_morphology(positions, chosen_me, spatial_dist, voxel_dimensions):
         L.warning('%d / %d cells could not get a valid morphology assigned',
                   np.count_nonzero(chosen_morphs == -1), len(chosen_morphs))
 
-    return spatial_dist.traits['morphology'].ix[chosen_morphs].as_matrix()
+    df = spatial_dist.traits['morphology'].ix[chosen_morphs]
+    return df.reset_index().drop('index', 1)

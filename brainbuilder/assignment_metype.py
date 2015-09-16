@@ -2,6 +2,7 @@
 import itertools
 
 import numpy as np
+import pandas as pd
 
 from brainbuilder.utils import traits as tt
 
@@ -17,7 +18,7 @@ def assign_metype_random(positions, mtypes, etypes):
         etypes: list of all etypes
 
     Returns:
-        An array of tuples containing the mtype and etype values that correspond to each position.
+        A pandas DataFrame with one row for each position and two columns: mtype and etype.
         For those positions whose me-type could not be determined, nan is used.
 
     Note:
@@ -27,7 +28,7 @@ def assign_metype_random(positions, mtypes, etypes):
     '''
     metypes = np.array(list(itertools.product(mtypes, etypes)), dtype='object')
     choices = np.random.randint(len(metypes), size=len(positions))
-    return metypes[choices]
+    return pd.DataFrame(data=metypes[choices], columns=('mtype', 'etype'))
 
 
 def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
@@ -40,7 +41,7 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
         voxel_dimensions: tuple with the size of the voxels in microns in each axis, (x, y, z)
 
     Returns:
-        An np.array of lists containing the mtype and etype values that correspond to each position.
+        A pandas DataFrame with one row for each position and two columns: mtype and etype.
         For those positions whose me-type could not be determined, nan is used.
     '''
     subsections = tt.split_distribution_collection(recipe_sdist, ('sClass',))
@@ -62,4 +63,5 @@ def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
                   invalid_metype_count, len(chosen_metype),
                   float(invalid_metype_count) / len(chosen_metype))
 
-    return recipe_sdist.traits[['mtype', 'etype']].ix[chosen_metype].as_matrix()
+    df = recipe_sdist.traits[['mtype', 'etype']].ix[chosen_metype]
+    return df.reset_index().drop('index', 1)
