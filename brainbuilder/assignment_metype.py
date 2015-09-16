@@ -31,25 +31,26 @@ def assign_metype_random(positions, mtypes, etypes):
     return pd.DataFrame(data=metypes[choices], columns=('mtype', 'etype'))
 
 
-def assign_metype(positions, chosen_sclass, recipe_sdist, voxel_dimensions):
+def assign_metype(positions, synapse_class, recipe_sdist, voxel_dimensions):
     '''for every cell in positions, assign me-type to each cell based on its synapse class
 
     Args:
         positions: list of positions for soma centers (x, y, z).
-        chosen_sclass: a list of synapse class values that correspond to each position.
-        recipe_sdist: SpatialDistribution containing at least the properties: sClass, mtype, etype.
+        synapse_class: a list of synapse class values that correspond to each position.
+        recipe_sdist: SpatialDistribution containing at least the properties:
+            synapse_class, mtype, etype.
         voxel_dimensions: tuple with the size of the voxels in microns in each axis, (x, y, z)
 
     Returns:
         A pandas DataFrame with one row for each position and two columns: mtype and etype.
         For those positions whose me-type could not be determined, nan is used.
     '''
-    subsections = tt.split_distribution_collection(recipe_sdist, ('sClass',))
+    subsections = tt.split_distribution_collection(recipe_sdist, ('synapse_class',))
 
-    chosen_metype = np.ones(shape=(len(chosen_sclass)), dtype=np.int) * -1
+    chosen_metype = np.ones(shape=(len(synapse_class)), dtype=np.int) * -1
 
     for value, subdist in subsections.iteritems():
-        mask = np.array(chosen_sclass) == value
+        mask = np.array(synapse_class) == value
         chosen_metype[mask] = tt.assign_from_spatial_distribution(positions[mask],
                                                                   subdist,
                                                                   voxel_dimensions)

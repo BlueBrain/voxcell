@@ -21,7 +21,7 @@ MAP_EXC_INH = {'excitatory': 'EXC',
 #https://bbpteam.epfl.ch/project/spaces/display/BBPHPC/Circuit+-+circuit.mvd2
 
 #MorphType as per MVD2 spec
-MorphType = namedtuple('MorphType', 'MName type sclass')
+MorphType = namedtuple('MorphType', 'MName type synapse_class')
 
 #Neuron information encoded per line as per MVD2 spec
 MVD2Neuron = namedtuple('MVD2Neuron', 'name database hyperColumn miniColumn layer '
@@ -122,7 +122,8 @@ def _create_mvd2(mvd2_path, morphology_path, positions,
 
         fd.write('MorphTypes\n')
         for _, k in sorted((v, k) for k, v in morph_types.items()):
-            fd.write('{MName} {type} {sclass}\n'.format(**k._asdict())) # pylint: disable=W0212
+            fd.write(
+                '{MName} {type} {synapse_class}\n'.format(**k._asdict())) # pylint: disable=W0212
 
         fd.write('ElectroTypes\n')
         for _, k in sorted((v, k) for k, v in electro_types.items()):
@@ -149,7 +150,8 @@ def export_mvd2(directory, morphology_path, cells):
     Args:
         directory(str path): location where circuit is created
         morphology_path(str path): directory of h5 morphologies
-        cells: CellCollection object with at least: positions, sClass, mtype, etype, morphology
+        cells: CellCollection object with at least:
+            positions, synapse_class, mtype, etype, morphology
 
     Returns:
         MVD2 file
@@ -164,7 +166,7 @@ def export_mvd2(directory, morphology_path, cells):
 
     _create_mvd2(mvd2_path, morphology_path,
                  cells.positions,
-                 cells.properties.sClass,
+                 cells.properties.synapse_class,
                  cells.properties.mtype,
                  cells.properties.etype,
                  cells.properties.morphology)

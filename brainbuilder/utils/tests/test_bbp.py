@@ -35,7 +35,7 @@ def test_load_recipe_as_layer_distributions_complex():
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'))
 
     eq_(list(layer_dists.keys()),
-        ['layer', 'mtype', 'etype', 'mClass', 'sClass', 'percentage'])
+        ['layer', 'mtype', 'etype', 'mClass', 'synapse_class', 'percentage'])
 
     eq_(len(layer_dists.values), 9)
 

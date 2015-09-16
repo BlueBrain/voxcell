@@ -74,7 +74,7 @@
     "dSTUT": [230, 213, 68]
   },
 
-  "sClass": {
+  "synapse_class": {
     "default": [255, 255, 255],
     "excitatory": [0, 0, 255],
     "inhibitory": [255, 0, 0]

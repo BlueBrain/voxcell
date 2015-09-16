@@ -6,17 +6,17 @@ import brainbuilder.assignment_synapse_class as ASC
 
 
 def test_assign_synapse_class_empty():
-    sclass = ASC.assign_synapse_class_randomly(np.zeros(shape=(0, 3)), inhibitory_fraction=0)
-    eq_(sclass.shape, (0, 1))
+    chosen = ASC.assign_synapse_class_randomly(np.zeros(shape=(0, 3)), inhibitory_fraction=0)
+    eq_(chosen.shape, (0, 1))
 
 
 def test_assign_synapse_class_all_excitatory():
     result = ASC.assign_synapse_class_randomly(np.zeros(shape=(10, 3)), inhibitory_fraction=0)
     eq_(result.shape, (10, 1))
-    assert_equal(result.sClass, np.array(['excitatory'] * 10))
+    assert_equal(result.synapse_class, np.array(['excitatory'] * 10))
 
 
 def test_assign_synapse_class_all_inhibitory():
     result = ASC.assign_synapse_class_randomly(np.zeros(shape=(10, 3)), inhibitory_fraction=1)
     eq_(result.shape, (10, 1))
-    assert_equal(result.sClass, np.array(['inhibitory'] * 10))
+    assert_equal(result.synapse_class, np.array(['inhibitory'] * 10))

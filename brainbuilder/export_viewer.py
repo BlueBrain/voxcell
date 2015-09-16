@@ -25,8 +25,8 @@ def export_viewer(directory, voxel_dimensions, orientation_field, cells):
     viewer.export_points(joinp(directory, 'etype.pts'),
                          cells.positions, 'etype', cells.properties.etype)
 
-    viewer.export_points(joinp(directory, 'sclass.pts'),
-                         cells.positions, 'sClass', cells.properties.sClass)
+    viewer.export_points(joinp(directory, 'synapse_class.pts'),
+                         cells.positions, 'synapse_class', cells.properties.synapse_class)
 
     for i in range(orientation_field.shape[-2]):
         viewer.export_vector_field(joinp(directory, 'field_%d.vcf' % i),

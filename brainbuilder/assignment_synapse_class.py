@@ -21,7 +21,7 @@ def assign_synapse_class_randomly(positions, inhibitory_fraction):
                               size=positions.shape[0],
                               p=np.array([1.0 - inhibitory_fraction, inhibitory_fraction]))
 
-    return pd.DataFrame({'sClass': chosen})
+    return pd.DataFrame({'synapse_class': chosen})
 
 
 def assign_synapse_class_from_spatial_dist(positions, spatial_dist, voxel_dimensions):
@@ -36,5 +36,5 @@ def assign_synapse_class_from_spatial_dist(positions, spatial_dist, voxel_dimens
         A pandas DataFrame with one row for each position and one column: sClass.
         For those positions whose morphology could not be determined, nan is used.
     '''
-    chosen_sclass = tt.assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions)
-    return pd.DataFrame({'sClass': spatial_dist.traits['sClass'][chosen_sclass].as_matrix()})
+    chosen = tt.assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions)
+    return pd.DataFrame({'synapse_class': spatial_dist.traits['synapse_class'][chosen].as_matrix()})

@@ -56,7 +56,7 @@ def load_recipe(recipe_filename):
     '''
     recipe_tree = etree.parse(recipe_filename)
 
-    sclass_alias = {
+    synapse_class_alias = {
         'INH': 'inhibitory',
         'EXC': 'excitatory'
     }
@@ -80,13 +80,13 @@ def load_recipe(recipe_filename):
                                 structural_type.attrib['id'],
                                 electro_type.attrib['id'],
                                 structural_type.attrib['mClass'],
-                                sclass_alias[structural_type.attrib['sClass']],
+                                synapse_class_alias[structural_type.attrib['sClass']],
                                 percentage
                             ]
 
     return pd.DataFrame(read_records(), columns=['layer',
                                                  'mtype', 'etype',
-                                                 'mClass', 'sClass',
+                                                 'mClass', 'synapse_class',
                                                  'percentage'])
 
 

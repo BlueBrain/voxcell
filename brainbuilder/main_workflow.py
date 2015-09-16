@@ -65,7 +65,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
                                                            annotation.raw, hierarchy, region_name)
 
-    sclass_sdist = tt.reduce_distribution_collection(recipe_sdist, 'sClass')
+    synapse_class_sdist = tt.reduce_distribution_collection(recipe_sdist, 'synapse_class')
 
     neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation.raw,
                                                                 hierarchy, region_name,
@@ -86,10 +86,11 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     cells.orientations = randomise_orientations(cells.orientations, rotation_ranges)
 
     chosen_synapse_class = assign_synapse_class_from_spatial_dist(cells.positions,
-                                                                  sclass_sdist, voxel_dimensions)
+                                                                  synapse_class_sdist,
+                                                                  voxel_dimensions)
     cells.add_properties(chosen_synapse_class)
 
-    chosen_me = assign_metype(cells.positions, cells.properties.sClass,
+    chosen_me = assign_metype(cells.positions, cells.properties.synapse_class,
                               recipe_sdist, voxel_dimensions)
     cells.add_properties(chosen_me)
 
