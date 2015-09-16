@@ -1,7 +1,6 @@
-import tempfile
 import numpy as np
 from nose.tools import raises
-from numpy.testing import assert_array_equal, assert_equal
+from numpy.testing import assert_array_equal
 
 from brainbuilder import select_region as sr
 
@@ -54,12 +53,3 @@ def test_sr_1():
         'children': [{'id': 1, 'name': 'r', 'children': []}]}
 
     sr.select_region(annotation_raw, density_raw, h, 'w')
-
-
-def test_serialize():
-    regions = np.array([[2.,  0.],
-                        [2.,  0.]])
-    with tempfile.NamedTemporaryFile() as f:
-        sr.serialize_region(f.name, regions)
-        new_regions = sr.deserialize_region(f.name)
-        assert_equal(regions, new_regions)

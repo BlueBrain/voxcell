@@ -1,5 +1,4 @@
 '''algorithm to clip a cell density distributions'''
-import h5py
 import numpy as np
 from brainbuilder.utils import genbrain as gb
 
@@ -40,27 +39,3 @@ def select_hemisphere(density_raw, left=True):
     if not left:
         in_region = np.negative(in_region)
     return density_raw * in_region
-
-
-def serialize_region(dst_file, region):
-    '''Serialize region
-
-    Args:
-        dst_file(str): fullpath to filename to write
-        region: np.array
-    '''
-    with h5py.File(dst_file, 'w') as h5:
-        h5.create_dataset('region', data=region)
-
-
-def deserialize_region(src_file):
-    '''De-serialize orientation fields
-
-    Args:
-        src_file(str): fullpath to filename to write
-
-    Returns:
-        region information as np.array
-    '''
-    with h5py.File(src_file, 'r') as h5:
-        return np.array(h5['region'])

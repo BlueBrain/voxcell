@@ -27,11 +27,3 @@ def test_assign_metype_random():
                     ['mtype1', 'etype0'],
                     ['mtype2', 'etype1']], dtype=object)
     assert_equal(metypes, res)
-
-
-def test_serialize():
-    metypes = AM.assign_metype_random(positions, mtypes, etypes)
-    with tempfile.NamedTemporaryFile() as f:
-        AM.serialize_assign_metype(f.name, metypes)
-        new_metypes = AM.deserialize_assign_metype(f.name)
-        assert_equal(metypes, new_metypes)
