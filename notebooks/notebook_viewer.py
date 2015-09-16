@@ -51,13 +51,18 @@ class NotebookViewer(object):
     def show_property(self, name, positions, properties):
         '''save a bunch of positions with properties locally and display them'''
         fullpath = joinp(self.output_directory, name + '.pts')
-        viewer.export_points(fullpath, positions, properties, name)
+        viewer.export_points(fullpath, positions, name, properties)
         self.show(name + '.pts')
 
-    def show_placement(self, name, positions, orientations, chosen_morphologies):
-        '''save a bunch of morphologies placement and display them'''
+    def show_placement(self, name, positions, orientations, chosen_morphologies, coloring=None):
+        '''save a bunch of morphologies placement and display them
+
+        Args:
+            coloring: a tuple of (attribute name, attribute values). Optional.
+        '''
         fullpath = joinp(self.output_directory, name + '.placement')
-        viewer.export_positions_vectors(fullpath, positions, orientations)
+        coloring = coloring if coloring is not None else ('morphology', chosen_morphologies)
+        viewer.export_positions_vectors(fullpath, positions, orientations, *coloring)
         morph_fullpath = joinp(self.output_directory, name + '.txt')
         viewer.export_strings(morph_fullpath, chosen_morphologies)
         self.show(name + '.placement')

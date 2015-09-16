@@ -44,7 +44,7 @@ var placementViewer = placementViewer ? placementViewer : {};
 
     var morphs = morphData.split('\n');
 
-    var rowLength = 4 * 3;
+    var rowLength = 5 * 3;
     var count = placementData.length / rowLength;
 
     //TODO: this should be retrieved for instance from a query parameter
@@ -73,11 +73,19 @@ var placementViewer = placementViewer ? placementViewer : {};
   morphology file and then apply the rotation and positioning from the placement file.
   */
   placementViewer.PlacementViewer.prototype.loadAndPlaceMesh = function(data, e) {
-    //TODO: use a better material that this one.
-    var material = new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide});
-    var mesh = morphBuilder.buildMesh(e.data.asc,material);
+    var properties = getPlacementProperties(data, e.data.offset);
+
+    var material = new THREE.MeshLambertMaterial( {
+      color: properties.color,
+      ambient: properties.color,
+    } );
+
+    var mesh = morphBuilder.buildMesh(e.data.asc, material);
+    mesh.applyMatrix(properties.rotation);
+    mesh.position.copy(properties.position);
     this.scene.add(mesh);
-    this.applyPositionOrientation(mesh, data, e.data.offset);
+    this.averagePoint.add(properties.position);
+
     this.count += 1;
 
     var center = new THREE.Vector3();
@@ -87,39 +95,43 @@ var placementViewer = placementViewer ? placementViewer : {};
     this.callbackRendering();
   };
 
-  placementViewer.PlacementViewer.prototype.applyPositionOrientation =
-  function(mesh, data, offset) {
-    var x = data[offset];
-    var y = data[offset + 1];
-    var z = data[offset + 2];
+  function getPlacementProperties(data, offset) {
+    var p = new THREE.Vector3(data[offset], data[offset + 1], data[offset + 2]);
     offset += 3;
 
     var n11 = data[offset];
     var n12 = data[offset + 1];
     var n13 = data[offset + 2];
     var n14 = 0;
-
     offset += 3;
+
     var n21 = data[offset];
     var n22 = data[offset + 1];
     var n23 = data[offset + 2];
     var n24 = 0;
-
     offset += 3;
+
     var n31 = data[offset];
     var n32 = data[offset + 1];
     var n33 = data[offset + 2];
     var n34 = 0;
+    offset += 3;
 
     var n41 = 0;
     var n42 = 0;
     var n43 = 0;
     var n44 = 1;
 
+    var col = new THREE.Color(data[offset], data[offset + 1], data[offset + 2]);
+    offset += 3;
+
     var m = new THREE.Matrix4();
     m.set(n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44);
-    mesh.applyMatrix(m);
-    mesh.position.set(x,y,z);
-    this.averagePoint.add(new THREE.Vector3(x,y,z));
+
+    return {
+      color: col,
+      position: p,
+      rotation: m
+    };
   };
 }());

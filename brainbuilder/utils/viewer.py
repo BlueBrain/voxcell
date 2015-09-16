@@ -23,6 +23,12 @@ def load_traits_colormap(filepath):
                        colormap)
 
 
+def get_cell_color(attribute, chosen_traits):
+    '''compute an array with colors for each cell depending on a given attribute'''
+    colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
+    return [np.array(colormap[attribute][t]) / 255.0 for t in chosen_traits]
+
+
 def serialize_points(filename, positions, colors):
     '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
     L.debug("saving %d points in %s", positions.shape[0], filename)
@@ -30,10 +36,9 @@ def serialize_points(filename, positions, colors):
     block.tofile(filename)
 
 
-def export_points(filename, positions, chosen_traits, attribute):
+def export_points(filename, positions, attribute, chosen_traits):
     '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
-    colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
-    colors = [np.array(colormap[attribute][t]) / 255.0 for t in chosen_traits]
+    colors = get_cell_color(attribute, chosen_traits)
     serialize_points(filename, positions, colors)
 
 
@@ -79,10 +84,11 @@ def export_vector_field(filename, field, point_count, voxel_dimensions):
     export_vectors(filename, positions, all_vectors)
 
 
-def export_positions_vectors(filename, positions, orientations):
+def export_positions_vectors(filename, positions, orientations, attribute, chosen_traits):
     ''' export position along with vectors to a binary file of float 32'''
     vectors = orientations.reshape((orientations.shape[0], np.prod(orientations.shape[1:])))
-    reduced_all = np.append(positions, vectors, axis=-1)
+    colors = get_cell_color(attribute, chosen_traits)
+    reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=-1), (positions, vectors, colors))
     reduced_all.astype(np.float32).tofile(filename)
 
 
