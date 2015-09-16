@@ -48,8 +48,10 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     var near = 0.1;
     var far = 50000;
     scene.fog = new THREE.Fog(0x000000, near, far);
-    var light = new THREE.AmbientLight(0xffffff);
+    var light = new THREE.AmbientLight(0x888888);
     scene.add(light);
+    var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    scene.add(directionalLight);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, near, far);
     camera.position.z = 150;

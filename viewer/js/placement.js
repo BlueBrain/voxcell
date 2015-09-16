@@ -74,7 +74,7 @@ var placementViewer = placementViewer ? placementViewer : {};
   */
   placementViewer.PlacementViewer.prototype.loadAndPlaceMesh = function(data, e) {
     //TODO: use a better material that this one.
-    var material = new THREE.MeshLambertMaterial({color: 0xff0000, side: THREE.DoubleSide});
+    var material = new THREE.MeshLambertMaterial({color: 0xffffff, side: THREE.DoubleSide});
     var mesh = morphBuilder.buildMesh(e.data.asc,material);
     this.scene.add(mesh);
     this.applyPositionOrientation(mesh, data, e.data.offset);
