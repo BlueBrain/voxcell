@@ -41,28 +41,28 @@ class NotebookViewer(object):
                         joinp(self.output_directory, filename_raw), raw)
         self.show(filename_mhd)
 
-    def show_points(self, name, positions):
+    def show_points(self, name, cells):
         '''save a bunch of positions locally and display them'''
         fullpath = joinp(self.output_directory, name + '.pts')
-        colors = [[0.9, 0.9, 1]] * len(positions)
-        viewer.serialize_points(fullpath, positions, colors)
+        colors = [[0.9, 0.9, 1]] * len(cells.positions)
+        viewer.serialize_points(fullpath, cells.positions, colors)
         self.show(name + '.pts')
 
-    def show_property(self, name, positions, properties):
+    def show_property(self, name, cells):
         '''save a bunch of positions with properties locally and display them'''
         fullpath = joinp(self.output_directory, name + '.pts')
-        viewer.export_points(fullpath, positions, name, properties)
+        viewer.export_points(fullpath, cells, name)
         self.show(name + '.pts')
 
-    def show_placement(self, name, positions, orientations, chosen_morphologies, coloring=None):
+    def show_placement(self, name, cells, coloring=None):
         '''save a bunch of morphologies placement and display them
 
         Args:
-            coloring: a tuple of (attribute name, attribute values). Optional.
+            coloring: the name of the property to use as color (default: morphology)
         '''
         fullpath = joinp(self.output_directory, name + '.placement')
-        coloring = coloring if coloring is not None else ('morphology', chosen_morphologies)
-        viewer.export_positions_vectors(fullpath, positions, orientations, *coloring)
+        coloring = coloring if coloring is not None else 'morphology'
+        viewer.export_positions_vectors(fullpath, cells, coloring)
         morph_fullpath = joinp(self.output_directory, name + '.txt')
-        viewer.export_strings(morph_fullpath, chosen_morphologies)
+        viewer.export_strings(morph_fullpath, cells.properties.morphology)
         self.show(name + '.placement')

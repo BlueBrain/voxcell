@@ -23,10 +23,10 @@ def load_traits_colormap(filepath):
                        colormap)
 
 
-def get_cell_color(attribute, chosen_traits):
+def get_cell_color(cells, attribute):
     '''compute an array with colors for each cell depending on a given attribute'''
     colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
-    return [np.array(colormap[attribute][t]) / 255.0 for t in chosen_traits]
+    return [np.array(colormap[attribute][t]) / 255.0 for t in cells.properties[attribute]]
 
 
 def serialize_points(filename, positions, colors):
@@ -36,10 +36,10 @@ def serialize_points(filename, positions, colors):
     block.tofile(filename)
 
 
-def export_points(filename, positions, attribute, chosen_traits):
+def export_points(filename, cells, attribute):
     '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
-    colors = get_cell_color(attribute, chosen_traits)
-    serialize_points(filename, positions, colors)
+    colors = get_cell_color(cells, attribute)
+    serialize_points(filename, cells.positions, colors)
 
 
 def serialize_vectors(filename, positions, vectors, colors0, colors1):
@@ -84,11 +84,16 @@ def export_vector_field(filename, field, point_count, voxel_dimensions):
     export_vectors(filename, positions, all_vectors)
 
 
-def export_positions_vectors(filename, positions, orientations, attribute, chosen_traits):
+def export_positions_vectors(filename, cells, attribute):
     ''' export position along with vectors to a binary file of float 32'''
-    vectors = orientations.reshape((orientations.shape[0], np.prod(orientations.shape[1:])))
-    colors = get_cell_color(attribute, chosen_traits)
-    reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=-1), (positions, vectors, colors))
+    vectors = cells.orientations.reshape((cells.orientations.shape[0],
+                                          np.prod(cells.orientations.shape[1:])))
+
+    colors = get_cell_color(cells, attribute)
+
+    reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=-1),
+                         (cells.positions, vectors, colors))
+
     reduced_all.astype(np.float32).tofile(filename)
 
 

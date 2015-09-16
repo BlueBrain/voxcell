@@ -19,14 +19,11 @@ def export_viewer(directory, voxel_dimensions, orientation_field, cells):
 
     # TODO consider downsampling points (for full brain, the viewer may crash)
 
-    viewer.export_points(joinp(directory, 'mtype.pts'),
-                         cells.positions, 'mtype', cells.properties.mtype)
+    viewer.export_points(joinp(directory, 'mtype.pts'), cells, 'mtype')
 
-    viewer.export_points(joinp(directory, 'etype.pts'),
-                         cells.positions, 'etype', cells.properties.etype)
+    viewer.export_points(joinp(directory, 'etype.pts'), cells, 'etype')
 
-    viewer.export_points(joinp(directory, 'synapse_class.pts'),
-                         cells.positions, 'synapse_class', cells.properties.synapse_class)
+    viewer.export_points(joinp(directory, 'synapse_class.pts'), cells, 'synapse_class')
 
     for i in range(orientation_field.shape[-2]):
         viewer.export_vector_field(joinp(directory, 'field_%d.vcf' % i),
@@ -34,5 +31,4 @@ def export_viewer(directory, voxel_dimensions, orientation_field, cells):
 
     # TODO export chosen orientation for each point
 
-    viewer.export_points(joinp(directory, 'morph.pts'),
-                         cells.positions, 'morphology', cells.properties.morphology)
+    viewer.export_points(joinp(directory, 'morph.pts'), cells, 'morphology')
