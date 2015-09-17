@@ -195,8 +195,21 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       var urlRaw = (urlMhd.substring(0, urlMhd.lastIndexOf('/') + 1) +
         mhd.ElementDataFile);
 
-      return viewerUtils.getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, 1000, 1, 0));
+      return viewerUtils.getFile(urlRaw, 'arraybuffer').then(buildRaw(mhd, undefined, 1, 0));
     });
+  }
+
+  function getAutoDownsampleStep(data, filterMin, maxCap) {
+    var validCount = _.filter(data, function (v) { return v > filterMin; }).length;
+    var downsampleStep = Math.max(Math.floor(validCount / maxCap), 1);
+
+    console.log(
+      'total data: ' + data.length +
+      ' valid: ' + validCount +
+      ' downsampleStep: ' + downsampleStep
+    );
+
+    return downsampleStep;
   }
 
   function buildRaw(mhd, downsampleStep, scaleFactor, filterMin) {
@@ -231,6 +244,10 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       );
 
       var averagePoint = new THREE.Vector3(0, 0, 0);
+
+      if (downsampleStep === undefined) {
+        downsampleStep = getAutoDownsampleStep(data, filterMin, 100000);
+      }
 
       var i = 0;
       for (var z = 0; z < dimsizeZ; z++) {
