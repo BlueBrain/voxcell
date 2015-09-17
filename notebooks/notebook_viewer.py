@@ -2,9 +2,11 @@
 
 import os
 import copy
+import numpy as np
 from os.path import join as joinp
 from brainbuilder.utils import viewer
 from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import traits as tt
 from IPython.display import HTML, display
 
 
@@ -65,3 +67,13 @@ class NotebookViewer(object):
         morph_fullpath = joinp(self.output_directory, name + '.txt')
         viewer.export_strings(morph_fullpath, cells.properties.morphology)
         self.show(name + '.placement')
+
+    def show_sdist(self, sdist, attribute, value, voxel_dimensions):
+        '''visualize the 3D probability distribution of the particular value of an attribute
+        from a spatial distribution
+
+        Voxels where the probability is missing or zero are not shown.
+        '''
+        raw = tt.get_probability_field(sdist, attribute, value).astype(np.float32)
+        mhd = gb.get_mhd_info(raw.shape, np.float32, voxel_dimensions, 'sdist.raw')
+        self.show_metaio('sdist', mhd, raw)

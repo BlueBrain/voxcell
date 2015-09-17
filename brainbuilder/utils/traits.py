@@ -161,3 +161,18 @@ def reduce_distribution_collection(spatial_dist, attribute):
                                  index=traits.index)
 
     return SpatialDistribution(spatial_dist.field, distributions, traits)
+
+
+def get_probability_field(sdist, attribute, value):
+    '''extract the probability of a particular attribute value from a spatial distribution
+
+    Voxels where the probability is missing will contain a probability of zero.
+
+    Returns:
+        A numpy array with the same shape as sdist.field where every voxel is a float representing
+        the probability of an attribute value being assigned to a cell in that voxel.
+    '''
+    probs = sdist.distributions[sdist.traits[attribute] == value].sum()
+    probs_field = probs[sdist.field.flatten()]
+    probs_field = probs_field.fillna(0)
+    return probs_field.values.reshape(sdist.field.shape)
