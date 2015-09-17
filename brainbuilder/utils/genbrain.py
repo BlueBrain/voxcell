@@ -373,6 +373,7 @@ class CellCollection(object):
         '''
         with h5py.File(filename, 'w') as f:
             f.create_group('cells')
+            f.create_group('library')
 
             if self.positions is not None:
                 f.create_dataset('cells/positions', data=self.positions)
@@ -390,7 +391,12 @@ class CellCollection(object):
                     # (automatically set to the current maximum).
                     data = data.astype(np.str)
 
-                f.create_dataset('cells/properties/' + name, data=data)
+                    unique_values, indices = np.unique(data, return_inverse=True)
+                    f.create_dataset('cells/properties/' + name, data=indices)
+                    f.create_dataset('library/' + name, data=unique_values)
+
+                else:
+                    f.create_dataset('cells/properties/' + name, data=data)
 
     @classmethod
     def deserialize(cls, filename):
@@ -417,6 +423,13 @@ class CellCollection(object):
                 properties = data['properties']
 
                 for name, data in properties.iteritems():
-                    cells.properties[name] = np.array(data)
+                    data = np.array(data)
+
+                    if name in f['library']:
+                        unique_values = np.array(f['library'][name])
+                        cells.properties[name] = unique_values[data]
+
+                    else:
+                        cells.properties[name] = data
 
         return cells
