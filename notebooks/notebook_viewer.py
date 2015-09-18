@@ -37,15 +37,14 @@ class NotebookViewer(object):
         filename_mhd = name + '.mhd'
         mhd = copy.copy(base_mhd)
         mhd['ElementDataFile'] = filename_raw
-        gb.save_meta_io(joinp(self.output_directory, filename_mhd), mhd,
-                        joinp(self.output_directory, filename_raw), raw)
+        gb.MetaIO(mhd, raw).save(joinp(self.output_directory, filename_mhd))
         self.show(filename_mhd)
 
     def show_points(self, name, cells):
         '''save a bunch of positions locally and display them'''
         fullpath = joinp(self.output_directory, name + '.pts')
         colors = [[0.9, 0.9, 1]] * len(cells.positions)
-        viewer.serialize_points(fullpath, cells.positions, colors)
+        viewer.save_points(fullpath, cells.positions, colors)
         self.show(name + '.pts')
 
     def show_property(self, name, cells):

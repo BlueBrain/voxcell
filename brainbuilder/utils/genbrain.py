@@ -33,8 +33,25 @@ class MetaIO(object):
         Return:
             MetaIO object
         '''
-        mhd, raw = load_meta_io(mhd_path, raw_path)
+        if not mhd_path.endswith('.mhd'):
+            L.warning('mhd_path does not end in .mhd')
+
+        mhd = read_mhd(mhd_path)
+
+        if raw_path is None:
+            dirname = os.path.dirname(mhd_path)
+            raw_path = joinp(dirname, mhd['ElementDataFile'])
+
+        if not raw_path.endswith('.raw'):
+            L.warning('data_path does not end in .raw')
+
+        raw = load_raw(mhd['ElementType'], mhd['DimSize'], raw_path)
         return cls(mhd, raw)
+
+    def save(self, mhd_filename):
+        '''save a MetaIO header file and its accompanying data file'''
+        save_mhd(mhd_filename, self.mhd)
+        self.raw.transpose().tofile(self.mhd['ElementDataFile'])
 
 
 def read_mhd(path):
@@ -125,60 +142,6 @@ def load_raw(element_type, shape, data_path):
     return data
 
 
-def load_meta_io(mhd_path, data_path=None):
-    '''load a meta io image
-
-    Args:
-        mhd_path(str): path to .mdh file describing data
-        data_path(str): path to data file described by .mhd file (usually .raw)
-            if None, .mhd file is read and ElementDataFile is used instead
-
-    Return:
-        tuple of the meta information, and numpy array of correct type
-    '''
-    if not mhd_path.endswith('.mhd'):
-        L.warning('mhd_path does not end in .mhd')
-
-    mhd = read_mhd(mhd_path)
-
-    if data_path is None:
-        dirname = os.path.dirname(mhd_path)
-        data_path = joinp(dirname, mhd['ElementDataFile'])
-
-    if not data_path.endswith('.raw'):
-        L.warning('data_path does not end in .raw')
-
-    raw = load_raw(mhd['ElementType'], mhd['DimSize'], data_path)
-    return mhd, raw
-
-
-def save_meta_io(mhd_filename, mhd, raw_filename, raw):
-    '''save a MetaIO header file and its accompanying data file'''
-    save_mhd(mhd_filename, mhd)
-    raw.transpose().tofile(raw_filename)
-
-
-def load_positions(filename):
-    '''load the cell positions from hdf5'''
-    with h5py.File(filename, 'r') as h5:
-        x = h5['x']
-        y = h5['y']
-        z = h5['z']
-        positions = np.empty((len(x), 3))
-        positions[:, 0] = x
-        positions[:, 1] = y
-        positions[:, 2] = z
-        return positions
-
-
-def save_positions(filename, positions):
-    '''save the cell positions in hdf5'''
-    with h5py.File(filename, 'w') as h5:
-        h5.create_dataset(name='x', data=positions[:, 0])
-        h5.create_dataset(name='y', data=positions[:, 1])
-        h5.create_dataset(name='z', data=positions[:, 2])
-
-
 def load_hierarchy(filename):
     '''load a hierarchy of annotations in json from the Allen Brain Institute'''
     return json.load(file(filename))
@@ -224,9 +187,9 @@ def load_trace_data(experiment_path, experiment_type):
         ('injection', 'energy', 'density', 'intensity', )
         the data is clipped, and returned
     '''
-    _, data = load_meta_io(joinp(experiment_path, experiment_type + '.mhd'),
-                           joinp(experiment_path, experiment_type + '.raw'))
-    return data
+    metaio = MetaIO.load(joinp(experiment_path, experiment_type + '.mhd'),
+                         joinp(experiment_path, experiment_type + '.raw'))
+    return metaio.raw
 
 
 def create_voxel_cube(max_x, max_y, max_z, dtype=object):
@@ -291,21 +254,6 @@ def get_points_list_from_mask(mask):
     return np.array(np.nonzero(mask)).swapaxes(0, 1)
 
 
-def save_orientations(filename, orientations):
-    '''serialise a list of tensor fields to h5.
-    orientations must be a list of 3 teson fields corresponding to the
-    right vectors, up vectors and fwd vectors'''
-    with h5py.File(filename, 'w') as h5:
-        for name, data in zip(('right', 'up', 'fwd'), orientations):
-            h5.create_dataset(name=name, data=data)
-
-
-def load_orientations(filename):
-    '''deserialise a list of tensor fields from h5'''
-    with h5py.File(filename, 'r') as h5:
-        return [np.array(h5[name]) for name in ('right', 'up', 'fwd')]
-
-
 def cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions):
     '''create random position in the selected voxel. Add some random jitter'''
     jitter = np.random.random(np.shape(cell_voxel_indices))
@@ -365,8 +313,8 @@ class CellCollection(object):
         '''
         self.properties = pd.concat([self.properties, new_properties], axis=1)
 
-    def serialize(self, filename):
-        '''serialize this cell collection
+    def save(self, filename):
+        '''save this cell collection to HDF5
 
         Args:
             filename(str): fullpath to filename to write
@@ -399,8 +347,8 @@ class CellCollection(object):
                     f.create_dataset('cells/properties/' + name, data=data)
 
     @classmethod
-    def deserialize(cls, filename):
-        '''de-serialize a cell collection
+    def load(cls, filename):
+        '''load a cell collection from HDF5
 
         Args:
             filename(str): fullpath to filename to write

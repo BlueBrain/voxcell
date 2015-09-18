@@ -29,7 +29,7 @@ def get_cell_color(cells, attribute):
     return [np.array(colormap[attribute][t]) / 255.0 for t in cells.properties[attribute]]
 
 
-def serialize_points(filename, positions, colors):
+def save_points(filename, positions, colors):
     '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
     L.debug("saving %d points in %s", positions.shape[0], filename)
     block = np.append(positions, colors, axis=1).astype(np.float32)
@@ -39,10 +39,10 @@ def serialize_points(filename, positions, colors):
 def export_points(filename, cells, attribute):
     '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
     colors = get_cell_color(cells, attribute)
-    serialize_points(filename, cells.positions, colors)
+    save_points(filename, cells.positions, colors)
 
 
-def serialize_vectors(filename, positions, vectors, colors0, colors1):
+def save_vectors(filename, positions, vectors, colors0, colors1):
     '''save a bunch of vectors to binary to a format that can be loaded by the JS viewer'''
     L.debug("saving %d vectors in %s", positions.shape[0], filename)
     p0_block = np.append(positions, colors0, axis=1).astype(np.float32)
@@ -56,7 +56,7 @@ def export_vectors(filename, positions, vectors):
     The color of each vector encodes the XYZ components'''
     colors1 = np.abs(vectors)
     colors0 = colors1 * 0.5
-    serialize_vectors(filename, positions, vectors, colors0, colors1)
+    save_vectors(filename, positions, vectors, colors0, colors1)
 
 
 def sample_vector_field(field, point_count, voxel_dimensions):

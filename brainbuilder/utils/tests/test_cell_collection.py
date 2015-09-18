@@ -34,8 +34,8 @@ def assert_equal_cells(c0, c1):
 
 def check_roundtrip(original):
     with tempcwd():
-        original.serialize('cells.h5')
-        restored = gb.CellCollection.deserialize('cells.h5')
+        original.save('cells.h5')
+        restored = gb.CellCollection.load('cells.h5')
         assert_equal_cells(original, restored)
 
 

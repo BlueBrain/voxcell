@@ -9,27 +9,6 @@ from brainbuilder.utils import genbrain as gb
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def test_hdf5_round_trip_0():
-    original = np.random.random((0, 3))
-    with tempfile.NamedTemporaryFile() as f:
-        gb.save_positions(f.name, original)
-        assert_equal(gb.load_positions(f.name), original)
-
-
-def test_hdf5_round_trip_1():
-    original = np.random.random((1, 3))
-    with tempfile.NamedTemporaryFile() as f:
-        gb.save_positions(f.name, original)
-        assert_equal(gb.load_positions(f.name), original)
-
-
-def test_hdf5_round_trip_10():
-    original = np.random.random((1, 3))
-    with tempfile.NamedTemporaryFile() as f:
-        gb.save_positions(f.name, original)
-        assert_equal(gb.load_positions(f.name), original)
-
-
 def test_read_mhd():
     eq_(gb.read_mhd(os.path.join(DATA_PATH, 'atlasVolume.mhd')),
         {'AnatomicalOrientation': '???',
@@ -83,14 +62,14 @@ def test_load_raw_int():
 
 
 def test_load_meta_io():
-    mhd, original = gb.load_meta_io(os.path.join(DATA_PATH, 'atlasVolume.mhd'),
-                                    os.path.join(DATA_PATH, 'atlasVolume.raw'))
+    original = gb.MetaIO.load(os.path.join(DATA_PATH, 'atlasVolume.mhd'),
+                              os.path.join(DATA_PATH, 'atlasVolume.raw'))
 
     with tempfile.NamedTemporaryFile() as f:
-        original.transpose().tofile(f.name)
+        original.raw.transpose().tofile(f.name)
 
-        mhd, restored = gb.load_meta_io(os.path.join(DATA_PATH, 'atlasVolume.mhd'), f.name)
-        assert np.all(original == restored)
+        restored = gb.MetaIO.load(os.path.join(DATA_PATH, 'atlasVolume.mhd'), f.name)
+        assert np.all(original.raw == restored.raw)
 
 
 def test_cell_density_from_positions_0():
@@ -174,7 +153,7 @@ def test_get_in_hierarchy_1():
 
 def test_get_in_hierarchy_2():
     h = gb.find_in_hierarchy(gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json')),
-                               'name', 'Primary somatosensory area, barrel field')
+                             'name', 'Primary somatosensory area, barrel field')
     res = gb.get_in_hierarchy(h[0], 'id')
     eq_(res, [329, 981, 201, 1047, 1070, 1038, 1062])
 
