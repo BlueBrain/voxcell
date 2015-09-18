@@ -1,6 +1,33 @@
 '''helper mathematical functions'''
 
 import numpy as np
+import fractions
+from scipy.stats import itemfreq  # pylint: disable=E0611
+
+
+def unique_with_counts(array):
+    '''return two arrays: the unique values of array and the number of times they appear
+
+    This is equivalent to np.unique(array, return_counts=True)
+    However, this is a numpy 1.9 function so we need a custom implementation to run on numpy 1.8
+    '''
+    if array.shape != (0,):
+        unique, counts = tuple(itemfreq(array).transpose())
+    else:
+        unique, counts = (np.array([]), np.array([]))
+
+    return unique.astype(array.dtype), counts.astype(np.int)
+
+
+def lcm(a, b):
+    '''Return lowest common multiple.'''
+    return a * b // fractions.gcd(a, b)
+
+
+# TODO consider making this a np ufunc
+def lcmm(args):
+    '''Return lcm of args.'''
+    return reduce(lcm, args)
 
 
 def matrices_to_quaternions(matrices):

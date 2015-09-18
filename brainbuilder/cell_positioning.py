@@ -1,24 +1,10 @@
 '''task that positions cell bodies from a density distribution'''
 from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils.math import unique_with_counts
 import numpy as np
-from scipy.stats import itemfreq  # pylint: disable=E0611
 
 import logging
 L = logging.getLogger(__name__)
-
-
-def _unique_with_counts(array):
-    '''return two arrays: the unique values of array and the number of times they appear
-    this is equivalent to np.unique(array, return_counts=True)
-
-    However, this is a numpy 1.9 function so we need a custom implementation to run on numpy 1.8
-    '''
-    if array.shape != (0,):
-        unique, counts = tuple(itemfreq(array).transpose())
-    else:
-        unique, counts = (np.array([]), np.array([]))
-
-    return unique.astype(array.dtype), counts.astype(np.int)
 
 
 def assign_cell_counts(cell_body_density_raw, total_cell_count):
@@ -32,7 +18,7 @@ def assign_cell_counts(cell_body_density_raw, total_cell_count):
 
     chosen_voxels = np.random.choice(all_voxels, size=total_cell_count, p=probs)
 
-    unique, counts = _unique_with_counts(chosen_voxels)
+    unique, counts = unique_with_counts(chosen_voxels)
 
     chosen_indexes = np.unravel_index(unique, cell_body_density_raw.shape)
 

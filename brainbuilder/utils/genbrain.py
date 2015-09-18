@@ -291,24 +291,6 @@ def cell_density_from_positions(positions, density_dimensions, voxel_dimensions,
     return density
 
 
-def gcd(a, b):
-    '''Return greatest common divisor using Euclid's Algorithm.'''
-    while b:
-        a, b = b, a % b
-    return a
-
-
-def lcm(a, b):
-    '''Return lowest common multiple.'''
-    return a * b // gcd(a, b)
-
-
-# TODO consider making this a np ufunc
-def lcmm(args):
-    '''Return lcm of args.'''
-    return reduce(lcm, args)
-
-
 class CellCollection(object):
     '''Encapsulates all the data related to a collection of cells that compose a circuit.
 
