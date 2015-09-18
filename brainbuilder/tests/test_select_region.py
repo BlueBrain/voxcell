@@ -2,6 +2,7 @@ import numpy as np
 from nose.tools import raises
 from numpy.testing import assert_array_equal
 
+from brainbuilder.utils import genbrain as gb
 from brainbuilder import select_region as sr
 
 
@@ -15,9 +16,9 @@ def test_sr_0():
         'name': 'root',
         'children': [{'id': 1, 'name': 'r', 'children': []}]}
 
-    density_in_region = sr.select_region(annotation_raw, density_raw, h, 'r')
+    density_in_region = sr.select_region(annotation_raw, gb.MetaIO(None, density_raw), h, 'r')
 
-    assert_array_equal(density_in_region,
+    assert_array_equal(density_in_region.raw,
                        np.array([[0.,  2.],
                                  [0.,  2.]]))
 
@@ -32,9 +33,9 @@ def test_sr_inverse_0():
         'name': 'root',
         'children': [{'id': 1, 'name': 'r', 'children': []}]}
 
-    density_in_region = sr.select_region(annotation_raw, density_raw, h, 'r', inverse=True)
+    density_in_region = sr.select_region(annotation_raw, gb.MetaIO(None, density_raw), h, 'r', inverse=True)
 
-    assert_array_equal(density_in_region,
+    assert_array_equal(density_in_region.raw,
                        np.array([[2.,  0.],
                                  [2.,  0.]]))
 

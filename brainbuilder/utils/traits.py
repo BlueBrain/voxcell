@@ -34,44 +34,43 @@ import logging
 L = logging.getLogger(__name__)
 
 
-# TODO decide: should voxel_dimensions also be part of SpatialDistribution?
 SpatialDistribution = namedtuple('SpatialDistribution',
-                                 'field distributions traits')
+                                 'field distributions traits voxel_dimensions')
 # field: volume data where every voxel is an index in the distributions list
 #        -1 means unavailable data.
 # distributions: a distributions collection, see module docstring
 # traits: a traits collection, see module docstring
 
 
-def assign_from_spatial_distribution(positions, spatial_dist, voxel_dimensions):
+def assign_from_spatial_distribution(positions, sdist):
     '''for every cell in positions, chooses a property from a spatial distribution
 
     Args:
         positions: list of positions for soma centers (x, y, z).
-        spatial_dist: a spatial distribution of traits
+        sdist: a spatial distribution of traits
         voxel_dimensions: the size of the voxels in each dimension
 
     Returns:
         An array with the same length as positions where each value
         is an index into spatial_dist.traits
     '''
-    voxel_idx = gb.cell_positions_to_voxel_indices(positions, voxel_dimensions)
+    voxel_idx = gb.cell_positions_to_voxel_indices(positions, sdist.voxel_dimensions)
 
     voxel_idx_tuple = tuple(voxel_idx.transpose())
-    dist_id_per_position = spatial_dist.field[voxel_idx_tuple]
+    dist_id_per_position = sdist.field[voxel_idx_tuple]
 
     unknown_count = np.count_nonzero(dist_id_per_position == -1)
     if unknown_count:
         L.warning('%d total positions in unknown areas', unknown_count)
 
-    valid = np.in1d(dist_id_per_position, spatial_dist.distributions.columns)
+    valid = np.in1d(dist_id_per_position, sdist.distributions.columns)
     if np.count_nonzero(~valid):
         L.warning('missing distribution for %d positions', np.count_nonzero(~valid))
 
     chosen_trait_indices = np.ones_like(dist_id_per_position) * -1
 
     unique_dists = np.unique(dist_id_per_position[valid])
-    for dist_id, dist in spatial_dist.distributions[unique_dists].iteritems():
+    for dist_id, dist in sdist.distributions[unique_dists].iteritems():
         hit_count = np.count_nonzero(dist_id_per_position == dist_id)
 
         chosen = np.random.choice(dist.keys(), hit_count, p=dist.values)
@@ -112,7 +111,8 @@ def split_distribution_collection(spatial_dist, attributes):
         dists = dists[dists.columns[dists.sum() != 0]]
         dists = normalize_distribution_collection(dists)
 
-        grouped_distributions[attr_values] = SpatialDistribution(spatial_dist.field, dists, traits)
+        grouped_distributions[attr_values] = SpatialDistribution(spatial_dist.field, dists, traits,
+                                                                 spatial_dist.voxel_dimensions)
 
     return grouped_distributions
 
@@ -160,7 +160,10 @@ def reduce_distribution_collection(spatial_dist, attribute):
                                  columns=spatial_dist.distributions.columns,
                                  index=traits.index)
 
-    return SpatialDistribution(spatial_dist.field, distributions, traits)
+    return SpatialDistribution(spatial_dist.field,
+                               distributions,
+                               traits,
+                               spatial_dist.voxel_dimensions)
 
 
 def get_probability_field(sdist, attribute, value):

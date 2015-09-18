@@ -20,9 +20,9 @@ def test_normalize_distribution_collection():
 def test_split_distribution_collection_empty_0():
     probabilities = pd.DataFrame()
     attributes = ('name',)
-    traits_collection = pd.DataFrame(columns=attributes)
+    traits = pd.DataFrame(columns=attributes)
 
-    eq_(tt.split_distribution_collection(SD(None, probabilities, traits_collection), attributes),
+    eq_(tt.split_distribution_collection(SD(None, probabilities, traits, None), attributes),
         {})
 
 
@@ -32,7 +32,7 @@ def test_split_distribution_collection_empty_1():
     attributes = ('name',)
 
     field = None
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), ['a'])
     assert_frame_equal(res['a'].distributions, distributions)
     assert_frame_equal(res['a'].traits, traits)
@@ -44,11 +44,11 @@ def test_split_distribution_collection_empty_2():
     attributes = ('name',)
 
     field = None
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), ['a', 'b'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame())
     assert_frame_equal(res['b'].distributions, pd.DataFrame())
-    # {('a',): SD(None, [], traits), ('b',): SD(None, [], traits)}
+    # {('a',): SD(None, [], traits, None), ('b',): SD(None, [], traits, None)}
 
 
 def test_split_distribution_collection_single_0():
@@ -57,9 +57,9 @@ def test_split_distribution_collection_single_0():
     traits = pd.DataFrame([{'name': 'a'}])
     attributes = ('name',)
 
-    # {('a',): SD(None, [{0: 1}], traits)})
+    # {('a',): SD(None, [{0: 1}], traits, None)})
 
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), ['a'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res['a'].traits, traits)
@@ -71,8 +71,8 @@ def test_split_distribution_collection_single_1():
     traits = pd.DataFrame([{'name': 'a'}, {'name': 'b'}])
     attributes = ('name',)
 
-    # {('a',): SD(None, [{0: 1.0}], traits), ('b',): SD(None, [{1: 1.0}], traits)})
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    # {('a',): SD(None, [{0: 1.0}], traits, None), ('b',): SD(None, [{1: 1.0}], traits, None)})
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), ['a', 'b'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res['b'].distributions, pd.DataFrame([1.], index=[1]))
@@ -84,9 +84,7 @@ def test_split_distribution_collection_single_2():
     traits = pd.DataFrame([{'name': 'a'}, {'name': 'b'}, {'name': 'b'}])
     attributes = ('name',)
 
-    # {('a',): SD(None, [{0: 1.0}], traits), ('b',): SD(None, [{1: 0.5, 2: 0.5}], traits)})
-
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), ['a', 'b'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res['b'].distributions, pd.DataFrame([0.5, 0.5], index=[1, 2]))
@@ -101,10 +99,10 @@ def test_split_distribution_collection_multiattr_0():
 
     attributes = ('name', 'type')
 
-    # {('a', 'x'): SD(None, [{0: 1.0}], traits),
-    #  ('b', 'y'): SD(None, [{1: 0.5, 2: 0.5}], traits)})
+    # {('a', 'x'): SD(None, [{0: 1.0}], traits, None),
+    #  ('b', 'y'): SD(None, [{1: 0.5, 2: 0.5}], traits, None)})
 
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), [('a', 'x'), ('b', 'y')])
     assert_frame_equal(res[('a', 'x')].distributions, pd.DataFrame([1.0]))
     assert_frame_equal(res[('b', 'y')].distributions, pd.DataFrame([0.5, 0.5], index=[1, 2]))
@@ -119,26 +117,29 @@ def test_split_distribution_collection_multiattr_1():
 
     attributes = ('name', 'type')
 
-    res = tt.split_distribution_collection(SD(field, distributions, traits), attributes)
+    res = tt.split_distribution_collection(SD(field, distributions, traits, None), attributes)
     eq_(res.keys(), [('a', 'x'), ('b', 'y'), ('b', 'x')])
     assert_frame_equal(res[('a', 'x')].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res[('b', 'x')].distributions, pd.DataFrame([1.], index=[1]))
     assert_frame_equal(res[('b', 'y')].distributions, pd.DataFrame([1.], index=[2]))
 
-    # {('a', 'x'): SD(None, [{0: 1.0}], traits),
-    #  ('b', 'x'): SD(None, [{1: 1.0}], traits),
-    #  ('b', 'y'): SD(None, [{2: 1.0}], traits)})
+    # {('a', 'x'): SD(None, [{0: 1.0}], traits, None),
+    #  ('b', 'x'): SD(None, [{1: 1.0}], traits, None),
+    #  ('b', 'y'): SD(None, [{2: 1.0}], traits, None)})
 
 
 def test_reduce_distribution_collection_empty_0():
-    r = tt.reduce_distribution_collection(SD(None, pd.DataFrame(), pd.DataFrame(columns=['name'])), 'name')
+    r = tt.reduce_distribution_collection(SD(None,
+                                             pd.DataFrame(),
+                                             pd.DataFrame(columns=['name']),
+                                             None), 'name')
     assert_frame_equal(r.distributions, pd.DataFrame())
 
 
 def test_reduce_distribution_collection_empty_1():
     traits = pd.DataFrame([{'name': 'a', 'type': 'x'}])
     dists = pd.DataFrame(index=traits.index)
-    r = tt.reduce_distribution_collection(SD(None, dists, traits), 'type')
+    r = tt.reduce_distribution_collection(SD(None, dists, traits, None), 'type')
     print r.distributions
     print r.traits
     assert_frame_equal(r.distributions, dists)
@@ -150,7 +151,7 @@ def test_reduce_distribution_collection_0():
 
     dists = pd.DataFrame([0.25, 0.75])
 
-    r = tt.reduce_distribution_collection(SD(None, dists, traits), 'type')
+    r = tt.reduce_distribution_collection(SD(None, dists, traits, None), 'type')
     assert_frame_equal(r.distributions,
                        pd.DataFrame([1.]))
 
@@ -161,7 +162,7 @@ def test_reduce_distribution_collection_1():
 
     dists = pd.DataFrame([0.75, 0.25])
 
-    r = tt.reduce_distribution_collection(SD(None, dists, traits), 'type')
+    r = tt.reduce_distribution_collection(SD(None, dists, traits, None), 'type')
     assert_frame_equal(r.traits,
                        pd.DataFrame({'type': ['y', 'x']}))
     assert_frame_equal(r.distributions,
@@ -176,13 +177,13 @@ def test_reduce_distribution_collection_2():
 
     dists = pd.DataFrame([0.1, 0.2, 0.3, 0.4])
 
-    r = tt.reduce_distribution_collection(SD(None, dists, traits), 'type')
+    r = tt.reduce_distribution_collection(SD(None, dists, traits, None), 'type')
     assert_frame_equal(r.traits,
                        pd.DataFrame({'type': ['y', 'x']}))
     assert_frame_equal(r.distributions,
                        pd.DataFrame([0.7, 0.3]))
 
-    r = tt.reduce_distribution_collection(SD(None, dists, traits), 'name')
+    r = tt.reduce_distribution_collection(SD(None, dists, traits, None), 'name')
     assert_frame_equal(r.traits,
                        pd.DataFrame({'name': ['a', 'c', 'b', 'd']}))
     assert_frame_equal(r.distributions,

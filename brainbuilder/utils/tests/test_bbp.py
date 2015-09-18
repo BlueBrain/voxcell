@@ -10,6 +10,9 @@ from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import bbp
 
 
+mhd = {'ElementSpacing': (25, 25, 25)}
+
+
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
@@ -55,8 +58,8 @@ def test_transform_into_spatial_distribution():
         2: (23,)
     }
 
-    (traits_field, probabilites, traits_collection) = \
-        bbp.transform_recipe_into_spatial_distribution(annotation_raw,
+    (traits_field, probabilites, traits_collection, vd) = \
+        bbp.transform_recipe_into_spatial_distribution(gb.MetaIO(mhd, annotation_raw),
                                                        layer_distributions,
                                                        region_layers_map)
 
@@ -78,7 +81,8 @@ def test_load_neurondb_v4():
 
 def test_transform_neurondb_into_spatial_distribution_empty():
     sd = bbp.transform_neurondb_into_spatial_distribution(
-        np.ones(shape=(3, 3), dtype=np.int), pd.DataFrame(), {},
+        gb.MetaIO(mhd, np.ones(shape=(3, 3), dtype=np.int)),
+        pd.DataFrame(), {},
         percentile=0.0)
 
     assert sd.traits.empty
@@ -103,7 +107,7 @@ def test_transform_neurondb_into_spatial_distribution():
         {'name': 'd', 'layer': 3, 'etype': 4, 'mtype': 4, 'placement_hints': (1,)},
     ])
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -165,7 +169,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 
     annotation = np.array([0] + [1] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -199,7 +203,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
 
     annotation = np.array([0, 0] + [1] * 12)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -237,7 +241,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
 
     annotation = np.array([1] * 3 + [0])  # [bottom, middle, top, pia]
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -281,7 +285,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
 
     annotation = np.array([0, 0] + [1] * 10)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -381,7 +385,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
 
     annotation = np.array([0, 0] + [1] * 4 + [2] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)

@@ -3,13 +3,13 @@ import numpy as np
 from brainbuilder.utils import genbrain as gb
 
 
-def select_region(annotation_raw, density_raw, hierarchy, region_name, inverse=False):
+def select_region(annotation_raw, density, hierarchy, region_name, inverse=False):
     '''Trim a density voxel dataset to keep only those that belong to a desired region
     or the opposite. Returns a copy where regions of no interest have been clipped out.
 
     Args:
         annotation_raw: voxel data from Allen Brain Institute (can be crossrefrenced with hierarchy)
-        density_raw: voxel data from Allen Brain Institute.
+        density: MetaIO object with voxel data from Allen Brain Institute.
             Called "atlasVolume" in their website.
             Each voxel represents a value that once normalised, can be treated as a probability
             of cells appearing in this voxel.
@@ -24,7 +24,7 @@ def select_region(annotation_raw, density_raw, hierarchy, region_name, inverse=F
     in_region = gb.get_regions_mask_by_names(annotation_raw, hierarchy, [region_name])
     if inverse:
         in_region = np.negative(in_region)
-    return density_raw * in_region
+    return gb.MetaIO(density.mhd, density.raw * in_region)
 
 
 def select_hemisphere(density_raw, left=True):

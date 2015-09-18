@@ -90,7 +90,7 @@ def load_recipe(recipe_filename):
                                                  'percentage'])
 
 
-def transform_recipe_into_spatial_distribution(annotation_raw, recipe, region_layers_map):
+def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map):
     '''take distributions grouped by layer ids and a map from regions to layers
     and build a volumetric dataset that contains the same distributions
 
@@ -109,10 +109,11 @@ def transform_recipe_into_spatial_distribution(annotation_raw, recipe, region_la
 
     distributions = tt.normalize_distribution_collection(distributions)
 
-    return tt.SpatialDistribution(annotation_raw, distributions, recipe)
+    return tt.SpatialDistribution(annotation.raw, distributions, recipe,
+                                  annotation.mhd['ElementSpacing'])
 
 
-def load_recipe_as_spatial_distribution(recipe_filename, annotation_raw, hierarchy, region_name):
+def load_recipe_as_spatial_distribution(recipe_filename, annotation, hierarchy, region_name):
     '''load the bbp recipe and return a spatial voxel-based distribution
 
     Returns:
@@ -122,7 +123,7 @@ def load_recipe_as_spatial_distribution(recipe_filename, annotation_raw, hierarc
 
     recipe = load_recipe(recipe_filename)
 
-    return transform_recipe_into_spatial_distribution(annotation_raw,
+    return transform_recipe_into_spatial_distribution(annotation,
                                                       recipe,
                                                       region_layers_map)
 
@@ -320,7 +321,7 @@ def assign_distributions_to_voxels(voxel_scores, bins):
     return region_dist_idxs
 
 
-def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, region_layers_map,
+def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
                                                  percentile):
     '''take the raw data from a neuron db (list of dicts) and build a volumetric dataset
     that contains the distributions of possible morphologies.
@@ -329,7 +330,7 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
     the layer (further from pia) towards the top (closer to pia)
 
     Args:
-        annotation_raw: voxel data from Allen Brain Institute to identify regions of space.
+        annotation: voxel data from Allen Brain Institute to identify regions of space.
         neurondb(dataframe): columns 'morphology', 'layer', 'mtype', 'etype', 'placement_hints'
         region_layers_map: dict that contains the relationship between regions (referenced by
             the annotation) and layers (referenced by the neurondb). The keys are region ids
@@ -345,18 +346,18 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
     # "outside" is tagged in the annotation_raw with 0
     # This will calculate, for every voxel, the euclidean distance to
     # the nearest voxel tagged as "outside" the brain
-    distance_to_pia = distance_transform_edt(annotation_raw)
+    distance_to_pia = distance_transform_edt(annotation.raw)
     distance_to_pia = distance_to_pia.flatten()
 
     region_dists = get_region_distributions_from_placement_hints(neurondb, region_layers_map,
                                                                  percentile)
 
-    flat_field = np.ones(shape=np.product(annotation_raw.shape), dtype=np.int) * -1
+    flat_field = np.ones(shape=np.product(annotation.raw.shape), dtype=np.int) * -1
 
     all_dists = pd.DataFrame()
 
     for region_ids, dists in region_dists.iteritems():
-        flat_mask = np.in1d(annotation_raw, region_ids)
+        flat_mask = np.in1d(annotation.raw, region_ids)
 
         voxel_distances = distance_to_pia[flat_mask]
         voxel_dist_indices = assign_distributions_to_voxels(voxel_distances, len(dists.columns))
@@ -366,13 +367,14 @@ def transform_neurondb_into_spatial_distribution(annotation_raw, neurondb, regio
         flat_field[flat_mask] = voxel_dist_indices + offset
         all_dists = pd.concat([all_dists, dists], axis=1)
 
-    return tt.SpatialDistribution(flat_field.reshape(annotation_raw.shape),
+    return tt.SpatialDistribution(flat_field.reshape(annotation.raw.shape),
                                   all_dists.fillna(0.0),
-                                  neurondb)
+                                  neurondb,
+                                  annotation.mhd['ElementSpacing'])
 
 
 def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
-                                             annotation_raw, hierarchy, region_name,
+                                             annotation, hierarchy, region_name,
                                              percentile):
     '''load the bbp recipe and return a spatial voxel-based distribution
 
@@ -383,7 +385,7 @@ def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
 
     neurondb = load_neurondb_v4(neurondb_filename)
 
-    return transform_neurondb_into_spatial_distribution(annotation_raw,
+    return transform_neurondb_into_spatial_distribution(annotation,
                                                         neurondb,
                                                         region_layers_map,
                                                         percentile)

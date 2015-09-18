@@ -122,34 +122,34 @@ def test_cell_voxel_indices_to_positions_2():
     assert (result[1, 2] >= 100) and (result[0, 2] <= 200)
 
 
+mhd = {'ElementSpacing': (25, 25, 25)}
+
+
 def test_cell_positioning_0():
-    cell_body_density_raw = np.ones((3, 3, 3))
-    voxel_dimensions = (25, 25, 25)
+    raw = np.ones((3, 3, 3))
     total_cell_count = 0
 
-    result = cp.cell_positioning(cell_body_density_raw, voxel_dimensions, total_cell_count)
+    result = cp.cell_positioning(gb.MetaIO(mhd, raw), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
 
 
 def test_cell_positioning_1():
-    cell_body_density_raw = np.ones((3, 3, 3))
-    voxel_dimensions = (25, 25, 25)
+    raw = np.ones((3, 3, 3))
     total_cell_count = 1
 
-    result = cp.cell_positioning(cell_body_density_raw, voxel_dimensions, total_cell_count)
+    result = cp.cell_positioning(gb.MetaIO(mhd, raw), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
 
 
 def test_cell_positioning_full():
-    cell_body_density_raw = np.ones((3, 3, 3))
-    voxel_dimensions = (25, 25, 25)
+    raw = np.ones((3, 3, 3))
     total_cell_count = 3 * 3 * 3
 
-    result = cp.cell_positioning(cell_body_density_raw, voxel_dimensions, total_cell_count)
+    result = cp.cell_positioning(gb.MetaIO(mhd, raw), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))

@@ -57,7 +57,7 @@ def cell_counts_to_cell_voxel_indices(cell_counts_per_voxel):
     return locations
 
 
-def cell_positioning(density_raw, voxel_dimensions, total_cell_count):
+def cell_positioning(density, total_cell_count):
     '''
     Args:
         density_raw: voxel data from Allen Brain Institute.
@@ -71,13 +71,14 @@ def cell_positioning(density_raw, voxel_dimensions, total_cell_count):
         positions: list of positions for soma centers (x, y, z).
     '''
 
-    cell_counts_per_voxel = assign_cell_counts(density_raw, total_cell_count)
+    cell_counts_per_voxel = assign_cell_counts(density.raw, total_cell_count)
 
     assert np.sum(cell_counts_per_voxel) == total_cell_count, \
         '%s != %s' % (np.sum(cell_counts_per_voxel), total_cell_count)
 
     cell_voxel_indices = cell_counts_to_cell_voxel_indices(cell_counts_per_voxel)
 
-    positions = gb.cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
+    positions = gb.cell_voxel_indices_to_positions(cell_voxel_indices,
+                                                   density.mhd['ElementSpacing'])
 
     return positions

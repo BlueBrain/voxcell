@@ -68,12 +68,12 @@ class NotebookViewer(object):
         viewer.export_strings(morph_fullpath, cells.properties.morphology)
         self.show(name + '.placement')
 
-    def show_sdist(self, sdist, attribute, value, voxel_dimensions):
+    def show_sdist(self, sdist, attribute, value):
         '''visualize the 3D probability distribution of the particular value of an attribute
         from a spatial distribution
 
         Voxels where the probability is missing or zero are not shown.
         '''
         raw = tt.get_probability_field(sdist, attribute, value).astype(np.float32)
-        mhd = gb.get_mhd_info(raw.shape, np.float32, voxel_dimensions, 'sdist.raw')
+        mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, 'sdist.raw')
         self.show_metaio('sdist', mhd, raw)

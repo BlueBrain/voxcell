@@ -31,7 +31,7 @@ def assign_metype_random(positions, mtypes, etypes):
     return pd.DataFrame(data=metypes[choices], columns=('mtype', 'etype'))
 
 
-def assign_metype(positions, synapse_class, recipe_sdist, voxel_dimensions):
+def assign_metype(positions, synapse_class, recipe_sdist):
     '''for every cell in positions, assign me-type to each cell based on its synapse class
 
     Args:
@@ -51,9 +51,7 @@ def assign_metype(positions, synapse_class, recipe_sdist, voxel_dimensions):
 
     for value, subdist in subsections.iteritems():
         mask = np.array(synapse_class) == value
-        chosen_metype[mask] = tt.assign_from_spatial_distribution(positions[mask],
-                                                                  subdist,
-                                                                  voxel_dimensions)
+        chosen_metype[mask] = tt.assign_from_spatial_distribution(positions[mask], subdist)
 
     invalid_metype_count = np.count_nonzero(chosen_metype == -1)
     if invalid_metype_count:

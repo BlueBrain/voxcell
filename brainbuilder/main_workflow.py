@@ -63,39 +63,37 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     # transform BBP recipies into voxel data:
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
-                                                           annotation.raw, hierarchy, region_name)
+                                                           annotation, hierarchy, region_name)
 
     synapse_class_sdist = tt.reduce_distribution_collection(recipe_sdist, 'synapse_class')
 
-    neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation.raw,
+    neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation,
                                                                 hierarchy, region_name,
                                                                 percentile=0.92)
 
     # main circuit building workflow:
 
-    density_raw = select_region(annotation.raw, full_density.raw, hierarchy, region_name)
+    density = select_region(annotation.raw, full_density, hierarchy, region_name)
 
     orientation_field = compute_sscx_orientation_fields(annotation, hierarchy, region_name)
 
     cells = gb.CellCollection()
 
-    cells.positions = cell_positioning(density_raw, voxel_dimensions, total_cell_count)
+    cells.positions = cell_positioning(density, total_cell_count)
 
     cells.orientations = assign_orientations(cells.positions, orientation_field, voxel_dimensions)
 
     cells.orientations = randomise_orientations(cells.orientations, rotation_ranges)
 
     chosen_synapse_class = assign_synapse_class_from_spatial_dist(cells.positions,
-                                                                  synapse_class_sdist,
-                                                                  voxel_dimensions)
+                                                                  synapse_class_sdist)
     cells.add_properties(chosen_synapse_class)
 
-    chosen_me = assign_metype(cells.positions, cells.properties.synapse_class,
-                              recipe_sdist, voxel_dimensions)
+    chosen_me = assign_metype(cells.positions, cells.properties.synapse_class, recipe_sdist)
     cells.add_properties(chosen_me)
 
     chosen_morphology = assign_morphology(cells.positions, cells.properties[['mtype', 'etype']],
-                                          neuron_sdist, voxel_dimensions)
+                                          neuron_sdist)
     cells.add_properties(chosen_morphology)
 
     acronym = gb.find_in_hierarchy(hierarchy, 'name', region_name)[0]['acronym']
