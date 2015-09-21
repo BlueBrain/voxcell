@@ -95,7 +95,7 @@ def save_mhd(name, data, dimensions, spacing):
     mhd_filename = name + '.mhd'
     raw_filename = name + '.raw'
     mhd = gb.get_mhd_info(dimensions, data.dtype.type, [spacing] * 3, raw_filename)
-    gb.save_meta_io(mhd_filename, mhd, raw_filename, data)
+    gb.MetaIO(mhd, data).save(mhd_filename)
 
 
 def column2voxel(mvd2_path, column_name, spacing):
