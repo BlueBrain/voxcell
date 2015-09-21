@@ -8,7 +8,6 @@ from os.path import join as joinp
 
 from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import bbp
-from brainbuilder.utils import traits as tt
 from brainbuilder.orientation_fields import compute_sscx_orientation_fields
 from brainbuilder.select_region import select_region
 from brainbuilder.cell_positioning import cell_positioning
@@ -65,7 +64,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
                                                            annotation, hierarchy, region_name)
 
-    synapse_class_sdist = tt.reduce_distribution_collection(recipe_sdist, 'synapse_class')
+    synapse_class_sdist = recipe_sdist.reduce_distribution_collection('synapse_class')
 
     neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation,
                                                                 hierarchy, region_name,

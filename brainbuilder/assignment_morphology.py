@@ -1,5 +1,4 @@
 '''algorithm to assign morphologies to a group of cells'''
-from brainbuilder.utils import traits as tt
 import numpy as np
 
 import logging
@@ -14,13 +13,12 @@ def assign_morphology(positions, chosen_me, sdist):
         chosen_me: dataframe with the mtype and etype values that correspond to each position.
         sdist: SpatialDistribution containing at least the properties:
             mtype, etype, morphology.
-        voxel_dimensions: tuple with the size of the voxels in microns in each axis.
 
     Returns:
         A pandas DataFrame with one row for each position and one column: morphology.
         For those positions whose morphology could not be determined, nan is used.
     '''
-    subsections = tt.split_distribution_collection(sdist, ('mtype', 'etype'))
+    subsections = sdist.split_distribution_collection(('mtype', 'etype'))
 
     chosen_morphs = np.ones(shape=(len(chosen_me)), dtype=np.int) * -1
 
@@ -29,7 +27,7 @@ def assign_morphology(positions, chosen_me, sdist):
     for values_comb in unique_me.values:
         subdist = subsections[tuple(values_comb)]
         mask = np.all(np.array(chosen_me) == values_comb, axis=1)
-        chosen_morphs[mask] = tt.assign_from_spatial_distribution(positions[mask], subdist)
+        chosen_morphs[mask] = subdist.assign_from_spatial_distribution(positions[mask])
 
     #TODO: docstring says non represented ones are NaN, but here it's looking for -1?
     if np.count_nonzero(chosen_morphs == -1):

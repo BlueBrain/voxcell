@@ -4,8 +4,6 @@ import itertools
 import numpy as np
 import pandas as pd
 
-from brainbuilder.utils import traits as tt
-
 import logging
 L = logging.getLogger(__name__)
 
@@ -45,13 +43,13 @@ def assign_metype(positions, synapse_class, recipe_sdist):
         A pandas DataFrame with one row for each position and two columns: mtype and etype.
         For those positions whose me-type could not be determined, nan is used.
     '''
-    subsections = tt.split_distribution_collection(recipe_sdist, ('synapse_class',))
+    subsections = recipe_sdist.split_distribution_collection(('synapse_class',))
 
     chosen_metype = np.ones(shape=(len(synapse_class)), dtype=np.int) * -1
 
     for value, subdist in subsections.iteritems():
         mask = np.array(synapse_class) == value
-        chosen_metype[mask] = tt.assign_from_spatial_distribution(positions[mask], subdist)
+        chosen_metype[mask] = subdist.assign_from_spatial_distribution(positions[mask])
 
     invalid_metype_count = np.count_nonzero(chosen_metype == -1)
     if invalid_metype_count:

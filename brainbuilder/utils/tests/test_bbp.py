@@ -58,20 +58,19 @@ def test_transform_into_spatial_distribution():
         2: (23,)
     }
 
-    (traits_field, probabilites, traits_collection, vd) = \
-        bbp.transform_recipe_into_spatial_distribution(gb.MetaIO(mhd, annotation_raw),
-                                                       layer_distributions,
-                                                       region_layers_map)
+    sdist = bbp.transform_recipe_into_spatial_distribution(gb.MetaIO(mhd, annotation_raw),
+                                                           layer_distributions,
+                                                           region_layers_map)
 
-    assert_frame_equal(probabilites,
+    assert_frame_equal(sdist.distributions,
                        pd.DataFrame({1: [0.5,  0.5, 0.],
                                      2: [0., 0., 1.]}))
 
-    assert_frame_equal(traits_collection, layer_distributions)
+    assert_frame_equal(sdist.traits, layer_distributions)
 
     expected_field = np.ones(shape=(3, 3, 3))
     expected_field[1, 1, 1] = 2
-    assert_equal(traits_field, expected_field)
+    assert_equal(sdist.field, expected_field)
 
 
 def test_load_neurondb_v4():

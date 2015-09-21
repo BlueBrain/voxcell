@@ -3,9 +3,6 @@ import numpy as np
 import pandas as pd
 
 
-from brainbuilder.utils import traits as tt
-
-
 def assign_synapse_class_randomly(positions, inhibitory_fraction):
     '''for every cell in positions, chooses whether it's an Excitatory or Inhibitory neuron
 
@@ -36,5 +33,5 @@ def assign_synapse_class_from_spatial_dist(positions, sdist):
         A pandas DataFrame with one row for each position and one column: sClass.
         For those positions whose morphology could not be determined, nan is used.
     '''
-    chosen = tt.assign_from_spatial_distribution(positions, sdist)
+    chosen = sdist.assign_from_spatial_distribution(positions)
     return pd.DataFrame({'synapse_class': sdist.traits['synapse_class'][chosen].as_matrix()})
