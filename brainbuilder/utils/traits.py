@@ -84,6 +84,51 @@ class SpatialDistribution(object):
 
         return chosen_trait_indices
 
+    def assign_conditional(self, positions, preassigned):
+        '''for every cell in positions, chooses a property from a spatial distribution
+        but taking into account a pre-assigned values of related properties.
+
+
+        Args:
+            positions: list of positions for soma centers (x, y, z).
+            preassigned: pandas.DataFrame or pandas.Series with the pre-assigned values.
+
+        Returns:
+            An array with the same length as positions where each value
+            is an index into spatial_dist.traits
+
+            For those positions whose value could not be determined, -1 is used.
+        '''
+        preassigned = preassigned.to_frame() if isinstance(preassigned, pd.Series) else preassigned
+
+        subsections = self.split_distribution_collection(tuple(preassigned.columns))
+        chosen = np.ones(shape=(len(preassigned)), dtype=np.int) * -1
+
+        unique_assigned = preassigned.drop_duplicates()
+        for values_comb in unique_assigned.values:
+
+            if len(values_comb) == 1:
+                values_comb = values_comb[0]
+                hashable = values_comb
+            else:
+                hashable = tuple(values_comb)
+
+            if hashable in subsections:
+                subdist = subsections[hashable]
+                mask = np.all(np.array(preassigned) == values_comb, axis=1)
+                chosen[mask] = subdist.assign_from_spatial_distribution(positions[mask])
+
+        invalid_count = np.count_nonzero(chosen == -1)
+        if invalid_count:
+            # this may happen because of inconsistencies of the data
+            # for example if we assigned excitatory neurons to a neuron that is in
+            # a voxel for which only inhibitory metype probabilities are known
+            L.warning('%d / %d = %f cells could not get a valid value assigned',
+                      invalid_count, len(chosen),
+                      float(invalid_count) / len(chosen))
+
+        return chosen
+
     def split_distribution_collection(self, attributes):
         '''split a distribution in two or more so that each one only references
         traits with the same value for certain attributes.

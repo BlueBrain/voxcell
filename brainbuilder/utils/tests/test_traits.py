@@ -2,6 +2,8 @@ from nose.tools import eq_
 from brainbuilder.utils import traits as tt
 from brainbuilder.utils.traits import SpatialDistribution as SD
 import pandas as pd
+import numpy as np
+from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
 
 
@@ -186,3 +188,58 @@ def test_reduce_distribution_collection_2():
                        pd.DataFrame({'name': ['a', 'c', 'b', 'd']}))
     assert_frame_equal(r.distributions,
                        pd.DataFrame([0.1, 0.3, 0.2, 0.4]))
+
+
+def check_assign_conditional(preassigned, expected):
+    sdist = SD(field=np.array([[[0]]]),
+               distributions=pd.DataFrame([0.75, 0.25, 0.0]),
+               traits=pd.DataFrame([{'name': 'a', 'type': 'x', 'color': 0},
+                                    {'name': 'b', 'type': 'y', 'color': 0},
+                                    {'name': 'c', 'type': 'z', 'color': 1}]),
+               voxel_dimensions=(25, 25, 25))
+
+    chosen = sdist.assign_conditional(np.array([[1, 1, 1]]), preassigned)
+
+    assert_equal(chosen, np.array([expected]))
+
+
+def test_assign_conditional_single_series():
+    check_assign_conditional(pd.DataFrame({'type': ['x']}).type, 0)
+    check_assign_conditional(pd.DataFrame({'type': ['y']}).type, 1)
+
+
+def test_assign_conditional_single_dataframe():
+    check_assign_conditional(pd.DataFrame({'type': ['x']}), 0)
+    check_assign_conditional(pd.DataFrame({'type': ['y']}), 1)
+
+
+def test_assign_conditional_multiple():
+    check_assign_conditional(pd.DataFrame({'type': ['x'], 'color': [0]}), 0)
+    check_assign_conditional(pd.DataFrame({'type': ['y'], 'color': [0]}), 1)
+
+
+def test_assign_conditional_single_unknown():
+    preassigned = pd.DataFrame({'type': ['unknown']})
+    check_assign_conditional(preassigned, -1)
+
+
+def test_assign_conditional_single_impossible():
+    preassigned = pd.DataFrame({'type': ['z']})
+    check_assign_conditional(preassigned, -1)
+
+
+def test_assign_conditional_multiple_unknown():
+    preassigned = pd.DataFrame({'type': ['unknown'], 'color': [0]})
+    check_assign_conditional(preassigned, -1)
+
+
+def test_assign_conditional_multiple_impossible_0():
+    # probability of this combination is zero
+    preassigned = pd.DataFrame({'type': ['z'], 'color': [1]})
+    check_assign_conditional(preassigned, -1)
+
+
+def test_assign_conditional_multiple_impossible_1():
+    # preassigned values exist but combination does not
+    preassigned = pd.DataFrame({'name': ['a'], 'type': ['y']})
+    check_assign_conditional(preassigned, -1)
