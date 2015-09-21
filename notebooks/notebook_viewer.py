@@ -1,7 +1,6 @@
 '''simple integration of the brain builder viewer with ipython notebooks'''
 
 import os
-import copy
 import numpy as np
 from os.path import join as joinp
 from brainbuilder.utils import viewer
@@ -33,13 +32,11 @@ class NotebookViewer(object):
 
         display(HTML(html))
 
-    def show_metaio(self, name, base_mhd, raw):
+    def show_metaio(self, name, metaio):
         '''save a MetaIO file locally and display it'''
-        filename_raw = name + '.raw'
         filename_mhd = name + '.mhd'
-        mhd = copy.copy(base_mhd)
-        mhd['ElementDataFile'] = filename_raw
-        gb.MetaIO(mhd, raw).save(joinp(self.output_directory, filename_mhd))
+        filename_raw = name + '.raw'
+        metaio.save(joinp(self.output_directory, filename_mhd), filename_raw)
         self.show(filename_mhd)
 
     def show_points(self, name, cells):

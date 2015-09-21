@@ -4,6 +4,7 @@ import itertools
 import json
 import logging
 import os
+import copy
 
 from collections import OrderedDict
 from os.path import join as joinp
@@ -48,10 +49,22 @@ class MetaIO(object):
         raw = load_raw(mhd['ElementType'], mhd['DimSize'], raw_path)
         return cls(mhd, raw)
 
-    def save(self, mhd_filename):
-        '''save a MetaIO header file and its accompanying data file'''
-        save_mhd(mhd_filename, self.mhd)
-        self.raw.transpose().tofile(self.mhd['ElementDataFile'])
+    def save(self, mhd_path, raw_filename=None):
+        '''save a MetaIO header file and its accompanying data file
+
+        Args:
+            mhd_path(string): full path to mhd file
+            raw_filename(string): name of raw file relative to mhd file.
+                Optional: if None, ElementDataFile in mhd is used instead
+        '''
+        if raw_filename is not None:
+            mhd = copy.copy(self.mhd)
+            mhd['ElementDataFile'] = raw_filename
+        else:
+            mhd = self.mhd
+
+        save_mhd(mhd_path, mhd)
+        self.raw.transpose().tofile(joinp(os.path.dirname(mhd_path), mhd['ElementDataFile']))
 
 
 def read_mhd(path):
