@@ -13,6 +13,8 @@ import h5py
 import numpy as np
 import pandas as pd
 
+from brainbuilder.utils import math
+
 L = logging.getLogger(__name__)
 
 
@@ -340,7 +342,8 @@ class CellCollection(object):
                 f.create_dataset('cells/positions', data=self.positions)
 
             if self.orientations is not None:
-                f.create_dataset('cells/orientations', data=self.orientations)
+                f.create_dataset('cells/orientations',
+                                 data=math.matrices_to_quaternions(self.orientations))
 
             for name, series in self.properties.iteritems():
                 data = series.values
@@ -379,6 +382,7 @@ class CellCollection(object):
 
             if 'orientations' in data:
                 cells.orientations = np.array(data['orientations'])
+                cells.orientations = math.quaternions_to_matrices(cells.orientations)
 
             if 'properties' in data:
                 properties = data['properties']
