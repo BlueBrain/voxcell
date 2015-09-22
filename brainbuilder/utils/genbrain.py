@@ -338,7 +338,7 @@ class CellCollection(object):
                     data = data.astype(np.str)
 
                     unique_values, indices = np.unique(data, return_inverse=True)
-                    f.create_dataset('cells/properties/' + name, data=indices)
+                    f.create_dataset('cells/properties/' + name, data=indices.astype(np.uint32))
                     f.create_dataset('library/' + name, data=unique_values)
 
                 else:
