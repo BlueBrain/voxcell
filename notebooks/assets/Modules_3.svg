@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="40cm" height="3cm" viewBox="96 548 798 41" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #e5e5e5" x="252.55" y="549.667" width="72" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x="252.55" y="549.667" width="72" height="38"/>
+    <text font-size="12.8" style="fill: #7f7f7f;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="288.55" y="573.517">
+      <tspan x="288.55" y="573.517">Position</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #ffc48c" x="350.211" y="549.667" width="154.75" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #b15a42" x="350.211" y="549.667" width="154.75" height="38"/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="427.586" y="573.517">
+      <tspan x="427.586" y="573.517">Excitatory/Inhibitory</tspan>
+    </text>
+  </g>
+  <g>
+    <rect style="fill: #e5e5e5" x="530.621" y="549.667" width="119.3" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x="530.621" y="549.667" width="119.3" height="38"/>
+    <text font-size="12.8" style="fill: #7f7f7f;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="590.271" y="573.517">
+      <tspan x="590.271" y="573.517">M-Type E-Type</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x1="324.55" y1="568.667" x2="339.211" y2="568.667"/>
+    <polygon style="fill: #bfbfbf" points="339.211,573.667 349.211,568.667 339.211,563.667 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" points="339.211,573.667 349.211,568.667 339.211,563.667 "/>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x1="504.961" y1="568.667" x2="519.621" y2="568.667"/>
+    <polygon style="fill: #bfbfbf" points="519.621,573.667 529.621,568.667 519.621,563.667 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" points="519.621,573.667 529.621,568.667 519.621,563.667 "/>
+  </g>
+  <g>
+    <rect style="fill: #e5e5e5" x="675.582" y="549.667" width="97.4" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x="675.582" y="549.667" width="97.4" height="38"/>
+    <text font-size="12.8" style="fill: #7f7f7f;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="724.282" y="573.517">
+      <tspan x="724.282" y="573.517">Morphology</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x1="649.921" y1="568.667" x2="664.582" y2="568.667"/>
+    <polygon style="fill: #bfbfbf" points="664.582,573.667 674.582,568.667 664.582,563.667 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" points="664.582,573.667 674.582,568.667 664.582,563.667 "/>
+  </g>
+  <g>
+    <rect style="fill: #e5e5e5" x="798.642" y="549.667" width="94.25" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x="798.642" y="549.667" width="94.25" height="38"/>
+    <text font-size="12.8" style="fill: #7f7f7f;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="845.767" y="573.517">
+      <tspan x="845.767" y="573.517">Orientation</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x1="772.982" y1="568.667" x2="787.642" y2="568.667"/>
+    <polygon style="fill: #bfbfbf" points="787.642,573.667 797.642,568.667 787.642,563.667 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" points="787.642,573.667 797.642,568.667 787.642,563.667 "/>
+  </g>
+  <g>
+    <rect style="fill: #e5e5e5" x="97.89" y="549.667" width="129" height="38"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x="97.89" y="549.667" width="129" height="38"/>
+    <text font-size="12.8" style="fill: #7f7f7f;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:normal" x="162.39" y="573.517">
+      <tspan x="162.39" y="573.517">Region Selection</tspan>
+    </text>
+  </g>
+  <g>
+    <line style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" x1="226.89" y1="568.667" x2="241.55" y2="568.667"/>
+    <polygon style="fill: #bfbfbf" points="241.55,573.667 251.55,568.667 241.55,563.667 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #bfbfbf" points="241.55,573.667 251.55,568.667 241.55,563.667 "/>
+  </g>
+</svg>
