@@ -2,6 +2,7 @@
 var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
 (function() {
+  var defaultParticleSize = 100;
   var renderer, scene, camera, stats, controls, root;
   var cloudMaterial;
   // map of all objects loaded in the scene.
@@ -22,7 +23,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     datguiSettings.opacity = {};
     datguiSettings.opacity._datgui = datguiSettings._datgui.addFolder('opacity');
 
-    datguiSettings.size = Math.log(250  + 1);
+    datguiSettings.size = Math.log(defaultParticleSize  + 1);
 
     var sizeGui = datguiSettings._datgui.add(
       datguiSettings, 'size', 0.0, Math.log(5000.0)).step(0.01);
@@ -278,7 +279,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       console.log('max: ' + maxValue + ' min: ' + minValue);
       console.log('loaded: ' + count + ' points');
 
-      cloudMaterial = buildSquareCloudMaterial(250);
+      cloudMaterial = buildSquareCloudMaterial(defaultParticleSize);
 
       return {
         object: new THREE.PointCloud(geometry, cloudMaterial),
@@ -314,7 +315,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
     console.log('loaded: ' + count + ' points');
 
-    cloudMaterial = buildCircleCloudMaterial(250);
+    cloudMaterial = buildCircleCloudMaterial(defaultParticleSize);
 
     return {
       object: new THREE.PointCloud(geometry, cloudMaterial),
