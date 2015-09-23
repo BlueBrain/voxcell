@@ -71,6 +71,7 @@ class NotebookViewer(object):
 
         Voxels where the probability is missing or zero are not shown.
         '''
+        filename = 'sdist_' + value.replace(' ', '_')
         raw = sdist.get_probability_field(attribute, value).astype(np.float32)
-        mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, 'sdist.raw')
-        self.show_metaio('sdist', gb.MetaIO(mhd, raw))
+        mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
+        self.show_metaio(filename, gb.MetaIO(mhd, raw))
