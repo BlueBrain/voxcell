@@ -150,3 +150,8 @@ def combine_vector_fields(fields):
 
     else:
         return np.empty((0,))
+
+
+def split_orientation_field(field):
+    '''given an orientation field return a list of vector fields'''
+    return [field[..., i] for i in range(field.shape[-2])]

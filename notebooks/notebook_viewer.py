@@ -74,3 +74,10 @@ class NotebookViewer(object):
         raw = sdist.get_probability_field(attribute, value).astype(np.float32)
         mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
         self.show_metaio(filename, gb.MetaIO(mhd, raw))
+
+    def show_vectors(self, field, point_count, voxel_dimensions):
+        '''visualize a vector field'''
+        filename = 'field.vcf'
+        viewer.export_vector_field(joinp(self.output_directory, filename),
+                                   field, point_count, voxel_dimensions)
+        self.show(filename)
