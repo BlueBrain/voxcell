@@ -250,6 +250,16 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
         downsampleStep = getAutoDownsampleStep(data, filterMin, 100000);
       }
 
+      var palette = [new THREE.Color(0x0571b0), new THREE.Color(0x92c5de), new THREE.Color(0xb392de), new THREE.Color(0xca0020)];
+
+      var transferFunction = function(intensity, palette) {
+        var idx = Math.max(0, Math.ceil(intensity * (palette.length - 1)) - 1);
+        var c = new THREE.Color(palette[idx].r, palette[idx].g, palette[idx].b);
+        c.lerp(palette[idx + 1], intensity);
+        // console.log(intensity, idx);
+        return c
+      };
+
       var i = 0;
       for (var z = 0; z < dimsizeZ; z++) {
         for (var y = 0; y < dimsizeY; y++) {
@@ -264,10 +274,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
                 geometry.vertices.push(p);
 
                 var intensity = (value - minValue) / (maxValue - minValue);
-                geometry.colors.push(
-                  new THREE.Color(intensity, 0, 1 - intensity)
-                );
 
+                geometry.colors.push(transferFunction(intensity, palette));
                 averagePoint.add(p);
                 count++;
               }
