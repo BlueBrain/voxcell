@@ -28,6 +28,19 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     var sizeGui = datguiSettings._datgui.add(
       datguiSettings, 'size', 0.0, Math.log(5000.0)).step(0.01);
 
+    if (BigScreen.enabled) {
+      datguiSettings._datgui.add(
+        {
+          fullscreen: function() {
+            BigScreen.toggle();
+          }
+        },
+        'fullscreen'
+      );
+    }
+
+    datguiSettings._datgui.close();
+
     sizeGui.onChange(function(value) {
       particleSizeChange(Math.exp(value) - 1);
     });

@@ -5,7 +5,6 @@ import numpy as np
 from os.path import join as joinp
 from brainbuilder.utils import viewer
 from brainbuilder.utils import genbrain as gb
-from brainbuilder.utils import traits as tt
 from IPython.display import HTML, display
 
 
@@ -25,10 +24,10 @@ class NotebookViewer(object):
     def show(self, filename):
         '''display the given local file'''
         url = '../../static/index.html#' + joinp(self.directory, filename)
-        html = ('<iframe src="{url}"'
-                ' scrolling="no" width="700" height="350"></iframe>\n'
-                '<br>'
-                '<a href="{url}" target="_blank">fullscreen</a>').format(url=url)
+        html = (
+            '<iframe src="{url}"'
+            ' scrolling="no" width="700" height="350" allowfullscreen></iframe>\n'
+        ).format(url=url)
 
         display(HTML(html))
 
