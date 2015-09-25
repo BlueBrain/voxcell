@@ -27,7 +27,6 @@ def assign_synapse_class_from_spatial_dist(positions, sdist):
     Args:
         positions: list of positions for soma centers (x, y, z).
         sdist: SpatialDistribution with at least the property: sClass
-        voxel_dimensions: tuple with the size of the voxels in microns in each axis
 
     Returns:
         A pandas DataFrame with one row for each position and one column: sClass.
