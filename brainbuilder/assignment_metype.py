@@ -37,7 +37,6 @@ def assign_metype(positions, synapse_class, sdist):
         synapse_class: a list of synapse class values that correspond to each position.
         sdist: SpatialDistribution containing at least the properties:
             synapse_class, mtype, etype.
-        voxel_dimensions: tuple with the size of the voxels in microns in each axis, (x, y, z)
 
     Returns:
         A pandas DataFrame with one row for each position and two columns: mtype and etype.
