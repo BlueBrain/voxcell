@@ -323,6 +323,7 @@ def assign_distributions_to_voxels(voxel_scores, bins):
 
 
 def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_layers_map,
+                                                 metric,
                                                  percentile):
     '''take the raw data from a neuron db (list of dicts) and build a volumetric dataset
     that contains the distributions of possible morphologies.
@@ -336,6 +337,8 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
         region_layers_map: dict that contains the relationship between regions (referenced by
             the annotation) and layers (referenced by the neurondb). The keys are region ids
             and the values are tuples of layer ids.
+        metric(np.array): numpy array with the same shape as annotation where each value is the
+            value to map to the placement hints.
         percentile(float): percentile above which the morphologies are used, below which, their
             probability is set to 0 (ie: not used) range from (0.0, 1.0]
 
@@ -343,12 +346,9 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
         A SpatialDistribution object where the properties of the traits_collection are those
         obtained from the neurondb.
     '''
+    assert metric.shape == annotation.raw.shape
 
-    # "outside" is tagged in the annotation_raw with 0
-    # This will calculate, for every voxel, the euclidean distance to
-    # the nearest voxel tagged as "outside" the brain
-    distance_to_pia = distance_transform_edt(annotation.raw)
-    distance_to_pia = distance_to_pia.flatten()
+    metric = metric.flatten()
 
     region_dists = get_region_distributions_from_placement_hints(neurondb, region_layers_map,
                                                                  percentile)
@@ -360,7 +360,7 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
     for region_ids, dists in region_dists.iteritems():
         flat_mask = np.in1d(annotation.raw, region_ids)
 
-        voxel_distances = distance_to_pia[flat_mask]
+        voxel_distances = metric[flat_mask]
         voxel_dist_indices = assign_distributions_to_voxels(voxel_distances, len(dists.columns))
 
         offset = len(all_dists.columns)
@@ -372,6 +372,16 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
                                   all_dists.fillna(0.0),
                                   neurondb,
                                   annotation.mhd['ElementSpacing'])
+
+
+def get_distance_to_pia(annotation):
+    '''given an atlas, compute a voxel dataset of the same shape where every voxel value
+    represents the distance to the pia region'''
+
+    # "outside" is tagged in the annotation_raw with 0
+    # This will calculate, for every voxel, the euclidean distance to
+    # the nearest voxel tagged as "outside" the brain
+    return distance_transform_edt(annotation.raw)
 
 
 def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
@@ -389,4 +399,5 @@ def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
     return transform_neurondb_into_spatial_distribution(annotation,
                                                         neurondb,
                                                         region_layers_map,
+                                                        get_distance_to_pia(annotation),
                                                         percentile)
