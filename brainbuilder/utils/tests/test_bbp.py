@@ -82,6 +82,7 @@ def test_transform_neurondb_into_spatial_distribution_empty():
     sd = bbp.transform_neurondb_into_spatial_distribution(
         gb.MetaIO(mhd, np.ones(shape=(3, 3), dtype=np.int)),
         pd.DataFrame(), {},
+        np.zeros(shape=(3,3)),
         percentile=0.0)
 
     assert sd.traits.empty
@@ -107,6 +108,7 @@ def test_transform_neurondb_into_spatial_distribution():
     ])
 
     sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+                                                          np.zeros(shape=(3, 3)),
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -169,6 +171,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
     annotation = np.array([0] + [1] * 6)
 
     sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+                                                          np.arange(len(annotation)),
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -203,6 +206,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
     annotation = np.array([0, 0] + [1] * 12)
 
     sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+                                                          np.array([0, 0] + range(12)),
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -241,6 +245,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
     annotation = np.array([1] * 3 + [0])  # [bottom, middle, top, pia]
 
     sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+                                                          np.array([3, 2, 1, 0]),
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -285,6 +290,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
     annotation = np.array([0, 0] + [1] * 10)
 
     sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+                                                          np.array([0, 0] + range(10)),
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -385,6 +391,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
     annotation = np.array([0, 0] + [1] * 4 + [2] * 6)
 
     sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+                                                          np.array([0, 0] + range(10)),
                                                           percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
