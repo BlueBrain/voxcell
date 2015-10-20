@@ -48,8 +48,8 @@ def test_split_distribution_collection_empty_2():
     field = None
     res = SD(field, distributions, traits, None).split_distribution_collection(attributes)
     eq_(res.keys(), ['a', 'b'])
-    assert_frame_equal(res['a'].distributions, pd.DataFrame())
-    assert_frame_equal(res['b'].distributions, pd.DataFrame())
+    assert_frame_equal(res['a'].distributions, pd.DataFrame(index=[0]))
+    assert_frame_equal(res['b'].distributions, pd.DataFrame(index=[1]))
     # {('a',): SD(None, [], traits, None), ('b',): SD(None, [], traits, None)}
 
 
