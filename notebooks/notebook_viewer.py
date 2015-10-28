@@ -40,10 +40,7 @@ class NotebookViewer(object):
 
     def show_points(self, name, cells):
         '''save a bunch of positions locally and display them'''
-        fullpath = joinp(self.output_directory, name + '.pts')
-        colors = [[0.9, 0.9, 1]] * len(cells.positions)
-        viewer.save_points(fullpath, cells.positions, colors)
-        self.show(name + '.pts')
+        self.show_property(name, cells)
 
     def show_property(self, name, cells):
         '''save a bunch of positions with properties locally and display them'''

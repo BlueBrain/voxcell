@@ -26,37 +26,56 @@ def load_traits_colormap(filepath):
 def get_cell_color(cells, attribute):
     '''compute an array with colors for each cell depending on a given attribute'''
     colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
-    return [np.array(colormap[attribute][t]) / 255.0 for t in cells.properties[attribute]]
+    colormap = colormap[attribute]
+    if isinstance(colormap, dict):
+        return [np.array(colormap[t]) / 255.0 for t in cells.properties[attribute]]
+    else:
+        # color doesn't depend on the value of the attribute
+        return [colormap] * len(cells.positions)
 
 
-def save_points(filename, positions, colors):
-    '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
-    L.debug("saving %d points in %s", positions.shape[0], filename)
-    block = np.append(positions, colors, axis=1).astype(np.float32)
-    block.tofile(filename)
+def serialize_points(cells, attribute):
+    '''convert a collection of cells to binary to a format that can be loaded by the JS viewer
+        The serialized data format is a long array of float32 representing,
+        for each cell, its position and color:
+        [x_0, y_0, z_0, r_0, g_0, b_0,
+         x_1, y_1, z_1, r_1, g_1, b_1,
+         etc]
+        Color components are in the range [0, 1]
+    '''
+    L.debug("serializing %d points", cells.positions.shape[0])
+    colors = get_cell_color(cells, attribute)
+    return np.append(cells.positions, colors, axis=1).astype(np.float32)
 
 
 def export_points(filename, cells, attribute):
-    '''save a bunch of points to binary to a format that can be loaded by the JS viewer'''
-    colors = get_cell_color(cells, attribute)
-    save_points(filename, cells.positions, colors)
+    '''save a collection of cells to binary to a format that can be loaded by the JS viewer'''
+    block = serialize_points(cells, attribute)
+    block.tofile(filename)
 
 
-def save_vectors(filename, positions, vectors, colors0, colors1):
-    '''save a bunch of vectors to binary to a format that can be loaded by the JS viewer'''
-    L.debug("saving %d vectors in %s", positions.shape[0], filename)
+def serialize_vectors(positions, vectors):
+    '''convert a bunch of vectors to binary to a format that can be loaded by the JS viewer
+      The serialized data format is: a long array of float32 representing,
+      for each vector, its position, initial color, vector and end color:
+        [x_0, y_0, z_0, r0_0, g0_0, b0_0, i_0, j_0, k_0, r1_0, g1_0, b1_0,
+         x_1, y_1, z_1, r0_1, g0_1, b0_1, i_1, j_1, k_1, r1_1, g1_1, b1_1,
+         etc]
+      Color components are in the range [0, 1]
+    '''
+    L.debug("serializing %d vectors", positions.shape[0])
+    colors1 = np.abs(vectors)
+    colors0 = colors1 * 0.5
     p0_block = np.append(positions, colors0, axis=1).astype(np.float32)
     p1_block = np.append(vectors, colors1, axis=1).astype(np.float32)
-    block = np.append(p0_block, p1_block, axis=1).astype(np.float32)
-    block.tofile(filename)
+    return np.append(p0_block, p1_block, axis=1).astype(np.float32)
 
 
 def export_vectors(filename, positions, vectors):
     '''save a bunch of vectors to binary to a format that can be loaded by the JS viewer.
     The color of each vector encodes the XYZ components'''
-    colors1 = np.abs(vectors)
-    colors0 = colors1 * 0.5
-    save_vectors(filename, positions, vectors, colors0, colors1)
+    block = serialize_vectors(positions, vectors)
+    block.tofile(filename)
 
 
 def sample_vector_field(field, point_count, voxel_dimensions):
