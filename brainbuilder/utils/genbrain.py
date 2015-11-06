@@ -108,7 +108,7 @@ METAIO_TO_DTYPE = {'MET_UCHAR': np.uint8,
                    'MET_FLOAT': np.float32,
                    }
 # conversion of types numpy types to type in .mhd file
-DTYPE_TO_MATAIO = dict((v, k) for k, v in METAIO_TO_DTYPE.items())
+DTYPE_TO_METAIO = dict((v, k) for k, v in METAIO_TO_DTYPE.items())
 
 
 def get_mhd_info(dimensions, element_type, element_spacing, element_datafile):
@@ -125,13 +125,13 @@ def get_mhd_info(dimensions, element_type, element_spacing, element_datafile):
             'BinaryData': True,
             'BinaryDataByteOrderMSB': False,
             'CompressedData': False,
-            'TransformMatrix': '1 0 0 0 1 0 0 0 1',
-            'Offset': '0 0 0',
-            'CenterOfRotation': '0 0 0',
+            'TransformMatrix': (1, 0, 0, 0, 1, 0, 0, 0, 1),
+            'Offset': (0, 0, 0),
+            'CenterOfRotation': (0, 0, 0),
             'AnatomicalOrientation': '???',
-            'DimSize': ' '.join(str(d) for d in dimensions),
-            'ElementType': DTYPE_TO_MATAIO[element_type],
-            'ElementSpacing': ' '.join(str(e) for e in element_spacing),
+            'DimSize': dimensions,
+            'ElementType': DTYPE_TO_METAIO[element_type],
+            'ElementSpacing': element_spacing,
             'ElementDataFile': element_datafile,
             }
 
