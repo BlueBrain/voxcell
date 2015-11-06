@@ -17,5 +17,4 @@ def assign_morphology(positions, metypes, sdist):
         For those positions whose morphology could not be determined, nan is used.
     '''
     chosen = sdist.assign_conditional(positions, metypes)
-    df = sdist.traits[['morphology']].ix[chosen]
-    return df.reset_index().drop('index', 1)
+    return sdist.collect_traits(chosen, ('morphology',))

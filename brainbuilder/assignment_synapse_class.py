@@ -33,4 +33,4 @@ def assign_synapse_class_from_spatial_dist(positions, sdist):
         For those positions whose morphology could not be determined, nan is used.
     '''
     chosen = sdist.assign(positions)
-    return pd.DataFrame({'synapse_class': sdist.traits['synapse_class'][chosen].as_matrix()})
+    return sdist.collect_traits(chosen)

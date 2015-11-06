@@ -43,5 +43,4 @@ def assign_metype(positions, synapse_class, sdist):
         For those positions whose me-type could not be determined, nan is used.
     '''
     chosen = sdist.assign_conditional(positions, synapse_class)
-    df = sdist.traits[['mtype', 'etype']].ix[chosen]
-    return df.reset_index().drop('index', 1)
+    return sdist.collect_traits(chosen, ('mtype', 'etype'))

@@ -129,6 +129,20 @@ class SpatialDistribution(object):
 
         return chosen
 
+    def collect_traits(self, chosen, names=None):
+        '''return the trait values corresponding to an array of indices
+
+        Args:
+            chosen: array of indices into the traits dataframe
+            names: names of the properties to collect. If not specified use all in traits.
+
+        Returns:
+            A pandas DataFrame with one row for each index and one column for each value of names
+        '''
+        names = names if names is not None else self.traits.columns
+        df = self.traits[names].ix[chosen]
+        return df.reset_index().drop('index', 1)
+
     def split(self, attributes):
         '''split a distribution in two or more so that each one only references
         traits with the same value for certain attributes.
