@@ -64,7 +64,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
                                                            annotation, hierarchy, region_name)
 
-    synapse_class_sdist = recipe_sdist.reduce_distribution_collection('synapse_class')
+    synapse_class_sdist = recipe_sdist.reduce('synapse_class')
 
     neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation,
                                                                 hierarchy, region_name,

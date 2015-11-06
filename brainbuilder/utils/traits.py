@@ -50,7 +50,7 @@ class SpatialDistribution(object):
         self.traits = traits
         self.voxel_dimensions = voxel_dimensions
 
-    def assign_from_spatial_distribution(self, positions):
+    def assign(self, positions):
         '''for every cell in positions, chooses a property from a spatial distribution
 
         Args:
@@ -101,7 +101,7 @@ class SpatialDistribution(object):
         '''
         preassigned = preassigned.to_frame() if isinstance(preassigned, pd.Series) else preassigned
 
-        subsections = self.split_distribution_collection(tuple(preassigned.columns))
+        subsections = self.split(tuple(preassigned.columns))
         chosen = np.ones(shape=(len(preassigned)), dtype=np.int) * -1
 
         unique_assigned = preassigned.drop_duplicates()
@@ -116,7 +116,7 @@ class SpatialDistribution(object):
             if hashable in subsections:
                 subdist = subsections[hashable]
                 mask = np.all(np.array(preassigned) == values_comb, axis=1)
-                chosen[mask] = subdist.assign_from_spatial_distribution(positions[mask])
+                chosen[mask] = subdist.assign(positions[mask])
 
         invalid_count = np.count_nonzero(chosen == -1)
         if invalid_count:
@@ -129,7 +129,7 @@ class SpatialDistribution(object):
 
         return chosen
 
-    def split_distribution_collection(self, attributes):
+    def split(self, attributes):
         '''split a distribution in two or more so that each one only references
         traits with the same value for certain attributes.
         Each resulting distribution is renormalised.
@@ -157,7 +157,7 @@ class SpatialDistribution(object):
 
         return grouped_distributions
 
-    def reduce_distribution_collection(self, attribute):
+    def reduce(self, attribute):
         '''given a spatial distribution, extract an equivalent one where all of the properties
         of the traits collection have been removed except for a specific one.
 
