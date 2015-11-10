@@ -291,6 +291,29 @@ def cell_density_from_positions(positions, density_dimensions, voxel_dimensions,
     return density
 
 
+def build_sphere_mask(shape, radius):
+    '''build the boolean mask of a sphere centered in the middle
+    Args:
+        shape: int or sequence of ints. Shape of the new mask.
+        radius: float representing the sphere radius in number of voxels
+    '''
+    mask = np.ones(shape, dtype=np.bool)
+    idx = np.nonzero(mask)
+    # subtract 1 because python indexes start by 0
+    middle = np.floor((np.array(shape) - 1) * 0.5)
+    aidx = np.array(idx) - middle[..., np.newaxis]
+    mask[idx] = np.sum(np.square(aidx), axis=0) < np.square(radius)
+    return mask
+
+
+def build_homogeneous_density(mask, voxel_dimensions, value=255):
+    '''build an artificial homogeneous density'''
+    raw = np.zeros(mask.shape, dtype=np.uint8)
+    raw[mask] = value
+    mhd = get_mhd_info(raw.shape, np.uint8, voxel_dimensions, "density")
+    return MetaIO(mhd, raw)
+
+
 class CellCollection(object):
     '''Encapsulates all the data related to a collection of cells that compose a circuit.
 
