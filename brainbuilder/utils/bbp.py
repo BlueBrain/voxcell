@@ -329,15 +329,18 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map, p
     for layer_ids, region_ids in reverse_region_layers_map(region_layers_map).iteritems():
 
         mask = np.in1d(neurondb.layer, layer_ids)
-        region_morphs = neurondb[mask].copy()
+        if np.any(mask):
+            region_morphs = neurondb[mask].copy()
 
-        dists = get_placement_hints_table(region_morphs)
+            dists = get_placement_hints_table(region_morphs)
 
-        me_groups = region_morphs.groupby(['mtype', 'etype'])
-        for idx in me_groups.indices.values():
-            dists.iloc[idx] = clip_columns_to_percentile(dists.iloc[idx].copy(), percentile)
+            me_groups = region_morphs.groupby(['mtype', 'etype'])
+            for idx in me_groups.indices.values():
+                dists.iloc[idx] = clip_columns_to_percentile(dists.iloc[idx].copy(), percentile)
 
-        regions_dists[tuple(region_ids)] = tt.normalize_distribution_collection(dists)
+            regions_dists[tuple(region_ids)] = tt.normalize_distribution_collection(dists)
+        else:
+            L.warning('Layer %d from neurondb not found in region-layer map', neurondb.layer)
 
     return regions_dists
 

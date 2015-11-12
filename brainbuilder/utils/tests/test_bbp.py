@@ -181,6 +181,24 @@ def test_get_region_distributions_from_placement_hints_0():
     assert_frame_equal(res[(0,)], expected)
 
 
+def test_get_region_distributions_from_placement_hints_unknown_region():
+    # we have data about neurons in layers that we don't know how to map to atlas regions
+    # these should be just ignored
+
+    neurondb = pd.DataFrame([
+        {'name': 'a', 'layer': 0, 'etype': 1, 'mtype': 1, 'placement_hints': (1,)},
+        {'name': 'b', 'layer': 999, 'etype': 2, 'mtype': 2, 'placement_hints': (1,)}
+    ])
+
+    region_layers_map = {
+        0: (0,)
+    }
+
+    res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.0)
+    eq_(res.keys(), [(0,)])
+    assert_frame_equal(res[(0,)], pd.DataFrame({0: [1.]}))
+
+
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 
     neurondb = pd.DataFrame([
