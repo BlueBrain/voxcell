@@ -49,13 +49,8 @@ def map_regions_to_layers(hierarchy, region_name):
     return layer_groups
 
 
-def load_recipe(recipe_filename):
-    '''take a BBP builder recipe and return the probability distributions for each type
-
-    Returns:
-        A DataFrame with one row for each posibility and columns:
-            layer, mtype, etype, mClass, sClass, percentage
-    '''
+def _parse_recipe(recipe_filename):
+    '''parse a BBP recipe and return the corresponding etree'''
     # This is rather hacky but lets us avoid a dependency on lxml (which requires libxml)
     # the only reason to use lxml is because of the recipe uses the SYSTEM ELEMENT feature
     # that embeds one xml into another xml file, which is not supported on the standard xml
@@ -65,7 +60,17 @@ def load_recipe(recipe_filename):
     # This will skip unknown entities (normal dict would raise KeyError instead)
     parser = xml.etree.ElementTree.XMLParser()
     parser.entity = defaultdict(lambda: '')
-    recipe_tree = xml.etree.ElementTree.parse(recipe_filename, parser=parser)
+    return xml.etree.ElementTree.parse(recipe_filename, parser=parser)
+
+
+def load_recipe(recipe_filename):
+    '''take a BBP builder recipe and return the probability distributions for each type
+
+    Returns:
+        A DataFrame with one row for each posibility and columns:
+            layer, mtype, etype, mClass, sClass, percentage
+    '''
+    recipe_tree = _parse_recipe(recipe_filename)
 
     synapse_class_alias = {
         'INH': 'inhibitory',
@@ -99,6 +104,34 @@ def load_recipe(recipe_filename):
                                                  'mtype', 'etype',
                                                  'mClass', 'synapse_class',
                                                  'percentage'])
+
+
+def load_recipe_density(recipe_filename, annotation, region_layers_map):
+    '''take a BBP builder recipe and return the probability distributions for each type
+
+    Returns:
+        A DataFrame with one row for each posibility and columns:
+            layer, mtype, etype, mClass, sClass, percentage
+    '''
+    recipe_tree = _parse_recipe(recipe_filename)
+
+    percentages = dict((int(layer.attrib['id']), float(layer.attrib['percentage']) / 100)
+                       for layer in recipe_tree.findall('NeuronTypes')[0].getchildren()
+                       if layer.tag == 'Layer')
+
+    raw = np.zeros_like(annotation.raw, dtype=np.float32)
+
+    for rid, layers in region_layers_map.iteritems():
+        assert len(layers) == 1
+        if layers[0] in percentages:
+            raw[annotation.raw == rid] = percentages[layers[0]]
+        else:
+            L.warning('No percentage found in recipe for layer %d', layers[0])
+
+    return gb.MetaIO(gb.get_mhd_info(annotation.mhd['DimSize'],
+                                     np.float32,
+                                     annotation.mhd['ElementSpacing'],
+                                     'density.raw'), raw)
 
 
 def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map):

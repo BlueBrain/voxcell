@@ -43,6 +43,32 @@ def test_load_recipe_as_layer_distributions_complex():
     eq_(len(layer_dists.values), 9)
 
 
+def test_load_recipe_density_0():
+    annotation_raw = np.array([1, 2])
+    density = bbp.load_recipe_density(
+        os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
+        gb.MetaIO({
+            'DimSize': annotation_raw.shape,
+            'ElementSpacing': (25,)},
+            annotation_raw),
+        {1: (1,), 2: (2,)})
+
+    assert_equal(density.raw, np.array([0.01, 0.10], dtype=np.float32))
+
+
+def test_load_recipe_density_unknown_layer_0():
+    annotation_raw = np.array([1, 2, 777])
+    density = bbp.load_recipe_density(
+        os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
+        gb.MetaIO({
+            'DimSize': annotation_raw.shape,
+            'ElementSpacing': (25,)},
+            annotation_raw),
+        {1: (1,), 2: (2,), 999: (888,)})
+
+    assert_equal(density.raw, np.array([0.01, 0.10, 0.], dtype=np.float32))
+
+
 def test_transform_into_spatial_distribution():
     annotation_raw = np.ones(shape=(3, 3, 3))
     annotation_raw[1, 1, 1] = 2

@@ -31,14 +31,14 @@
 
 <blueColumn>
 	<NeuronTypes totalNeurons="31346" miniColumns="310" IntExtendedMinicolumnRadious="23">
-		<Layer id="1" percentage="1.037315">
+		<Layer id="1" percentage="1.0">
 
 		  <StructuralType id="L1_DAC" percentage="100" sigma="25" exclusionRadius="6.0" mClass="INT" sClass="INH" spineLength="2.5" maxHeightRestriction="-35">
 		    <ElectroType id="bNAC" percentage="33.33"/>
 		    <ElectroType id="cNAC" percentage="66.67"/>
 		  </StructuralType>
 		</Layer>
-		<Layer id="2" percentage="10.832282">
+		<Layer id="2" percentage="10.0">
 			<StructuralType id="L23_PC" percentage="50" sigma="20" exclusionRadius="6.0" mClass="PYR" sClass="EXC" spineLength="2.5">
 				<ElectroType id="cADpyr" percentage="100" />
 			</StructuralType>
