@@ -2,7 +2,8 @@
 import numpy as np
 import pandas as pd
 import itertools
-from lxml import etree
+import xml.etree.ElementTree
+from collections import defaultdict
 from brainbuilder.utils import math
 from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import traits as tt
@@ -55,7 +56,16 @@ def load_recipe(recipe_filename):
         A DataFrame with one row for each posibility and columns:
             layer, mtype, etype, mClass, sClass, percentage
     '''
-    recipe_tree = etree.parse(recipe_filename)
+    # This is rather hacky but lets us avoid a dependency on lxml (which requires libxml)
+    # the only reason to use lxml is because of the recipe uses the SYSTEM ELEMENT feature
+    # that embeds one xml into another xml file, which is not supported on the standard xml
+    # package
+    # However, this is only used to embed the connectivy recipe into the rest of the recipe and
+    # brain builder doesn't care about connectivity rules
+    # This will skip unknown entities (normal dict would raise KeyError instead)
+    parser = xml.etree.ElementTree.XMLParser()
+    parser.entity = defaultdict(lambda: '')
+    recipe_tree = xml.etree.ElementTree.parse(recipe_filename, parser=parser)
 
     synapse_class_alias = {
         'INH': 'inhibitory',
