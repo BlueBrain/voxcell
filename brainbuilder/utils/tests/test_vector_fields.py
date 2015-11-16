@@ -108,3 +108,28 @@ def test_join_vector_fields_2():
 def test_join_vector_fields_2_override():
     assert_equal(vf.join_vector_fields(np.array([[1]]), np.array([[2]])),
                  np.array([[2]]))
+
+
+def test_calculate_fields_by_distance_from_1d():
+    reg = np.array([1, 1, 1, 1], dtype=np.bool)
+    ref = np.array([0, 0, 1, 1], dtype=np.bool)
+    assert_equal(
+        vf.calculate_fields_by_distance_from(reg, ref),
+        np.array([[-1], [-1], [-0.5], [0]]))
+
+
+def test_calculate_fields_by_distance_to_1d():
+    reg = np.array([1, 1, 1, 1], dtype=np.bool)
+    ref = np.array([0, 0, 1, 1], dtype=np.bool)
+    assert_equal(
+        vf.calculate_fields_by_distance_to(reg, ref),
+        np.array([[1], [1], [0.5], [0]]))
+
+
+def test_calculate_fields_by_distance_to_between():
+    reg = np.array([1, 1, 1, 1], dtype=np.bool)
+    ref0 = np.array([1, 1, 0, 0], dtype=np.bool)
+    ref1 = np.array([0, 0, 1, 1], dtype=np.bool)
+    assert_equal(
+        vf.calculate_fields_by_distance_between(reg, ref0, ref1),
+        np.array([[1], [0.5], [1], [1]]))  # everything positive: pointing to ref1

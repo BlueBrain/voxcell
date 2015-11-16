@@ -44,22 +44,42 @@ def _calculate_fields_by_distance(target_mask, reference_mask, direction):
 
     result = np.zeros(shape=(reference_mask.shape + (len(reference_mask.shape),)), dtype=np.float32)
 
-    for i, field in enumerate(np.gradient(distance_to_reference)):
+    gradient = np.gradient(distance_to_reference)
+
+    if not isinstance(gradient, (tuple, list)):
+        # when working on 1D numpy return is inconsistent
+        gradient = (gradient,)
+
+    for i, field in enumerate(gradient):
         result[..., i] = direction * target_mask * field
 
     return result
 
 
-def calculate_fields_by_distance_from(region_mask, reference_mask):
+def calculate_fields_by_distance_from(region, reference):
     '''create a vector field on target_mask where the each vector points at the closest
-    voxel in reference_mask'''
-    return _calculate_fields_by_distance(region_mask, reference_mask, 1)
+    voxel in reference_mask
+    If reference is part of region, the vectors there will be (0,0,0).
+    Result is not normalized.'''
+    return _calculate_fields_by_distance(region, reference, 1)
 
 
-def calculate_fields_by_distance_to(region_mask, reference_mask):
+def calculate_fields_by_distance_to(region, reference):
     '''create a vector field on target_mask where the each vector points in the direction opposite
-     to the closest voxel in reference_mask'''
-    return _calculate_fields_by_distance(region_mask, reference_mask, -1)
+    to the closest voxel in reference_mask.
+    If reference is part of region, the vectors there will be (0,0,0).
+    Result is not normalized.'''
+    return _calculate_fields_by_distance(region, reference, -1)
+
+
+def calculate_fields_by_distance_between(region, first, last):
+    '''create a vector field on region where the vector in each voxel points in the direction
+    from first to last.
+    If first and last overlap, the vectors there will be (0,0,0).
+    Result is not normalized.'''
+    field_to_last = calculate_fields_by_distance_to(region, last)
+    field_from_first = calculate_fields_by_distance_from(region, first)
+    return join_vector_fields(field_to_last, field_from_first)
 
 
 def compute_cylindrical_tangent_vectors(points, center_point):
