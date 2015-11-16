@@ -72,9 +72,9 @@ class NotebookViewer(object):
         mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
         self.show_metaio(filename, gb.MetaIO(mhd, raw))
 
-    def show_vectors(self, field, point_count, voxel_dimensions):
+    def show_vectors(self, name, field, point_count, voxel_dimensions):
         '''visualize a vector field'''
-        filename = 'field.vcf'
+        filename = name + '.vcf'
         viewer.export_vector_field(joinp(self.output_directory, filename),
                                    field, point_count, voxel_dimensions)
         self.show(filename)
