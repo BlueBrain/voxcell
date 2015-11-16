@@ -340,7 +340,8 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map, p
 
             regions_dists[tuple(region_ids)] = tt.normalize_distribution_collection(dists)
         else:
-            L.warning('Layer %d from neurondb not found in region-layer map', neurondb.layer)
+            L.warning('Layer %s from region-layer map not found in neurondb',
+                      ', '.join(str(l) for l in layer_ids))
 
     return regions_dists
 
