@@ -18,6 +18,9 @@ from scipy.ndimage import morphology
 
 import brainbuilder.utils.genbrain as gb
 
+import logging
+L = logging.getLogger(__name__)
+
 
 def generate_homogeneous_field(mask, direction):
     '''create an homogeneous field from a direction vector replicated according to a binary mask'''
@@ -155,3 +158,27 @@ def combine_vector_fields(fields):
 def split_orientation_field(field):
     '''given an orientation field return a list of vector fields'''
     return [field[..., i] for i in range(field.shape[-2])]
+
+
+def join_vector_fields(vf0, *vfs):
+    '''performs an union of several vector fields.
+    A voxel on a vector field is considered "empty" if all of its components are zero.
+    Args:
+        vf0: first vector field.
+        vfs: rest of vector fields. All of them must have the same shape.
+    '''
+    vfs = (vf0,) + vfs
+    assert all(v.shape == vf0.shape for v in vfs)
+
+    joined = np.zeros_like(vf0)
+    joined_mask = np.zeros(joined.shape[:-1], dtype=np.bool)
+
+    for field in vfs:
+        field_mask = np.any(field != 0, axis=-1)
+        overlap_count = np.count_nonzero(joined_mask & field_mask)
+        if overlap_count:
+            L.warning('%d voxels overlap will be overwritten', overlap_count)
+        joined_mask |= field_mask
+        joined[field_mask] = field[field_mask]
+
+    return joined

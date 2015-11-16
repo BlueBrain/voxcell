@@ -85,3 +85,26 @@ def test_combine_vector_fields_high_dim():
                                   np.ones((2, 2, 2, 2, 4)) * 4])
 
     eq_(r.shape, (2, 2, 2, 2, 4, 4))
+
+
+def test_join_vector_fields_1_empty():
+    assert_equal(vf.join_vector_fields(np.array([[0]])),
+                 np.array([[0]]))
+
+
+def test_join_vector_fields_1_full():
+    assert_equal(vf.join_vector_fields(np.array([[1]])),
+                 np.array([[1]]))
+
+
+def test_join_vector_fields_2():
+    assert_equal(vf.join_vector_fields(np.array([[1]]), np.array([[0]])),
+                 np.array([[1]]))
+
+    assert_equal(vf.join_vector_fields(np.array([[0]]), np.array([[1]])),
+                 np.array([[1]]))
+
+
+def test_join_vector_fields_2_override():
+    assert_equal(vf.join_vector_fields(np.array([[1]]), np.array([[2]])),
+                 np.array([[2]]))
