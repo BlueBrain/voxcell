@@ -4,7 +4,7 @@ from brainbuilder.utils import vector_fields as vf
 import numpy as np
 
 
-def compute_sscx_orientation_fields(annotation, hierarchy, region_name):
+def compute_orientation_field(annotation, hierarchy, region_name):
     '''Computes the orientation field for the somatosensory cortex
 
     Args:

@@ -8,7 +8,7 @@ from os.path import join as joinp
 
 from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import bbp
-from brainbuilder.orientation_fields import compute_sscx_orientation_fields
+from brainbuilder.orientation_field_sscx import compute_orientation_field
 from brainbuilder.select_region import select_region
 from brainbuilder.cell_positioning import cell_positioning
 from brainbuilder.assignment_synapse_class import assign_synapse_class_from_spatial_dist
@@ -74,7 +74,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     density = select_region(annotation.raw, full_density, hierarchy, region_name)
 
-    orientation_field = compute_sscx_orientation_fields(annotation, hierarchy, region_name)
+    orientation_field = compute_orientation_field(annotation, hierarchy, region_name)
 
     cells = gb.CellCollection()
 
