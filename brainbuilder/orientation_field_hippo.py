@@ -69,9 +69,8 @@ def compute_main_axis_hemispheric_field(mask, hemisphere):
     tangents = np.array([dx, dy, dz]).transpose()
 
     dis = np.sqrt(np.sum(np.square(tangents), axis=-1))
-    tangents /= dis
+    tangents /= dis[..., np.newaxis]
 
-    tangents = np.array([dx, dy, dz]).transpose()
     tangents_field = np.zeros(shape=(mask.shape + (tangents.shape[1],)), dtype=np.float32)
     tangents_field[idx] = tangents
 
