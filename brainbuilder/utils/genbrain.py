@@ -85,7 +85,7 @@ def read_mhd(path):
     for k in numerical_keys:
         if k in data and data[k] != '???':
             data[k] = tuple(int(v) for v in data[k].split())
-            data[k] = data[k][0] if len(data[k]) == 1 else data[k]
+            data[k] = data[k][0] if len(data[k]) == 1 else np.array(data[k])
 
     for k in data.keys():
         if isinstance(data[k], basestring):
@@ -101,8 +101,10 @@ def save_mhd(path, data):
     '''save a VoxelData header file'''
     with open(path, 'w') as mhd:
         for k, v in data.items():
-            if isinstance(v, (list, tuple, np.ndarray)):
+            if isinstance(v, (list, tuple)):
                 v = ' '.join(str(x) for x in v)
+            elif isinstance(v, np.ndarray):
+                v = ' '.join(str(x) for x in v.flat)
             mhd.write('%s = %s\n' % (k, v))
 
 # conversion of types in .mhd file to numpy types
@@ -124,20 +126,22 @@ def get_mhd_info(raw, element_datafile, voxel_dimensions, offset):
         voxel_dimensions(numpy.ndarray): spacing of the elements
         offset(numpy.ndarray): offset from the atlas origin
         element_datafile(str): name of the corresponding datafile
+        offset(tuple): (x, y, z)
     '''
+    ndims = len(raw.shape)
     return {
         'ObjectType': 'Image',
-        'NDims': len(raw.shape),
+        'NDims': ndims,
         'BinaryData': True,
         'BinaryDataByteOrderMSB': False,
         'CompressedData': False,
-        'TransformMatrix': (1, 0, 0, 0, 1, 0, 0, 0, 1),
-        'Offset': offset,
-        'CenterOfRotation': (0, 0, 0),
+        'TransformMatrix': np.identity(ndims),
+        'Offset': np.array(offset),
+        'CenterOfRotation': np.zeros(ndims),
         'AnatomicalOrientation': '???',
-        'DimSize': raw.shape,
+        'DimSize': np.array(raw.shape),
         'ElementType': DTYPE_TO_METAIO[raw.dtype.type],
-        'ElementSpacing': voxel_dimensions,
+        'ElementSpacing': np.array(voxel_dimensions),
         'ElementDataFile': element_datafile,
     }
 
@@ -408,3 +412,25 @@ class CellCollection(object):
                         cells.properties[name] = data
 
         return cells
+
+
+def get_minimum_aabb(mask):
+    '''calculate the minimum axis-aligned bounding box
+    Returns:
+        A tuple containing the minimum x,y,z and maximum x,y,z
+    '''
+    idx = np.nonzero(mask)
+    return np.min(idx, axis=1), np.max(idx, axis=1)
+
+
+def clip(mask, aabb):
+    '''take a numpy array it to an axis-aligned bounding box'''
+    idx = [slice(s, e + 1) for s, e in zip(*aabb)]
+    return mask[idx]
+
+
+def clip_metaio(density, aabb):
+    '''take a density and clip it to an axis-aligned bounding box'''
+    raw = clip(density.raw, aabb)
+    offset = aabb[0] * density.voxel_dimensions
+    return VoxelData(raw, density.voxel_dimensions, density.offset + offset)

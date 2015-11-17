@@ -36,7 +36,7 @@ L = logging.getLogger(__name__)
 class SpatialDistribution(object):
     '''encapsulates the data relative to the 3D probability distributions of traits'''
 
-    def __init__(self, field, distributions, traits, voxel_dimensions):
+    def __init__(self, field, distributions, traits, voxel_dimensions, offset=None):
         '''
         Args:
             field: volume data where every voxel is an index in the distributions list
@@ -44,11 +44,15 @@ class SpatialDistribution(object):
             distributions: a distributions collection, see module docstring
             traits: a traits collection, see module docstring
             voxel_dimensions: a 3-tuple containing, in microns, the size of each voxel
+            offset: a vector representing the offset of this distribution with respect to an atlas.
+                Default to [0, 0, 0].
+                It should be in the same unit as the primary unit of the atlas.
         '''
         self.field = field
         self.distributions = distributions
         self.traits = traits
         self.voxel_dimensions = voxel_dimensions
+        self.offset = offset if offset is not None else np.zeros(len(field.shape))
 
     def assign(self, positions):
         '''for every cell in positions, chooses a property from a spatial distribution
@@ -60,6 +64,8 @@ class SpatialDistribution(object):
             An array with the same length as positions where each value
             is an index into spatial_dist.traits
         '''
+        positions = positions - self.offset
+
         voxel_idx = gb.cell_positions_to_voxel_indices(positions, self.voxel_dimensions)
 
         voxel_idx_tuple = tuple(voxel_idx.transpose())
@@ -99,6 +105,8 @@ class SpatialDistribution(object):
 
             For those positions whose value could not be determined, -1 is used.
         '''
+        # No need to apply offset here because it's applied inside subdist.assign
+
         preassigned = preassigned.to_frame() if isinstance(preassigned, pd.Series) else preassigned
 
         subsections = self.split(tuple(preassigned.columns))
@@ -167,7 +175,8 @@ class SpatialDistribution(object):
             dists = normalize_distribution_collection(dists)
 
             grouped_distributions[attr_values] = SpatialDistribution(self.field, dists, traits,
-                                                                     self.voxel_dimensions)
+                                                                     self.voxel_dimensions,
+                                                                     self.offset)
 
         return grouped_distributions
 
@@ -217,7 +226,8 @@ class SpatialDistribution(object):
         return SpatialDistribution(self.field,
                                    distributions,
                                    traits,
-                                   self.voxel_dimensions)
+                                   self.voxel_dimensions,
+                                   self.offset)
 
     def get_probability_field(self, attribute, value):
         '''extract the probability of a particular attribute value from a spatial distribution

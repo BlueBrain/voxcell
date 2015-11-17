@@ -10,19 +10,31 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def test_read_mhd():
-    eq_(gb.read_mhd(os.path.join(DATA_PATH, 'atlasVolume.mhd')),
-        {'AnatomicalOrientation': '???',
-         'BinaryData': True,
-         'BinaryDataByteOrderMSB': False,
-         'CenterOfRotation': (0, 0, 0),
-         'DimSize': (52, 32, 45),
-         'ElementDataFile': 'atlasVolume.raw',
-         'ElementSpacing': (25, 25, 25),
-         'ElementType': 'MET_UCHAR',
-         'NDims': 3,
-         'ObjectType': 'Image',
-         'Offset': (0, 0, 0),
-         'TransformMatrix': (1, 0, 0, 0, 1, 0, 0, 0, 1)})
+    got = gb.read_mhd(os.path.join(DATA_PATH, 'atlasVolume.mhd'))
+
+    expected = {
+        'AnatomicalOrientation': '???',
+        'BinaryData': True,
+        'BinaryDataByteOrderMSB': False,
+        'CenterOfRotation': np.array([0, 0, 0]),
+        'DimSize': np.array([52, 32, 45]),
+        'ElementDataFile': 'atlasVolume.raw',
+        'ElementSpacing': np.array([25, 25, 25]),
+        'ElementType': 'MET_UCHAR',
+        'NDims': 3,
+        'ObjectType': 'Image',
+        'Offset': np.array([0, 0, 0]),
+        'TransformMatrix': np.array([1, 0, 0, 0, 1, 0, 0, 0, 1])
+    }
+
+    eq_(set(got.keys()), set(expected.keys()))
+
+    for k in got.keys():
+        v0, v1 = got[k], expected[k]
+        if isinstance(v0, np.ndarray):
+            assert_equal(v0, v1)
+        else:
+            eq_(v0, v1)
 
 
 def test_save_mhd():

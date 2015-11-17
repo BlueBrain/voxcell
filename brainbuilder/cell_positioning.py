@@ -46,8 +46,7 @@ def cell_counts_to_cell_voxel_indices(cell_counts_per_voxel):
 def cell_positioning(density, total_cell_count):
     '''
     Args:
-        density_raw: voxel data from Allen Brain Institute.
-            Called "atlasVolume" in their website.
+        density_raw: VoxelData object representing cell body density.
             Each voxel represents a value that once normalised, can be treated as a probability of
             cells appearing in this voxel.
         total_cell_count: an int
@@ -66,4 +65,4 @@ def cell_positioning(density, total_cell_count):
     positions = gb.cell_voxel_indices_to_positions(cell_voxel_indices,
                                                    density.voxel_dimensions)
 
-    return positions
+    return positions + density.offset
