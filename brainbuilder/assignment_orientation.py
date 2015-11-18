@@ -2,24 +2,22 @@
 from brainbuilder.utils import genbrain as gb
 
 
-def assign_orientations(positions, orientation_fields, voxel_dimensions, offset):
+def assign_orientations(positions, orientation_field):
     '''Assigns orientations to each of the positions based on the orientation_field
 
     Args:
         positions: list of positions for soma centers (x, y, z).
-        orientation_field: volume data where every voxel contains 3 vectors: right, up, fwd
-        voxel_dimensions: tuple with the size of the voxels in microns in each axis.
-        offset(np.array of dimension 3): offset of the orientation field with respect to the atlas
-            that the positions use as a reference
+        orientation_field(VoxelData): volumetric data where every voxel
+            contains 3 vectors: right, up, fwd
 
     Returns:
         orientations: a Nx3x3 numpy array where N is the number of positions and the 3x3 are
             rotation matrices.
     '''
-    positions = positions - offset
-    voxel_idx = gb.cell_positions_to_voxel_indices(positions, voxel_dimensions)
+    positions = positions - orientation_field.offset
+    voxel_idx = gb.cell_positions_to_voxel_indices(positions, orientation_field.voxel_dimensions)
     idx = tuple(voxel_idx.transpose())
-    return orientation_fields[idx]
+    return orientation_field.raw[idx]
 
 
 # pylint: disable=W0613
@@ -32,7 +30,7 @@ def randomise_orientations(orientations, ranges):
 
     Args:
         orientations: list of orientations (3 vectors: right, up, fwd).
-        rotation_ranges: list of angle ranges around the three main axis: X, Y, Z
+        ranges: list of angle ranges around the three main axis: X, Y, Z
 
     Returns:
         orientations: list of orientations (3 vectors: right, up, fwd).

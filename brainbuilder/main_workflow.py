@@ -58,8 +58,6 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
-    voxel_dimensions = full_density.voxel_dimensions
-
     # transform BBP recipies into voxel data:
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
                                                            annotation, hierarchy, region_name)
@@ -80,7 +78,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     cells.positions = cell_positioning(density, total_cell_count)
 
-    cells.orientations = assign_orientations(cells.positions, orientation_field, voxel_dimensions)
+    cells.orientations = assign_orientations(cells.positions, orientation_field)
 
     cells.orientations = randomise_orientations(cells.orientations, rotation_ranges)
 
@@ -97,7 +95,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     acronym = gb.find_in_hierarchy(hierarchy, 'name', region_name)[0]['acronym']
     export_viewer(joinp(output_path, 'intermediates_%s_%d' % (acronym, total_cell_count)),
-                  voxel_dimensions, orientation_field, cells)
+                  orientation_field, cells)
 
     # export data to file formats from the BBP pipeline:
     circuit_path = export_mvd2(output_path, 'mpath', cells)

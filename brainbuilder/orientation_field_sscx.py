@@ -28,4 +28,6 @@ def compute_orientation_field(annotation, hierarchy, region_name):
     fwd_field = np.cross(up_field, right_field)
     right_field = np.cross(fwd_field, up_field)
 
-    return vf.combine_vector_fields([right_field, up_field, fwd_field])
+    field = vf.combine_vector_fields([right_field, up_field, fwd_field])
+
+    return gb.VoxelData(field, annotation.voxel_dimensions, annotation.offset)

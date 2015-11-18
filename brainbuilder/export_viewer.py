@@ -8,7 +8,7 @@ import logging
 L = logging.getLogger(__name__)
 
 
-def export_viewer(directory, voxel_dimensions, orientation_field, cells):
+def export_viewer(directory, orientation_field, cells):
     '''export all the intermediates and results of a new circuit for the JS viewer'''
 
     if not os.path.isdir(directory):
@@ -27,7 +27,8 @@ def export_viewer(directory, voxel_dimensions, orientation_field, cells):
 
     for i in range(orientation_field.shape[-2]):
         viewer.export_vector_field(joinp(directory, 'field_%d.vcf' % i),
-                                   orientation_field[..., i, :], 7000, voxel_dimensions)
+                                   orientation_field[..., i, :], 7000,
+                                   orientation_field.voxel_dimensions)
 
     # TODO export chosen orientation for each point
 
