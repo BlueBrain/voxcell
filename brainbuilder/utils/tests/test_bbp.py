@@ -90,7 +90,7 @@ def test_transform_into_spatial_distribution():
 
     expected_field = np.ones(shape=(3, 3, 3))
     expected_field[1, 1, 1] = 2
-    assert_equal(sdist.field, expected_field)
+    assert_equal(sdist.field.raw, expected_field)
 
 
 def test_load_neurondb_v4():
@@ -107,7 +107,7 @@ def test_transform_neurondb_into_spatial_distribution_empty():
 
     assert sd.traits.empty
     assert sd.distributions.empty
-    assert_equal(sd.field, np.ones(shape=(3, 3)) * -1)
+    assert_equal(sd.field.raw, np.ones(shape=(3, 3)) * -1)
 
 
 def test_transform_neurondb_into_spatial_distribution():
@@ -143,7 +143,7 @@ def test_transform_neurondb_into_spatial_distribution():
 
     expected_field = np.zeros_like(annotation)
     expected_field[1, 1] = 1
-    assert_equal(sd.field, expected_field)
+    assert_equal(sd.field.raw, expected_field)
 
 
 def test_get_region_distributions_from_placement_hints_0():
@@ -225,7 +225,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
     expected /= expected.sum()
     assert_frame_equal(sd.distributions, expected)
 
-    assert_equal(sd.field, np.array([-1, 0, 1, 2, 3, 4, 5]))
+    assert_equal(sd.field.raw, np.array([-1, 0, 1, 2, 3, 4, 5]))
 
 
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
@@ -260,7 +260,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
     expected /= expected.sum()
     assert_frame_equal(sd.distributions, expected)
 
-    assert_equal(sd.field, np.array([-1, -1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]))
+    assert_equal(sd.field.raw, np.array([-1, -1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5]))
 
 
 def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order():
@@ -289,16 +289,16 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
     assert_frame_equal(sd.traits, neurondb)
 
     a = neurondb[neurondb.name == 'a'].index[0]
-    eq_(sd.distributions[sd.field[0]][a], .25)  # bottom
-    eq_(sd.distributions[sd.field[1]][a],  .5)  # middle
-    eq_(sd.distributions[sd.field[2]][a], .75)  # top
+    eq_(sd.distributions[sd.field.raw[0]][a], .25)  # bottom
+    eq_(sd.distributions[sd.field.raw[1]][a],  .5)  # middle
+    eq_(sd.distributions[sd.field.raw[2]][a], .75)  # top
 
     b = neurondb[neurondb.name == 'b'].index[0]
-    eq_(sd.distributions[sd.field[0]][b], .75)  # bottom
-    eq_(sd.distributions[sd.field[1]][b],  .5)  # middle
-    eq_(sd.distributions[sd.field[2]][b], .25)  # top
+    eq_(sd.distributions[sd.field.raw[0]][b], .75)  # bottom
+    eq_(sd.distributions[sd.field.raw[1]][b],  .5)  # middle
+    eq_(sd.distributions[sd.field.raw[2]][b], .25)  # top
 
-    assert_equal(sd.field, np.array([2,  # bottom
+    assert_equal(sd.field.raw, np.array([2,  # bottom
                                      1,  # middle
                                      0,  # top
                                      -1]))  # pia
@@ -344,7 +344,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
     expected /= expected.sum()
     assert_frame_equal(sd.distributions, expected)
 
-    assert_equal(sd.field, np.array([-1, -1, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5]))
+    assert_equal(sd.field.raw, np.array([-1, -1, 0, 0, 1, 2, 2, 3, 4, 4, 5, 5]))
 
 
 def test_get_region_distributions_from_placement_hints_multiple_regions():
@@ -442,7 +442,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
         4: [1/3., 2/3.,    0.,   0.],
     }))
 
-    assert_equal(sd.field, np.array([-1, -1, 3, 3, 4, 4, 0, 0, 1, 1, 2, 2]))
+    assert_equal(sd.field.raw, np.array([-1, -1, 3, 3, 4, 4, 0, 0, 1, 1, 2, 2]))
 
 
 def test_assign_distributions_to_voxels_empty():

@@ -152,9 +152,7 @@ def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers
 
     distributions = tt.normalize_distribution_collection(distributions)
 
-    return tt.SpatialDistribution(annotation.raw, distributions, recipe,
-                                  annotation.voxel_dimensions,
-                                  annotation.offset)
+    return tt.SpatialDistribution(annotation, distributions, recipe)
 
 
 def load_recipe_as_spatial_distribution(recipe_filename, annotation, hierarchy, region_name):
@@ -415,11 +413,11 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
         flat_field[flat_mask] = voxel_dist_indices + offset
         all_dists = pd.concat([all_dists, dists], axis=1)
 
-    return tt.SpatialDistribution(flat_field.reshape(annotation.raw.shape),
-                                  all_dists.fillna(0.0),
-                                  neurondb,
-                                  annotation.voxel_dimensions,
-                                  annotation.offset)
+    field = gb.VoxelData(flat_field.reshape(annotation.raw.shape),
+                         annotation.voxel_dimensions,
+                         annotation.offset)
+
+    return tt.SpatialDistribution(field, all_dists.fillna(0.0), neurondb)
 
 
 def get_distance_to_pia(annotation):

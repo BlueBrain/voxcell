@@ -36,23 +36,17 @@ L = logging.getLogger(__name__)
 class SpatialDistribution(object):
     '''encapsulates the data relative to the 3D probability distributions of traits'''
 
-    def __init__(self, field, distributions, traits, voxel_dimensions, offset=None):
+    def __init__(self, field, distributions, traits):
         '''
         Args:
-            field: volume data where every voxel is an index in the distributions list
+            field: VoxelData where every voxel is an index in the distributions list
                    -1 means unavailable data.
             distributions: a distributions collection, see module docstring
             traits: a traits collection, see module docstring
-            voxel_dimensions: a 3-tuple containing, in microns, the size of each voxel
-            offset: a vector representing the offset of this distribution with respect to an atlas.
-                Default to [0, 0, 0].
-                It should be in the same unit as the primary unit of the atlas.
         '''
         self.field = field
         self.distributions = distributions
         self.traits = traits
-        self.voxel_dimensions = voxel_dimensions
-        self.offset = offset if offset is not None else np.zeros(len(field.shape))
 
     def assign(self, positions):
         '''for every cell in positions, chooses a property from a spatial distribution
@@ -64,12 +58,12 @@ class SpatialDistribution(object):
             An array with the same length as positions where each value
             is an index into spatial_dist.traits
         '''
-        positions = positions - self.offset
+        positions = positions - self.field.offset
 
-        voxel_idx = gb.cell_positions_to_voxel_indices(positions, self.voxel_dimensions)
+        voxel_idx = gb.cell_positions_to_voxel_indices(positions, self.field.voxel_dimensions)
 
         voxel_idx_tuple = tuple(voxel_idx.transpose())
-        dist_id_per_position = self.field[voxel_idx_tuple]
+        dist_id_per_position = self.field.raw[voxel_idx_tuple]
 
         unknown_count = np.count_nonzero(dist_id_per_position == -1)
         if unknown_count:
@@ -174,9 +168,7 @@ class SpatialDistribution(object):
             dists = dists[dists.columns[dists.sum() != 0]]
             dists = normalize_distribution_collection(dists)
 
-            grouped_distributions[attr_values] = SpatialDistribution(self.field, dists, traits,
-                                                                     self.voxel_dimensions,
-                                                                     self.offset)
+            grouped_distributions[attr_values] = SpatialDistribution(self.field, dists, traits)
 
         return grouped_distributions
 
@@ -225,9 +217,7 @@ class SpatialDistribution(object):
 
         return SpatialDistribution(self.field,
                                    distributions,
-                                   traits,
-                                   self.voxel_dimensions,
-                                   self.offset)
+                                   traits)
 
     def get_probability_field(self, attribute, value):
         '''extract the probability of a particular attribute value from a spatial distribution
