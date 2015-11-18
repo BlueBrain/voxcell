@@ -1,5 +1,4 @@
 '''algorithm to assign orientations to a group of cells'''
-from brainbuilder.utils import genbrain as gb
 
 
 def assign_orientations(positions, orientation_field):
@@ -14,10 +13,7 @@ def assign_orientations(positions, orientation_field):
         orientations: a Nx3x3 numpy array where N is the number of positions and the 3x3 are
             rotation matrices.
     '''
-    positions = positions - orientation_field.offset
-    voxel_idx = gb.cell_positions_to_voxel_indices(positions, orientation_field.voxel_dimensions)
-    idx = tuple(voxel_idx.transpose())
-    return orientation_field.raw[idx]
+    return orientation_field.lookup(positions)
 
 
 # pylint: disable=W0613

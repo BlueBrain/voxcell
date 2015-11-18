@@ -71,6 +71,18 @@ class VoxelData(object):
         save_mhd(mhd_path, mhd)
         self.raw.transpose().tofile(joinp(os.path.dirname(mhd_path), mhd['ElementDataFile']))
 
+    def lookup(self, positions):
+        '''find the values in raw corresponding to the given positions
+        Args:
+            positions: list of positions (x, y, z). Expected in atlas-space.
+        Returns:
+            Numpy array with the values of the voxels corresponding to each position
+        '''
+        positions = positions - self.offset
+        voxel_idx = cell_positions_to_voxel_indices(positions, self.voxel_dimensions)
+        voxel_idx_tuple = tuple(voxel_idx.transpose())
+        return self.raw[voxel_idx_tuple]
+
 
 def read_mhd(path):
     '''read a VoxelData header file'''

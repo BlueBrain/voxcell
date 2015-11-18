@@ -26,7 +26,6 @@
 
 import numpy as np
 import pandas as pd
-from brainbuilder.utils import genbrain as gb
 
 
 import logging
@@ -58,12 +57,7 @@ class SpatialDistribution(object):
             An array with the same length as positions where each value
             is an index into spatial_dist.traits
         '''
-        positions = positions - self.field.offset
-
-        voxel_idx = gb.cell_positions_to_voxel_indices(positions, self.field.voxel_dimensions)
-
-        voxel_idx_tuple = tuple(voxel_idx.transpose())
-        dist_id_per_position = self.field.raw[voxel_idx_tuple]
+        dist_id_per_position = self.field.lookup(positions)
 
         unknown_count = np.count_nonzero(dist_id_per_position == -1)
         if unknown_count:
