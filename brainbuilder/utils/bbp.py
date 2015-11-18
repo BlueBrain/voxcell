@@ -128,10 +128,9 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
         else:
             L.warning('No percentage found in recipe for layer %d', layers[0])
 
-    return gb.MetaIO(gb.get_mhd_info(annotation.mhd['DimSize'],
-                                     np.float32,
-                                     annotation.mhd['ElementSpacing'],
-                                     'density.raw'), raw)
+    return gb.VoxelData(raw,
+                        voxel_dimensions=annotation.voxel_dimensions,
+                        offset=annotation.offset)
 
 
 def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map):
@@ -154,7 +153,7 @@ def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers
     distributions = tt.normalize_distribution_collection(distributions)
 
     return tt.SpatialDistribution(annotation.raw, distributions, recipe,
-                                  annotation.mhd['ElementSpacing'])
+                                  annotation.voxel_dimensions)
 
 
 def load_recipe_as_spatial_distribution(recipe_filename, annotation, hierarchy, region_name):
@@ -418,7 +417,7 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
     return tt.SpatialDistribution(flat_field.reshape(annotation.raw.shape),
                                   all_dists.fillna(0.0),
                                   neurondb,
-                                  annotation.mhd['ElementSpacing'])
+                                  annotation.voxel_dimensions)
 
 
 def get_distance_to_pia(annotation):

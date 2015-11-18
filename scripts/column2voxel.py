@@ -16,7 +16,7 @@ def load_mvd2_layers_positions(mvd2_path):
     '''load the positions of the neurons from the MVD2 file
 
     '''
-    #TODO: This code is duplicated from mgevaert's mvd2_2_bin.py, remove this when it has a home
+    # TODO: This code is duplicated from mgevaert's mvd2_2_bin.py, remove this when it has a home
     MVD_SECTIONS = [s.lower() for s in ("HEADER", "Neurons Loaded", "MicroBox Data",
                                         "MiniColumnsPosition", "CircuitSeeds",
                                         "MorphTypes", "ElectroTypes", "FOOTER")]
@@ -37,7 +37,7 @@ def load_mvd2_layers_positions(mvd2_path):
 
     positions = np.array(positions)
     layers = np.array(layers)
-    return (layers, positions)
+    return layers, positions
 
 
 def translate_positions_positive(positions, halo=25.):
@@ -89,13 +89,12 @@ def create_annotations(positions, layers, dimensions, spacing, layer_map):
     return annotations
 
 
-def save_mhd(name, data, dimensions, spacing):
-    '''save an MetaIO raw file with .mhd header
+def save_mhd(name, data, spacing):
+    '''save a VoxelData raw file with .mhd header
     '''
     mhd_filename = name + '.mhd'
     raw_filename = name + '.raw'
-    mhd = gb.get_mhd_info(dimensions, data.dtype.type, [spacing] * 3, raw_filename)
-    gb.MetaIO(mhd, data).save(mhd_filename)
+    gb.VoxelData(data, [spacing] * 3).save_metaio(mhd_filename, raw_filename)
 
 
 def column2voxel(mvd2_path, column_name, spacing):
@@ -110,10 +109,10 @@ def column2voxel(mvd2_path, column_name, spacing):
     dimensions = np.ceil(np.amax(positions, axis=0) / spacing).astype(dtype=np.uint32)
 
     density = gb.cell_density_from_positions(positions, dimensions, [spacing] * 3, dtype=np.float32)
-    #density = density / np.sum(density)
-    save_mhd(column_name + '_density', density, dimensions, spacing)
+    # density = density / np.sum(density)
+    save_mhd(column_name + '_density', density, spacing)
 
-    #from bbp_hierarchy.json
+    # from bbp_hierarchy.json
     layer_map = {0: 21,  # Primary somatosensory area, lower limb, layer 1
                  1: 22,  # Primary somatosensory area, lower limb, layer 2
                  2: 23,  # Primary somatosensory area, lower limb, layer 3
@@ -125,7 +124,7 @@ def column2voxel(mvd2_path, column_name, spacing):
                  }
 
     annotations = create_annotations(positions, layers, dimensions, spacing, layer_map)
-    save_mhd(column_name + '_annotations', annotations, dimensions, spacing)
+    save_mhd(column_name + '_annotations', annotations, spacing)
 
 
 def get_parser():

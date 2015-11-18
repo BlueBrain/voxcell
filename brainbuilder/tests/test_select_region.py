@@ -16,7 +16,7 @@ def test_sr_0():
         'name': 'root',
         'children': [{'id': 1, 'name': 'r', 'children': []}]}
 
-    density_in_region = sr.select_region(annotation_raw, gb.MetaIO(None, density_raw), h, 'r')
+    density_in_region = sr.select_region(annotation_raw, gb.VoxelData(density_raw, (25, 25)), h, 'r')
 
     assert_array_equal(density_in_region.raw,
                        np.array([[0.,  2.],
@@ -33,7 +33,7 @@ def test_sr_inverse_0():
         'name': 'root',
         'children': [{'id': 1, 'name': 'r', 'children': []}]}
 
-    density_in_region = sr.select_region(annotation_raw, gb.MetaIO(None, density_raw), h, 'r', inverse=True)
+    density_in_region = sr.select_region(annotation_raw, gb.VoxelData(density_raw, (25, 25)), h, 'r', inverse=True)
 
     assert_array_equal(density_in_region.raw,
                        np.array([[2.,  0.],

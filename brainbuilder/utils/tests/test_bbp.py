@@ -10,7 +10,7 @@ from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import bbp
 
 
-mhd = {'ElementSpacing': (25, 25, 25)}
+mhd = {'voxel_dimensions': (25, 25, 25)}
 
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
@@ -47,10 +47,7 @@ def test_load_recipe_density_0():
     annotation_raw = np.array([1, 2])
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
-        gb.MetaIO({
-            'DimSize': annotation_raw.shape,
-            'ElementSpacing': (25,)},
-            annotation_raw),
+        gb.VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: (1,), 2: (2,)})
 
     assert_equal(density.raw, np.array([0.01, 0.10], dtype=np.float32))
@@ -60,10 +57,7 @@ def test_load_recipe_density_unknown_layer_0():
     annotation_raw = np.array([1, 2, 777])
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
-        gb.MetaIO({
-            'DimSize': annotation_raw.shape,
-            'ElementSpacing': (25,)},
-            annotation_raw),
+        gb.VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: (1,), 2: (2,), 999: (888,)})
 
     assert_equal(density.raw, np.array([0.01, 0.10, 0.], dtype=np.float32))
@@ -84,7 +78,7 @@ def test_transform_into_spatial_distribution():
         2: (23,)
     }
 
-    sdist = bbp.transform_recipe_into_spatial_distribution(gb.MetaIO(mhd, annotation_raw),
+    sdist = bbp.transform_recipe_into_spatial_distribution(gb.VoxelData(annotation_raw, **mhd),
                                                            layer_distributions,
                                                            region_layers_map)
 
@@ -106,7 +100,7 @@ def test_load_neurondb_v4():
 
 def test_transform_neurondb_into_spatial_distribution_empty():
     sd = bbp.transform_neurondb_into_spatial_distribution(
-        gb.MetaIO(mhd, np.ones(shape=(3, 3), dtype=np.int)),
+        gb.VoxelData(np.ones(shape=(3, 3), dtype=np.int), **mhd),
         pd.DataFrame(), {},
         np.zeros(shape=(3,3)),
         percentile=0.0)
@@ -133,7 +127,7 @@ def test_transform_neurondb_into_spatial_distribution():
         {'name': 'd', 'layer': 3, 'etype': 4, 'mtype': 4, 'placement_hints': (1,)},
     ])
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
                                                           np.zeros(shape=(3, 3)),
                                                           percentile=0.0)
 
@@ -214,7 +208,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 
     annotation = np.array([0] + [1] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
                                                           np.arange(len(annotation)),
                                                           percentile=0.0)
 
@@ -249,7 +243,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
 
     annotation = np.array([0, 0] + [1] * 12)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
                                                           np.array([0, 0] + range(12)),
                                                           percentile=0.0)
 
@@ -288,7 +282,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
 
     annotation = np.array([1] * 3 + [0])  # [bottom, middle, top, pia]
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
                                                           np.array([3, 2, 1, 0]),
                                                           percentile=0.0)
 
@@ -333,7 +327,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
 
     annotation = np.array([0, 0] + [1] * 10)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
                                                           np.array([0, 0] + range(10)),
                                                           percentile=0.0)
 
@@ -434,7 +428,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
 
     annotation = np.array([0, 0] + [1] * 4 + [2] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.MetaIO(mhd, annotation), neurondb, region_layers_map,
+    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
                                                           np.array([0, 0] + range(10)),
                                                           percentile=0.0)
 

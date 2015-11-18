@@ -4,7 +4,6 @@ import itertools
 import json
 import logging
 import os
-import copy
 
 from collections import OrderedDict
 from os.path import join as joinp
@@ -18,15 +17,25 @@ from brainbuilder.utils import math
 L = logging.getLogger(__name__)
 
 
-class MetaIO(object):
-    '''wrap MetaIO files'''
-    def __init__(self, mhd, raw):
-        self.mhd = mhd
+class VoxelData(object):
+    '''wrap volumetric data and some basic metadata'''
+
+    def __init__(self, raw, voxel_dimensions, offset=None):
+        '''
+        Note that he units for the metadata will depend on the atlas being used.
+
+        Args:
+            raw(numpy.ndarray): actual voxel values
+            voxel_dimensions(tuple of numbers): size of each voxel in space.
+            offset(tuple of numbers): offset from an external atlas origin
+        '''
+        self.offset = offset if offset is not None else np.zeros(len(raw.shape))
+        self.voxel_dimensions = voxel_dimensions
         self.raw = raw
 
     @classmethod
-    def load(cls, mhd_path, raw_path=None):
-        '''create a MetaIO object
+    def load_metaio(cls, mhd_path, raw_path=None):
+        '''create a VoxelData object from a MetaIO file
 
         Args:
             mhd_path(string): path to mhd file
@@ -34,7 +43,7 @@ class MetaIO(object):
                 and ElementDataFile is used instead
 
         Return:
-            MetaIO object
+            VoxelData object
         '''
         if not mhd_path.endswith('.mhd'):
             L.warning('mhd_path does not end in .mhd')
@@ -49,28 +58,22 @@ class MetaIO(object):
             L.warning('data_path does not end in .raw')
 
         raw = load_raw(mhd['ElementType'], mhd['DimSize'], raw_path)
-        return cls(mhd, raw)
+        return cls(raw, mhd['ElementSpacing'])
 
-    def save(self, mhd_path, raw_filename=None):
-        '''save a MetaIO header file and its accompanying data file
+    def save_metaio(self, mhd_path, raw_filename):
+        '''save a VoxelData header file and its accompanying data file
 
         Args:
             mhd_path(string): full path to mhd file
             raw_filename(string): name of raw file relative to mhd file.
-                Optional: if None, ElementDataFile in mhd is used instead
         '''
-        if raw_filename is not None:
-            mhd = copy.copy(self.mhd)
-            mhd['ElementDataFile'] = raw_filename
-        else:
-            mhd = self.mhd
-
+        mhd = get_mhd_info(self.raw, raw_filename, self.voxel_dimensions, self.offset)
         save_mhd(mhd_path, mhd)
         self.raw.transpose().tofile(joinp(os.path.dirname(mhd_path), mhd['ElementDataFile']))
 
 
 def read_mhd(path):
-    '''read a MetaIO header file'''
+    '''read a VoxelData header file'''
     with open(path) as mhd:
         data = OrderedDict((k.strip(), v.strip())
                            for k, v in (line.split('=')
@@ -95,7 +98,7 @@ def read_mhd(path):
 
 
 def save_mhd(path, data):
-    '''save a MetaIO header file'''
+    '''save a VoxelData header file'''
     with open(path, 'w') as mhd:
         for k, v in data.items():
             if isinstance(v, (list, tuple, np.ndarray)):
@@ -103,37 +106,40 @@ def save_mhd(path, data):
             mhd.write('%s = %s\n' % (k, v))
 
 # conversion of types in .mhd file to numpy types
-METAIO_TO_DTYPE = {'MET_UCHAR': np.uint8,
-                   'MET_UINT': np.uint32,
-                   'MET_FLOAT': np.float32,
-                   }
+METAIO_TO_DTYPE = {
+    'MET_UCHAR': np.uint8,
+    'MET_UINT': np.uint32,
+    'MET_FLOAT': np.float32,
+}
+
 # conversion of types numpy types to type in .mhd file
 DTYPE_TO_METAIO = dict((v, k) for k, v in METAIO_TO_DTYPE.items())
 
 
-def get_mhd_info(dimensions, element_type, element_spacing, element_datafile):
-    '''Get a dictionary with all the elements needed for an .MHD file
+def get_mhd_info(raw, element_datafile, voxel_dimensions, offset):
+    '''Build a MetaIO header dictionary with all the elements needed for an .MHD file
 
     Args:
-        dimensions(tuple): (x, y, z)
-        element_type(numpy type): Type of the data
-        element_spacing(tuple): spacing of the elements
+        raw(numpy.ndarray): data from which to extract sizes and types
+        voxel_dimensions(numpy.ndarray): spacing of the elements
+        offset(numpy.ndarray): offset from the atlas origin
         element_datafile(str): name of the corresponding datafile
     '''
-    return {'ObjectType': 'Image',
-            'NDims': 3,
-            'BinaryData': True,
-            'BinaryDataByteOrderMSB': False,
-            'CompressedData': False,
-            'TransformMatrix': (1, 0, 0, 0, 1, 0, 0, 0, 1),
-            'Offset': (0, 0, 0),
-            'CenterOfRotation': (0, 0, 0),
-            'AnatomicalOrientation': '???',
-            'DimSize': dimensions,
-            'ElementType': DTYPE_TO_METAIO[element_type],
-            'ElementSpacing': element_spacing,
-            'ElementDataFile': element_datafile,
-            }
+    return {
+        'ObjectType': 'Image',
+        'NDims': len(raw.shape),
+        'BinaryData': True,
+        'BinaryDataByteOrderMSB': False,
+        'CompressedData': False,
+        'TransformMatrix': (1, 0, 0, 0, 1, 0, 0, 0, 1),
+        'Offset': offset,
+        'CenterOfRotation': (0, 0, 0),
+        'AnatomicalOrientation': '???',
+        'DimSize': raw.shape,
+        'ElementType': DTYPE_TO_METAIO[raw.dtype.type],
+        'ElementSpacing': voxel_dimensions,
+        'ElementDataFile': element_datafile,
+    }
 
 
 def load_raw(element_type, shape, data_path):
@@ -202,8 +208,8 @@ def load_trace_data(experiment_path, experiment_type):
         ('injection', 'energy', 'density', 'intensity', )
         the data is clipped, and returned
     '''
-    metaio = MetaIO.load(joinp(experiment_path, experiment_type + '.mhd'),
-                         joinp(experiment_path, experiment_type + '.raw'))
+    metaio = VoxelData.load_metaio(joinp(experiment_path, experiment_type + '.mhd'),
+                                   joinp(experiment_path, experiment_type + '.raw'))
     return metaio.raw
 
 
@@ -306,12 +312,11 @@ def build_sphere_mask(shape, radius):
     return mask
 
 
-def build_homogeneous_density(mask, voxel_dimensions, value=255):
+def build_homogeneous_density(mask, voxel_dimensions, offset=None, value=255):
     '''build an artificial homogeneous density'''
     raw = np.zeros(mask.shape, dtype=np.uint8)
     raw[mask] = value
-    mhd = get_mhd_info(raw.shape, np.uint8, voxel_dimensions, "density")
-    return MetaIO(mhd, raw)
+    return VoxelData(raw, voxel_dimensions=voxel_dimensions, offset=offset)
 
 
 class CellCollection(object):

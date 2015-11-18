@@ -31,11 +31,11 @@ class NotebookViewer(object):
 
         display(HTML(html))
 
-    def show_metaio(self, name, metaio):
-        '''save a MetaIO file locally and display it'''
+    def show_volume(self, name, voxel):
+        '''save a VoxelData object locally and display it'''
         filename_mhd = name + '.mhd'
         filename_raw = name + '.raw'
-        metaio.save(joinp(self.output_directory, filename_mhd), filename_raw)
+        voxel.save_metaio(joinp(self.output_directory, filename_mhd), filename_raw)
         self.show(filename_mhd)
 
     def show_points(self, name, cells):
@@ -70,7 +70,7 @@ class NotebookViewer(object):
         filename = 'sdist_' + value.replace(' ', '_')
         raw = sdist.get_probability_field(attribute, value).astype(np.float32)
         mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
-        self.show_metaio(filename, gb.MetaIO(mhd, raw))
+        self.show_volume(filename, gb.VoxelData(mhd, raw))
 
     def show_vectors(self, name, field, point_count, voxel_dimensions):
         '''visualize a vector field'''

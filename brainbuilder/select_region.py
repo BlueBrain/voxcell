@@ -9,7 +9,7 @@ def select_region(annotation_raw, density, hierarchy, region_name, inverse=False
 
     Args:
         annotation_raw: voxel data from Allen Brain Institute (can be crossrefrenced with hierarchy)
-        density: MetaIO object with voxel data from Allen Brain Institute.
+        density: VoxelData object with voxel data from Allen Brain Institute.
             Called "atlasVolume" in their website.
             Each voxel represents a value that once normalised, can be treated as a probability
             of cells appearing in this voxel.
@@ -24,7 +24,7 @@ def select_region(annotation_raw, density, hierarchy, region_name, inverse=False
     in_region = gb.get_regions_mask_by_names(annotation_raw, hierarchy, [region_name])
     if inverse:
         in_region = np.negative(in_region)
-    return gb.MetaIO(density.mhd, density.raw * in_region)
+    return gb.VoxelData(density.raw * in_region, density.voxel_dimensions, density.offset)
 
 
 def select_hemisphere(density_raw, left=True):

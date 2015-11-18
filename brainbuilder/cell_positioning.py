@@ -64,6 +64,6 @@ def cell_positioning(density, total_cell_count):
     cell_voxel_indices = cell_counts_to_cell_voxel_indices(cell_counts_per_voxel)
 
     positions = gb.cell_voxel_indices_to_positions(cell_voxel_indices,
-                                                   density.mhd['ElementSpacing'])
+                                                   density.voxel_dimensions)
 
     return positions

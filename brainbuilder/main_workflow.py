@@ -50,15 +50,15 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     L.debug('Creating brain region: "%s", cell count: %d', region_name, total_cell_count)
 
-    annotation = gb.MetaIO.load(annotations_path)
+    annotation = gb.VoxelData.load_metaio(annotations_path)
 
     hierarchy = gb.load_hierarchy(hierarchy_path)['msg'][0]
 
-    full_density = gb.MetaIO.load(atlas_volume_path)
+    full_density = gb.VoxelData.load_metaio(atlas_volume_path)
 
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
-    voxel_dimensions = full_density.mhd['ElementSpacing']
+    voxel_dimensions = full_density.voxel_dimensions
 
     # transform BBP recipies into voxel data:
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,

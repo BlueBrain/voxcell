@@ -122,14 +122,14 @@ def test_cell_voxel_indices_to_positions_2():
     assert (result[1, 2] >= 100) and (result[0, 2] <= 200)
 
 
-mhd = {'ElementSpacing': (25, 25, 25)}
+mhd = {'voxel_dimensions': (25, 25, 25)}
 
 
 def test_cell_positioning_0():
     raw = np.ones((3, 3, 3))
     total_cell_count = 0
 
-    result = cp.cell_positioning(gb.MetaIO(mhd, raw), total_cell_count)
+    result = cp.cell_positioning(gb.VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
@@ -139,7 +139,7 @@ def test_cell_positioning_1():
     raw = np.ones((3, 3, 3))
     total_cell_count = 1
 
-    result = cp.cell_positioning(gb.MetaIO(mhd, raw), total_cell_count)
+    result = cp.cell_positioning(gb.VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
@@ -149,7 +149,7 @@ def test_cell_positioning_full():
     raw = np.ones((3, 3, 3))
     total_cell_count = 3 * 3 * 3
 
-    result = cp.cell_positioning(gb.MetaIO(mhd, raw), total_cell_count)
+    result = cp.cell_positioning(gb.VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))

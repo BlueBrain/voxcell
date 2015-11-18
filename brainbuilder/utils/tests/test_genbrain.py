@@ -62,13 +62,13 @@ def test_load_raw_int():
 
 
 def test_load_meta_io():
-    original = gb.MetaIO.load(os.path.join(DATA_PATH, 'atlasVolume.mhd'),
-                              os.path.join(DATA_PATH, 'atlasVolume.raw'))
+    original = gb.VoxelData.load_metaio(os.path.join(DATA_PATH, 'atlasVolume.mhd'),
+                                        os.path.join(DATA_PATH, 'atlasVolume.raw'))
 
     with tempfile.NamedTemporaryFile() as f:
         original.raw.transpose().tofile(f.name)
 
-        restored = gb.MetaIO.load(os.path.join(DATA_PATH, 'atlasVolume.mhd'), f.name)
+        restored = gb.VoxelData.load_metaio(os.path.join(DATA_PATH, 'atlasVolume.mhd'), f.name)
         assert np.all(original.raw == restored.raw)
 
 
@@ -263,5 +263,5 @@ def test_build_homogeneous_density_empty():
 
 
 def test_build_homogeneous_density_1():
-    assert_equal(gb.build_homogeneous_density(np.array([0, 1, 0], dtype=np.bool), (1,), 42).raw,
-                 np.array([0, 42, 0]))
+    assert_equal(gb.build_homogeneous_density(np.array([0, 1, 0], dtype=np.bool), (1,)).raw,
+                 np.array([0, 255, 0]))
