@@ -151,47 +151,48 @@ def test_cell_density_from_positions_homogeneous():
 
 def test_load_hierarchy_0():
     with tempfile.NamedTemporaryFile() as f:
-        f.write('{}')
+        f.write('{"msg": [{}]}')
         f.flush()
 
-        h = gb.load_hierarchy(f.name)
-        eq_(h, {})
+        h = gb.Hierarchy.load(f.name)
+        eq_(h.data, {})
+        eq_(h.children, [])
 
 
 def test_load_hierarchy_1():
-    h = gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json'))
-    eq_(h['name'], 'root')
+    h = gb.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json'))
+    eq_(h.data['name'], 'root')
 
 
 @raises(KeyError)
 def test_find_in_hierarchy_0():
-    eq_(gb.find_in_hierarchy({}, 'id', 'xxx'), [])
+    eq_(gb.Hierarchy({}).find('id', 'xxx'), [])
 
 
 def test_find_in_hierarchy_1():
-    eq_(gb.find_in_hierarchy({ "id": 997, "children": []}, 'id', 'xxx'), [])
+    eq_(gb.Hierarchy({ "id": 997, "children": []}).find('id', 'xxx'), [])
 
 
 def test_find_in_hierarchy_2():
-    res = gb.find_in_hierarchy(gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json')),
+    res = gb.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json')).find(
                                'name', 'Primary somatosensory area, barrel field')
     eq_(len(res), 1)
-    eq_(res[0]['name'], 'Primary somatosensory area, barrel field')
+    eq_(res[0].data['name'], 'Primary somatosensory area, barrel field')
 
 
 @raises(KeyError)
 def test_get_in_hierarchy_0():
-    gb.get_in_hierarchy({}, 'id')
+    gb.Hierarchy({}).get('id')
 
 
 def test_get_in_hierarchy_1():
-    eq_(gb.get_in_hierarchy({"id": 997, "children": []}, 'id'), [997])
+    eq_(gb.Hierarchy({"id": 997, "children": []}).get('id'), [997])
 
 
 def test_get_in_hierarchy_2():
-    h = gb.find_in_hierarchy(gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json')),
+    h = gb.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json')).find(
                              'name', 'Primary somatosensory area, barrel field')
-    res = gb.get_in_hierarchy(h[0], 'id')
+    res = h[0].get('id')
     eq_(res, [329, 981, 201, 1047, 1070, 1038, 1062])
 
 

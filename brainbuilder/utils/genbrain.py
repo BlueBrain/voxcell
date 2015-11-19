@@ -183,44 +183,50 @@ def load_raw(element_type, shape, data_path):
     return data
 
 
-def load_hierarchy(filename):
-    '''load a hierarchy of annotations in json from the Allen Brain Institute'''
-    return json.load(file(filename))
+class Hierarchy(object):
+    '''encapsulates data about brain structures organized in a
+    hierarchical part-of relationship.'''
 
+    def __init__(self, data):
+        self.children = [Hierarchy(c) for c in data.get('children', [])]
+        self.data = dict((k, data[k]) for k in set(data.keys()) - set(['children']))
 
-def find_in_hierarchy(hierarchy, attribute, value):
-    '''get a list with all the subsections of a hierarchy that exactly match
-    the given value on the given attribute'''
-    if hierarchy[attribute] == value:
-        return [hierarchy]
-    else:
-        found = [find_in_hierarchy(c, attribute, value) for c in hierarchy['children']]
-        res = []
-        for c in found:
-            if c:
-                res.extend(c)
+    @classmethod
+    def load(cls, filename):
+        '''load a hierarchy of annotations in json from the Allen Brain Institute'''
+        return Hierarchy(json.load(file(filename))['msg'][0])
+
+    def find(self, attribute, value):
+        '''get a list with all the subsections of a hierarchy that exactly match
+        the given value on the given attribute'''
+        if self.data[attribute] == value:
+            return [self]
+        else:
+            found = [c.find(attribute, value) for c in self.children]
+            res = []
+            for c in found:
+                if c:
+                    res.extend(c)
+            return res
+
+    def get(self, attribute):
+        '''get the list of all values of the given attribute for every subsection of a hierarchy'''
+        res = [self.data[attribute]]
+        for c in self.children:
+            res.extend(c.get(attribute))
         return res
 
+    def collect(self, find_attribute, value, get_attribute):
+        '''get the list of all values for the get_attribute for all sections in a hierarchy
+        matching the find_attribute-value'''
+        all_got = []
 
-def get_in_hierarchy(hierarchy, attribute):
-    '''get the list of all values of the given attribute for every subsection of a hierarchy'''
-    res = [hierarchy[attribute]]
-    for c in hierarchy['children']:
-        res.extend(get_in_hierarchy(c, attribute))
-    return res
+        found = self.find(find_attribute, value)
+        for r in found:
+            got = r.get(get_attribute)
+            all_got.extend(got)
 
-
-def collect_in_hierarchy(hierarchy, find_attribute, value, get_attribute):
-    '''get the list of all values for the get_attribute for all sections ina hierarchy
-    matching the find_attribute-value'''
-    all_got = []
-
-    found = find_in_hierarchy(hierarchy, find_attribute, value)
-    for r in found:
-        got = get_in_hierarchy(r, get_attribute)
-        all_got.extend(got)
-
-    return all_got
+        return all_got
 
 
 def load_trace_data(experiment_path, experiment_type):
@@ -275,7 +281,7 @@ def get_regions_mask_by_names(annotation_raw, hierarchy, names):
     '''get a binary voxel mask where the voxel belonging to the given region names are True'''
     all_ids = []
     for n in names:
-        ids = collect_in_hierarchy(hierarchy, 'name', n, 'id')
+        ids = hierarchy.collect('name', n, 'id')
         if not ids:
             raise KeyError(n)
         all_ids.extend(ids)

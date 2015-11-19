@@ -52,7 +52,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     annotation = gb.VoxelData.load_metaio(annotations_path)
 
-    hierarchy = gb.load_hierarchy(hierarchy_path)['msg'][0]
+    hierarchy = gb.Hierarchy.load(hierarchy_path)
 
     full_density = gb.VoxelData.load_metaio(atlas_volume_path)
 
@@ -93,7 +93,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
                                           neuron_sdist)
     cells.add_properties(chosen_morphology)
 
-    acronym = gb.find_in_hierarchy(hierarchy, 'name', region_name)[0]['acronym']
+    acronym = hierarchy.find('name', region_name)[0]['acronym']
     export_viewer(joinp(output_path, 'intermediates_%s_%d' % (acronym, total_cell_count)),
                   orientation_field, cells)
 
@@ -107,7 +107,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
 def get_region_names(hierarchy):
     '''retuns the names of all the regions'''
-    names = sorted(gb.get_in_hierarchy(hierarchy, 'name'))
+    names = sorted(hierarchy.get(hierarchy, 'name'))
     return names
 
 

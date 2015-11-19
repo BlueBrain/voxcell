@@ -110,13 +110,13 @@ def compute_orientation_field(annotation, hierarchy, region_name):
         dimension of size 3 contains the three i,j,k components of each vector
 
     '''
-    subhierarchy = gb.collect_in_hierarchy(hierarchy, 'name', region_name, 'id')
+    subhierarchy = hierarchy.collect('name', region_name, 'id')
     region_mask = gb.get_regions_mask_by_ids(annotation.raw, subhierarchy)
     fwd_field = compute_main_axis_field(region_mask)
 
-    first = [name for name in gb.collect_in_hierarchy(hierarchy, 'name', region_name, 'name')
+    first = [name for name in hierarchy.collect('name', region_name, 'name')
              if 'stratum lacunosum-moleculare' in name]
-    last = [name for name in gb.collect_in_hierarchy(hierarchy, 'name', region_name, 'name')
+    last = [name for name in hierarchy.collect('name', region_name, 'name')
             if 'stratum oriens' in name]
     up_field = compute_depth_axis_field(annotation, hierarchy, first, last, region_mask)
 

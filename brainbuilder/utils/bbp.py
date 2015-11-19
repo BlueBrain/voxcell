@@ -22,7 +22,7 @@ def map_regions_to_layers(hierarchy, region_name):
         the value is a tuple of the integer indices of the 6 layers used in BBP: 1, 2, 3, 4, 5, 6
     '''
 
-    sub_area_names = gb.collect_in_hierarchy(hierarchy, 'name', region_name, 'name')
+    sub_area_names = hierarchy.collect('name', region_name, 'name')
 
     layer_mapping = {
         'layer 1': (1,),
@@ -43,8 +43,8 @@ def map_regions_to_layers(hierarchy, region_name):
     for subarea in sub_area_names:
         for name, indices in layer_mapping.items():
             if subarea.lower().endswith(name):
-                area = gb.find_in_hierarchy(hierarchy, 'name', subarea)
-                layer_groups[area[0]['id']] = indices
+                area = hierarchy.find('name', subarea)
+                layer_groups[area[0].data['id']] = indices
 
     return layer_groups
 

@@ -17,14 +17,15 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def test_map_regions_to_layers_unknown_area():
-    region_layers_map = bbp.map_regions_to_layers({"id": 997, "name": "mybrain", "children": []},
+    h = gb.Hierarchy({"id": 997, "name": "mybrain", "children": []})
+    region_layers_map = bbp.map_regions_to_layers(h,
                                                   'Primary somatosensory area, barrel field')
 
     eq_(region_layers_map, {})
 
 
 def test_map_regions_to_layers_complex():
-    hierarchy = gb.load_hierarchy(os.path.join(DATA_PATH, 'hierarchy.json'))
+    hierarchy = gb.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json'))
 
     region_layers_map = bbp.map_regions_to_layers(hierarchy,
                                                   'Primary somatosensory area, barrel field')
