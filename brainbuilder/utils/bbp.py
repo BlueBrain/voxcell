@@ -447,3 +447,82 @@ def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
                                                         region_layers_map,
                                                         get_distance_to_pia(annotation),
                                                         percentile)
+
+
+def parse_mvd2(filepath):
+    '''loads an mvd2 as a dict data structure with tagged fields'''
+
+    sections = {
+        'Neurons Loaded': (
+            ('morphology', str),
+            ('database', int), ('hyperColumn', int), ('miniColumn', int),
+            ('layer', int), ('mtype', int), ('etype', int),
+            ('x', float), ('y', float), ('z', float), ('r', float), ('metype', str)
+        ),
+        'MicroBox Data': (
+            ('size_x', float), ('size_y', float), ('size_z', float),
+            ('layer_6_percentage', float),
+            ('layer_5_percentage', float),
+            ('layer_4_percentage', float),
+            ('layer_3_percentage', float),
+            ('layer_2_percentage', float)
+        ),
+        'MiniColumnsPosition': (('x', float), ('y', float), ('z', float)),
+        'CircuitSeeds': (('RecipeSeed', float), ('ColumnSeed', float), ('SynapseSeed', float)),
+        'MorphTypes': (('name', str), ('mclass', str), ('sclass', str)),
+        'ElectroTypes': (('name', str),),
+    }
+
+    result = {}
+
+    section_names = dict((s.lower(), s) for s in sections.keys())
+
+    current_section = 'HEADER'
+
+    with open(filepath) as f:
+        for exact_line in f.readlines():
+            line = exact_line.strip()
+
+            if line.lower() in section_names:
+                current_section = section_names[line.lower()]
+            else:
+                if current_section in sections:
+                    fields = sections[current_section]
+                    parsed = dict((field_def[0], field_def[1](value))
+                                  for field_def, value in zip(fields, line.split()))
+
+                    result.setdefault(current_section, []).append(parsed)
+                else:
+                    assert current_section == 'HEADER'
+                    result.setdefault(current_section, '')
+                    result[current_section] += exact_line + '\n'
+
+    return result
+
+
+def load_mvd2(filepath):
+    '''loads an mvd2 as a CellCollection'''
+    data = parse_mvd2(filepath)
+
+    cells = gb.CellCollection()
+
+    cells.positions = np.array([[c['x'], c['y'], c['z']] for c in data['Neurons Loaded']])
+
+    angles = np.array([c['r'] for c in data['Neurons Loaded']])
+    cells.orientations = np.array([[[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
+                                   for cos, sin in zip(np.cos(angles), np.sin(angles))])
+
+    synapse_class_alias = {'INH': 'inhibitory', 'EXC': 'excitatory'}
+
+    props = pd.DataFrame({
+        'synapse_class': [synapse_class_alias[data['MorphTypes'][c['mtype']]['sclass']]
+                          for c in data['Neurons Loaded']],
+        'mtype': [data['MorphTypes'][c['mtype']]['name'] for c in data['Neurons Loaded']],
+        'etype': [data['ElectroTypes'][c['etype']]['name'] for c in data['Neurons Loaded']],
+        'morphology': [c['morphology'] for c in data['Neurons Loaded']],
+        'layer': [c['layer'] for c in data['Neurons Loaded']],
+        'minicolumn': [c['miniColumn'] for c in data['Neurons Loaded']],
+    })
+
+    cells.add_properties(props)
+    return cells

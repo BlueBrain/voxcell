@@ -499,3 +499,37 @@ def test_clip_columns_to_percentile():
 
     ret = bbp.clip_columns_to_percentile(dists.copy(), 0.50)
     assert_equal(np.sum(ret.values, axis=0), np.array((9, 9, 8, 5)))
+
+
+def test_parse_mvd2():
+    data = bbp.parse_mvd2(os.path.join(DATA_PATH, 'circuit.mvd2'))
+    eq_(len(data['CircuitSeeds']), 1)
+    eq_(len(data['ElectroTypes']), 3)
+    eq_(len(data['MorphTypes']), 5)
+    eq_(len(data['MicroBox Data']), 1)
+    eq_(len(data['MiniColumnsPosition']), 5)
+    eq_(len(data['Neurons Loaded']), 5)
+
+
+def test_load_mvd2():
+    cells = bbp.load_mvd2(os.path.join(DATA_PATH, 'circuit.mvd2'))
+
+    eq_(cells.positions.shape, (5, 3))
+
+    eq_(cells.orientations.shape, (5, 3, 3))
+
+    eq_(set(cells.properties.columns),
+        set(['etype', 'morphology', 'mtype', 'synapse_class',
+             'layer', 'minicolumn']))
+
+    eq_(list(cells.properties.synapse_class.unique()),
+        ['inhibitory', 'excitatory'])
+
+    eq_(list(cells.properties.mtype.unique()),
+        ['L1_DLAC', 'L23_PC', 'L4_NBC', 'L5_TTPC1', 'L6_LBC'])
+
+    eq_(list(cells.properties.etype.unique()),
+        ['cNAC', 'cADpyr', 'dNAC'])
+
+    eq_(list(cells.properties.synapse_class),
+        ['inhibitory', 'excitatory', 'inhibitory', 'excitatory', 'inhibitory'])
