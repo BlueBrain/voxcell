@@ -53,6 +53,31 @@ def test_save_mhd():
         eq_(contents, original_contents)
 
 
+def test_save_metaio():
+
+    original_path = os.path.join(DATA_PATH, 'atlasVolume.mhd')
+    vd = gb.VoxelData.load_metaio(original_path)
+
+    with tempfile.NamedTemporaryFile(suffix='.mhd') as f:
+        vd.save_metaio(f.name)
+        f.seek(0)
+
+        # compare MHD
+        contents = dict(l.split(' = ') for l in f.read().split('\n') if l)
+
+        with open(original_path) as o:
+            original_contents = dict(l.split(' = ') for l in o.read().split('\n') if l)
+
+        eq_(sorted(contents.keys()), sorted(original_contents.keys()))
+
+        # compare RAW
+        rawname = contents['ElementDataFile']
+        original_rawname = os.path.join(DATA_PATH, original_contents['ElementDataFile'])
+        with open(rawname) as r:
+            with open(original_rawname) as ro:
+                eq_(r.read(), ro.read())
+
+
 def test_load_raw_float():
     original = np.random.random((3, 4, 5)).astype(np.float32)
 

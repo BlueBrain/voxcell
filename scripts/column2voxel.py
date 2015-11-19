@@ -89,14 +89,6 @@ def create_annotations(positions, layers, dimensions, spacing, layer_map):
     return annotations
 
 
-def save_mhd(name, data, spacing):
-    '''save a VoxelData raw file with .mhd header
-    '''
-    mhd_filename = name + '.mhd'
-    raw_filename = name + '.raw'
-    gb.VoxelData(data, [spacing] * 3).save_metaio(mhd_filename, raw_filename)
-
-
 def column2voxel(mvd2_path, column_name, spacing):
     '''
     Args:
@@ -110,7 +102,7 @@ def column2voxel(mvd2_path, column_name, spacing):
 
     density = gb.cell_density_from_positions(positions, dimensions, [spacing] * 3, dtype=np.float32)
     # density = density / np.sum(density)
-    save_mhd(column_name + '_density', density, spacing)
+    gb.VoxelData(density, [spacing] * 3).save_metaio(column_name + '_density.mhd')
 
     # from bbp_hierarchy.json
     layer_map = {0: 21,  # Primary somatosensory area, lower limb, layer 1
@@ -124,7 +116,7 @@ def column2voxel(mvd2_path, column_name, spacing):
                  }
 
     annotations = create_annotations(positions, layers, dimensions, spacing, layer_map)
-    save_mhd(column_name + '_annotations', annotations, spacing)
+    gb.VoxelData(annotations, [spacing] * 3).save_metaio(column_name + '_annotations.mhd')
 
 
 def get_parser():
