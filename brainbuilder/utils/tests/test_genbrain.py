@@ -111,24 +111,88 @@ def test_load_meta_io():
 
 def test_cell_density_from_positions_0():
     positions = np.zeros((0, 3))
-    density_dimensions = (3, 4, 5)
     voxel_dimensions = (25, 25, 25)
 
-    result = gb.cell_density_from_positions(positions, density_dimensions, voxel_dimensions)
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
 
-    assert_equal(result.raw, np.zeros(density_dimensions))
+    assert_equal(result.raw, np.zeros((1, 1, 1)))
+    assert_equal(result.offset, np.array([0, 0, 0]))
 
 
 def test_cell_density_from_positions_1():
     positions = np.zeros((1, 3))
-    density_dimensions = (3, 4, 5)
     voxel_dimensions = (25, 25, 25)
 
-    result = gb.cell_density_from_positions(positions, density_dimensions, voxel_dimensions)
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
 
-    expected = np.zeros(density_dimensions)
-    expected[0, 0, 0] = 1
+    expected = np.ones((1, 1, 1))
     assert_equal(result.raw, expected)
+    assert_equal(result.offset, np.array([0, 0, 0]))
+
+
+def test_cell_density_from_positions_random_cube():
+    positions = np.random.random((10, 3))
+    voxel_dimensions = (25, 25, 25)
+
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
+
+    expected = np.ones((1, 1, 1)) * 10
+    assert_equal(result.raw, expected)
+
+
+def test_cell_density_from_positions_negative_0():
+    positions = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    voxel_dimensions = (25, 25, 25)
+
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
+
+    expected = np.ones((1, 1, 1)) * 3
+    assert_equal(result.raw, expected)
+    assert_equal(result.offset, np.array([-1, -1, -1]))
+
+
+def test_cell_density_from_positions_negative_1():
+    positions = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    voxel_dimensions = (1, 1, 1)
+
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
+
+    expected = np.zeros((3, 3, 3))
+    expected[0, 0, 0] = 1
+    expected[1, 1, 1] = 1
+    expected[2, 2, 2] = 1
+    assert_equal(result.raw, expected)
+    assert_equal(result.offset, np.array([-1, -1, -1]))
+
+
+def test_cell_density_from_positions_negative_2():
+    positions = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    voxel_dimensions = (0.5, 0.5, 0.5)
+
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
+
+    expected = np.zeros((5, 5, 5))
+    expected[0, 0, 0] = 1
+    expected[2, 2, 2] = 1
+    expected[4, 4, 4] = 1
+    print 'result'
+    print result.raw
+    assert_equal(result.raw, expected)
+    assert_equal(result.offset, np.array([-1, -1, -1]))
+
+
+def test_cell_density_from_positions_negative_3():
+    positions = np.array([[-1, -1, -1], [0, 0, 0], [1, 1, 1]])
+    voxel_dimensions = (0.5, 1, 25)
+
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
+
+    expected = np.zeros((5, 3, 1))
+    expected[0, 0, 0] = 1
+    expected[2, 1, 0] = 1
+    expected[4, 2, 0] = 1
+    assert_equal(result.raw, expected)
+    assert_equal(result.offset, np.array([-1, -1, -1]))
 
 
 def test_cell_density_from_positions_homogeneous():
@@ -144,9 +208,29 @@ def test_cell_density_from_positions_homogeneous():
 
     voxel_dimensions = (1, 1, 1)
 
-    result = gb.cell_density_from_positions(positions, density_dimensions, voxel_dimensions)
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
 
     assert_equal(result.raw, np.ones(density_dimensions))
+    assert_equal(result.offset, np.array([0, 0, 0]))
+
+
+def test_cell_density_from_positions_homogeneous_negative():
+    density_dimensions = (3, 4, 5)
+
+    positions = np.zeros((np.prod(density_dimensions), 3))
+    idx = 0
+    for i in xrange(density_dimensions[0]):
+        for j in xrange(density_dimensions[1]):
+            for k in xrange(density_dimensions[2]):
+                positions[idx] = [-i, -j, -k]
+                idx += 1
+
+    voxel_dimensions = (1, 1, 1)
+
+    result = gb.build_cell_density_from_positions(positions, voxel_dimensions)
+
+    assert_equal(result.raw, np.ones(density_dimensions))
+    assert_equal(result.offset, np.array([-2, -3, -4]))
 
 
 def test_load_hierarchy_0():

@@ -40,23 +40,6 @@ def load_mvd2_layers_positions(mvd2_path):
     return layers, positions
 
 
-def translate_positions_positive(positions, halo=25.):
-    '''Old column was centred at (0,0,0), we want all voxels to be positive, so we shift
-       the whole column
-
-       positions(numpy array): positions of soma
-       halo(float): distance from edges that column is offset (so it doesn't exactly touch 0
-    '''
-    min_positions = np.amin(positions, axis=0)
-    offset = np.zeros_like(min_positions)
-
-    mask = min_positions < 0.
-    offset[mask] = np.abs(min_positions[mask]) + halo
-    offset[~mask] = halo - np.abs(min_positions[~mask])
-
-    return positions + offset
-
-
 def create_annotations(positions, layers, dimensions, spacing, layer_map):
     '''create an annotation map like from AIBS: each voxel is tagged with a specific value
 
@@ -99,12 +82,8 @@ def column2voxel(mvd2_path, spacing):
         annotation(VoxelData): every voxel value represents the id of a region of the atlas
     '''
     layers, positions = load_mvd2_layers_positions(mvd2_path)
-    positions = translate_positions_positive(positions)
 
-    dimensions = np.ceil(np.amax(positions, axis=0) / spacing).astype(dtype=np.uint32)
-
-    density = gb.cell_density_from_positions(positions, dimensions, [spacing] * 3, dtype=np.float32)
-    # density = density / np.sum(density)
+    density = gb.build_cell_density_from_positions(positions, [spacing] * 3, dtype=np.float32)
 
     # from bbp_hierarchy.json
     layer_map = {0: 21,  # Primary somatosensory area, lower limb, layer 1
@@ -117,7 +96,7 @@ def column2voxel(mvd2_path, spacing):
                  'VOID': 1,
                  }
 
-    annotation = create_annotations(positions, layers, dimensions, spacing, layer_map)
+    annotation = create_annotations(positions, layers, density.raw.shape, spacing, layer_map)
     return density, annotation
 
 

@@ -314,15 +314,25 @@ def cell_positions_to_voxel_indices(positions, voxel_dimensions):
     return np.floor(positions / voxel_dimensions).astype(np.int)
 
 
-def cell_density_from_positions(positions, density_dimensions, voxel_dimensions, dtype=np.uint8):
+def build_cell_density_from_positions(positions, voxel_dimensions, dtype=np.uint8):
     '''calculate cell density from the cell positions'''
-    voxel_indices = cell_positions_to_voxel_indices(positions, voxel_dimensions)
+    if positions.shape[0] == 0:
+        return VoxelData(np.zeros([1] * len(voxel_dimensions), dtype=dtype), voxel_dimensions)
 
-    density = np.zeros(density_dimensions, dtype=dtype)
-    for coords in voxel_indices:
-        density[coords[0], coords[1], coords[2]] += 1
+    else:
+        aabb_min, aabb_max = get_positions_minimum_aabb(positions)
 
-    return VoxelData(density, voxel_dimensions)
+        dimensions = np.floor((aabb_max - aabb_min) / voxel_dimensions).astype(np.uint)
+        dimensions += np.ones_like(dimensions)
+
+        positions = positions - aabb_min
+        voxel_indices = cell_positions_to_voxel_indices(positions, voxel_dimensions)
+
+        density = np.zeros(dimensions, dtype=dtype)
+        for x, y, z in voxel_indices:
+            density[x, y, z] += 1
+
+        return VoxelData(density, voxel_dimensions, offset=aabb_min)
 
 
 def build_sphere_mask(shape, radius):
@@ -439,12 +449,20 @@ class CellCollection(object):
 
 
 def get_minimum_aabb(mask):
-    '''calculate the minimum axis-aligned bounding box
+    '''calculate the minimum axis-aligned bounding box for a volume mask
     Returns:
         A tuple containing the minimum x,y,z and maximum x,y,z
     '''
     idx = np.nonzero(mask)
     return np.min(idx, axis=1), np.max(idx, axis=1)
+
+
+def get_positions_minimum_aabb(positions):
+    '''calculate the minimum axis-aligned bounding box for a list of positions
+    Returns:
+        A tuple containing the minimum x,y,z and maximum x,y,z
+    '''
+    return np.min(positions, axis=0), np.max(positions, axis=0)
 
 
 def clip(mask, aabb):
