@@ -116,7 +116,7 @@ def test_cell_density_from_positions_0():
 
     result = gb.cell_density_from_positions(positions, density_dimensions, voxel_dimensions)
 
-    assert_equal(result, np.zeros(density_dimensions))
+    assert_equal(result.raw, np.zeros(density_dimensions))
 
 
 def test_cell_density_from_positions_1():
@@ -128,7 +128,7 @@ def test_cell_density_from_positions_1():
 
     expected = np.zeros(density_dimensions)
     expected[0, 0, 0] = 1
-    assert_equal(result, expected)
+    assert_equal(result.raw, expected)
 
 
 def test_cell_density_from_positions_homogeneous():
@@ -146,7 +146,7 @@ def test_cell_density_from_positions_homogeneous():
 
     result = gb.cell_density_from_positions(positions, density_dimensions, voxel_dimensions)
 
-    assert_equal(result, np.ones(density_dimensions))
+    assert_equal(result.raw, np.ones(density_dimensions))
 
 
 def test_load_hierarchy_0():

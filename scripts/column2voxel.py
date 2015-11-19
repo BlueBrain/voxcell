@@ -67,7 +67,7 @@ def create_annotations(positions, layers, dimensions, spacing, layer_map):
         layer_map(dict): translates layer numbers -> annotation value
 
     Returns:
-        numpy array of annotations
+        VoxelData object with the annotations
     '''
     annotations = np.zeros(dimensions, dtype=np.uint32)
     counts = defaultdict(lambda: [0] * 6)
@@ -86,14 +86,17 @@ def create_annotations(positions, layers, dimensions, spacing, layer_map):
     max_ind = np.amax(voxel_indices, axis=0)
     annotations[min_ind[X]:max_ind[X], max_ind[Y], min_ind[Z]:max_ind[Z]] = layer_map['PIA']
 
-    return annotations
+    return gb.VoxelData(annotations, spacing)
 
 
-def column2voxel(mvd2_path, column_name, spacing):
+def column2voxel(mvd2_path, spacing):
     '''
     Args:
         mvd2_path(str path): path to mvd2 file
-        column_name(str): name of the column, will be used to output files
+
+    Returns:
+        density(VoxelData): every voxel value represents the density of cell somas
+        annotation(VoxelData): every voxel value represents the id of a region of the atlas
     '''
     layers, positions = load_mvd2_layers_positions(mvd2_path)
     positions = translate_positions_positive(positions)
@@ -102,7 +105,6 @@ def column2voxel(mvd2_path, column_name, spacing):
 
     density = gb.cell_density_from_positions(positions, dimensions, [spacing] * 3, dtype=np.float32)
     # density = density / np.sum(density)
-    gb.VoxelData(density, [spacing] * 3).save_metaio(column_name + '_density.mhd')
 
     # from bbp_hierarchy.json
     layer_map = {0: 21,  # Primary somatosensory area, lower limb, layer 1
@@ -115,8 +117,8 @@ def column2voxel(mvd2_path, column_name, spacing):
                  'VOID': 1,
                  }
 
-    annotations = create_annotations(positions, layers, dimensions, spacing, layer_map)
-    gb.VoxelData(annotations, [spacing] * 3).save_metaio(column_name + '_annotations.mhd')
+    annotation = create_annotations(positions, layers, dimensions, spacing, layer_map)
+    return density, annotation
 
 
 def get_parser():
@@ -134,7 +136,9 @@ def get_parser():
 
 def main(args):
     '''main function'''
-    column2voxel(args.mvd, args.name, args.spacing)
+    density, annotation = column2voxel(args.mvd, args.spacing)
+    density.save_metaio(args.name + '_density.mhd')
+    annotation.save_metaio(args.name + '_annotation.mhd')
 
 
 if __name__ == '__main__':

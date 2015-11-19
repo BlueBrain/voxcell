@@ -314,7 +314,7 @@ def cell_density_from_positions(positions, density_dimensions, voxel_dimensions,
     for coords in voxel_indices:
         density[coords[0], coords[1], coords[2]] += 1
 
-    return density
+    return VoxelData(density, voxel_dimensions)
 
 
 def build_sphere_mask(shape, radius):
