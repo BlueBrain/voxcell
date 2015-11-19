@@ -199,34 +199,21 @@ class Hierarchy(object):
     def find(self, attribute, value):
         '''get a list with all the subsections of a hierarchy that exactly match
         the given value on the given attribute'''
-        if self.data[attribute] == value:
-            return [self]
-        else:
-            found = [c.find(attribute, value) for c in self.children]
-            res = []
-            for c in found:
-                if c:
-                    res.extend(c)
-            return res
+        me = [self] if self.data[attribute] == value else []
+        children = (c.find(attribute, value) for c in self.children)
+        return list(itertools.chain(me, *children))
 
     def get(self, attribute):
-        '''get the list of all values of the given attribute for every subsection of a hierarchy'''
-        res = [self.data[attribute]]
-        for c in self.children:
-            res.extend(c.get(attribute))
-        return res
+        '''get the set of all values of the given attribute for every subsection of a hierarchy'''
+        me = [self.data[attribute]]
+        children = (c.get(attribute) for c in self.children)
+        return set(itertools.chain(me, *children))
 
     def collect(self, find_attribute, value, get_attribute):
-        '''get the list of all values for the get_attribute for all sections in a hierarchy
+        '''get the set of all values for the get_attribute for all sections in a hierarchy
         matching the find_attribute-value'''
-        all_got = []
-
-        found = self.find(find_attribute, value)
-        for r in found:
-            got = r.get(get_attribute)
-            all_got.extend(got)
-
-        return all_got
+        collected = (r.get(get_attribute) for r in self.find(find_attribute, value))
+        return set(itertools.chain.from_iterable(collected))
 
 
 def load_trace_data(experiment_path, experiment_type):

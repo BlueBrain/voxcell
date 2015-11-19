@@ -170,7 +170,19 @@ def test_find_in_hierarchy_0():
 
 
 def test_find_in_hierarchy_1():
-    eq_(gb.Hierarchy({ "id": 997, "children": []}).find('id', 'xxx'), [])
+    eq_(gb.Hierarchy({"id": 997, "children": []}).find('id', 'xxx'), [])
+
+
+def test_find_in_hierarchy_beyond_me():
+    found = gb.Hierarchy({"id": 997, "prop": "a", "children": []}).find('prop', 'a')
+    eq_(len(found), 1)
+
+    found = gb.Hierarchy(
+        {"id": 997, "prop": "a", "children": [
+            {"id": 998, "prop": "a", "children": []}
+        ]}).find('prop', 'a')
+
+    eq_(len(found), 2)
 
 
 def test_find_in_hierarchy_2():
@@ -186,14 +198,23 @@ def test_get_in_hierarchy_0():
 
 
 def test_get_in_hierarchy_1():
-    eq_(gb.Hierarchy({"id": 997, "children": []}).get('id'), [997])
+    eq_(gb.Hierarchy({"id": 997, "children": []}).get('id'), set([997]))
 
 
 def test_get_in_hierarchy_2():
     h = gb.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json')).find(
                              'name', 'Primary somatosensory area, barrel field')
     res = h[0].get('id')
-    eq_(res, [329, 981, 201, 1047, 1070, 1038, 1062])
+    eq_(res, set([329, 981, 201, 1047, 1070, 1038, 1062]))
+
+
+def test_collect_in_hierarchy():
+    h = gb.Hierarchy(
+        {"id": 997, "prop": "a", "prop2": "a", "children": [
+            {"id": 998, "prop": "a", "prop2": "b", "children": []}
+        ]})
+
+    eq_(h.collect('prop', 'a', 'prop2'), set(['a', 'b']))
 
 
 def test_create_voxel_cube():
