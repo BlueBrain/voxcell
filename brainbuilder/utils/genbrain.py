@@ -335,21 +335,6 @@ def build_cell_density_from_positions(positions, voxel_dimensions, dtype=np.uint
         return VoxelData(density, voxel_dimensions, offset=aabb_min)
 
 
-def build_sphere_mask(shape, radius):
-    '''build the boolean mask of a sphere centered in the middle
-    Args:
-        shape: int or sequence of ints. Shape of the new mask.
-        radius: float representing the sphere radius in number of voxels
-    '''
-    mask = np.ones(shape, dtype=np.bool)
-    idx = np.nonzero(mask)
-    # subtract 1 because python indexes start by 0
-    middle = np.floor((np.array(shape) - 1) * 0.5)
-    aidx = np.array(idx) - middle[..., np.newaxis]
-    mask[idx] = np.sum(np.square(aidx), axis=0) < np.square(radius)
-    return mask
-
-
 def build_homogeneous_density(mask, voxel_dimensions, offset=None, value=255):
     '''build an artificial homogeneous density'''
     raw = np.zeros(mask.shape, dtype=np.uint8)
