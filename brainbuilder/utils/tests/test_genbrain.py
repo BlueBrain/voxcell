@@ -324,3 +324,11 @@ def test_build_homogeneous_density_empty():
 def test_build_homogeneous_density_1():
     assert_equal(gb.build_homogeneous_density(np.array([0, 1, 0], dtype=np.bool), (1,)).raw,
                  np.array([0, 255, 0]))
+
+
+def test_get_regions_mask_by_ids_0():
+    assert_equal(gb.get_regions_mask_by_ids(np.ones((3, 3)), set([1])),
+                 np.ones((3, 3), dtype=np.bool))
+
+    assert_equal(gb.get_regions_mask_by_ids(np.ones((3, 3)), set([3])),
+                 np.zeros((3, 3), dtype=np.bool))

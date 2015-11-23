@@ -259,7 +259,7 @@ def get_popular_voxels(f):
 def get_regions_mask_by_ids(annotation_raw, region_ids):
     '''get a binary voxel mask where the voxel belonging to the given region ids are True'''
 
-    in_region = np.in1d(annotation_raw, region_ids)
+    in_region = np.in1d(annotation_raw, list(region_ids))
     in_region = in_region.reshape(np.shape(annotation_raw))
     return in_region
 
