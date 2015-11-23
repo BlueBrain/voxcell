@@ -215,6 +215,21 @@ class Hierarchy(object):
         collected = (r.get(get_attribute) for r in self.find(find_attribute, value))
         return set(itertools.chain.from_iterable(collected))
 
+    def __str__(self):
+        txt = self.data.get('name', '<unnamed section>')
+
+        if self.data:
+            txt += '\n    ' + '\n    '.join('%s: %s' % (k, v)
+                                            for k, v in self.data.iteritems() if k != 'name')
+
+        if self.children:
+            children = '\n'.join(str(c) for c in self.children)
+            txt += '\n    children: [\n    %s\n    ]' % children.replace('\n', '\n    ')
+        else:
+            txt += '\n    children: []'
+
+        return txt
+
 
 def load_trace_data(experiment_path, experiment_type):
     '''load the experiment pointed to by experiment_path, of experiment_type

@@ -217,6 +217,41 @@ def test_collect_in_hierarchy():
     eq_(h.collect('prop', 'a', 'prop2'), set(['a', 'b']))
 
 
+def test_print_hierarchy_empty():
+    h = gb.Hierarchy({})
+    eq_(str(h), '<unnamed section>\n'
+                '    children: []')
+
+    h = gb.Hierarchy({'children': []})
+    eq_(str(h), '<unnamed section>\n'
+                '    children: []')
+
+    h = gb.Hierarchy({'children': [{}]})
+    eq_(str(h), '<unnamed section>\n'
+                '    children: [\n'
+                '    <unnamed section>\n'
+                '        children: []\n'
+                '    ]')
+
+
+def test_print_hierarchy_props():
+    h = gb.Hierarchy({'name': 'brains', 'prop': 'a'})
+    eq_(str(h), 'brains\n'
+                '    prop: a\n'
+                '    children: []')
+
+    h = gb.Hierarchy({'name': 'brains', 'prop': 'a',
+                      'children': [{'name': 'grey stuff', 'prop': 'b'}]})
+
+    eq_(str(h), 'brains\n'
+                '    prop: a\n'
+                '    children: [\n'
+                '    grey stuff\n'
+                '        prop: b\n'
+                '        children: []\n'
+                '    ]')
+
+
 def test_create_voxel_cube():
     shape = (10, 10, 10)
     ret = gb.create_voxel_cube(*shape)
@@ -332,3 +367,4 @@ def test_get_regions_mask_by_ids_0():
 
     assert_equal(gb.get_regions_mask_by_ids(np.ones((3, 3)), set([3])),
                  np.zeros((3, 3), dtype=np.bool))
+
