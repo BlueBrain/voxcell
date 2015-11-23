@@ -32,7 +32,14 @@ class NotebookViewer(object):
         display(HTML(html))
 
     def show_volume(self, name, voxel):
-        '''save a VoxelData object locally and display it'''
+        '''save volumetric data locally and display it
+        it may be a VoxelData object or a 3D numpy array'''
+
+        if isinstance(voxel, np.ndarray):
+            if voxel.dtype == np.bool:
+                voxel = voxel * np.ones_like(voxel, dtype=np.uint8)
+            voxel = gb.VoxelData(voxel, (1, 1, 1))
+
         filename_mhd = name + '.mhd'
         filename_raw = name + '.raw'
         voxel.save_metaio(joinp(self.output_directory, filename_mhd), filename_raw)
