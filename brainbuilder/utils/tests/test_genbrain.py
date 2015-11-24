@@ -371,6 +371,31 @@ def test_build_homogeneous_density_1():
                  np.array([0, 255, 0]))
 
 
+def test_build_layered_annotation_empty_0():
+    assert_equal(gb.build_layered_annotation((10, 10), [], []),
+                 np.empty((10, 0, 10)))
+
+
+def test_build_layered_annotation_empty_1():
+    assert_equal(gb.build_layered_annotation((10, 10), [0], [1]),
+                 np.empty((10, 0, 10)))
+
+
+def test_build_layered_annotation_homogeneous():
+    assert_equal(gb.build_layered_annotation((10, 10), [10], [1]),
+                 np.ones((10, 10, 10)))
+
+
+def test_build_layered_annotation_same_heights():
+    assert_equal(gb.build_layered_annotation((1, 1), [1] * 5, range(5)),
+                 np.array([[[0], [1], [2], [3], [4]]]))
+
+
+def test_build_layered_annotation_different_heights():
+    assert_equal(gb.build_layered_annotation((1, 1), range(4), range(4)),
+                 np.array([[[1], [2], [2], [3], [3], [3]]]))
+
+
 def test_get_regions_mask_by_ids_0():
     assert_equal(gb.get_regions_mask_by_ids(np.ones((3, 3)), set([1])),
                  np.ones((3, 3), dtype=np.bool))

@@ -342,6 +342,27 @@ def build_homogeneous_density(mask, voxel_dimensions, offset=None, value=255):
     return VoxelData(raw, voxel_dimensions=voxel_dimensions, offset=offset)
 
 
+def build_layered_annotation(shape, heights, layer_ids):
+    ''' build an artificial annotation composed of layers along the Y axis
+    Args:
+        shape: 2-tuple with the size of the resulting array in X and Z in number of voxels
+        heights: sequence of layer heights in number of voxels from lower to higher layer
+        layer_ids: sequence of layer ids ordered from lower to higher layer
+    '''
+    assert len(layer_ids) == len(heights)
+    boundaries = np.zeros(len(heights) + 1, dtype=np.uint)
+    boundaries[1:] = np.cumsum(heights)
+
+    raw = np.zeros((shape[0], boundaries[-1], shape[1]), dtype=np.uint32)
+
+    idx = 0
+    for i, j in zip(boundaries[:-1], boundaries[1:]):
+        raw[:, i:j, :] = layer_ids[idx]
+        idx += 1
+
+    return raw
+
+
 class CellCollection(object):
     '''Encapsulates all the data related to a collection of cells that compose a circuit.
 
