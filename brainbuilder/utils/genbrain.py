@@ -471,7 +471,7 @@ def clip(mask, aabb):
     return mask[idx]
 
 
-def clip_metaio(density, aabb):
+def clip_volume(density, aabb):
     '''take a density and clip it to an axis-aligned bounding box'''
     raw = clip(density.raw, aabb)
     offset = aabb[0] * density.voxel_dimensions
