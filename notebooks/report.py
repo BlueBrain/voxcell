@@ -1,0 +1,185 @@
+'''a collection of very ad hoc tests and plots to analyse the rebuilt BBP microcircuit'''
+import pandas as pd
+import numpy as np
+from matplotlib import pyplot as plt
+import itertools
+
+from brainbuilder.utils import genbrain as gb
+
+
+def count_cell_percentages(recipe, cells, attributes):
+    '''compute cell percentages, actual and expected, grouped by the given attributes'''
+    actual = []
+    expected = []
+    total_cell_count = cells.positions.shape[0]
+
+    for values, rows in recipe.groupby(attributes):
+        expected.append(rows.percentage.sum())
+
+        values = pd.Series(values, index=attributes)
+        cell_count = np.count_nonzero(np.all(values == cells.properties[attributes], axis=1))
+        actual.append(float(cell_count) / total_cell_count)
+
+    return np.array(actual), np.array(expected)
+
+
+def report_cell_percentages(recipe, columns, attributes):
+    '''plot cell percentages, actual and expected, grouped by the given attributes'''
+    actual, expected = zip(*[count_cell_percentages(recipe, c, attributes) for c in columns])
+
+    plt.figure(figsize=(15, 2))
+    plt.title('Percentages of cells')
+    plt.xlabel('recipe row (grouped by %s)' % ', '.join(attributes))
+    plt.ylabel('cell count (% of total)')
+    for e in expected:
+        plt.plot(e, 'b:')
+        plt.plot(e, 'b+', label='expected')
+    for a in actual:
+        plt.plot(a, 'rx', label='actual')
+    plt.legend(loc='upper left')
+
+    plt.figure(figsize=(15, 2))
+    plt.title('Percentages of cells (Zoom in for < 0.1%)')
+    plt.xlabel('recipe row (grouped by %s)' % ', '.join(attributes))
+    plt.ylabel('cell count (% of total)')
+    plt.ylim((0, 0.001))
+    for e in expected:
+        plt.plot(e, 'b+')
+    for a in actual:
+        plt.plot(a, 'rx')
+
+    plt.figure(figsize=(15, 2))
+    plt.title('Absolute error in percentages of cells')
+    plt.xlabel('recipe row (grouped by %s)' % ', '.join(attributes))
+    plt.ylabel('error (% difference)')
+    for a, e in zip(actual, expected):
+        plt.plot(np.abs(e - a), 'r:')
+        plt.plot(np.abs(e - a), 'ro')
+
+
+def count_morphology_used(neurondb, cells, attributes):
+    '''count how many unique morphologies where used and available for
+    cells grouped by the given attributes'''
+    keys = []
+    usage = []
+    availability = []
+
+    for values, rows in cells.properties.groupby(attributes):
+        used = rows.morphology.unique()
+
+        values = pd.Series(values, index=attributes)
+        matching_entries = np.all(values == neurondb[attributes], axis=1)
+        available = neurondb[matching_entries].morphology.unique()
+
+        keys.append(values)
+        usage.append(len(used))
+        availability.append(len(available))
+
+    return keys, np.array(usage), np.array(availability)
+
+
+def report_morphology_used(neurondb, column):
+    '''plot how many unique morphologies where used and available for
+    cells grouped by the given attributes'''
+    attributes = ['mtype', 'etype']
+    keys, u, a = count_morphology_used(neurondb, column, attributes)
+
+    plt.figure(figsize=(15, 50))
+    plt.title('Morphology Usage')
+    plt.barh(np.arange(len(a)), a, label='available')
+    plt.barh(np.arange(len(u)), u, color='r', label='used')
+    plt.xlabel('number of different morphologies')
+    plt.ylabel('morphologies grouped by %s' % ', '.join(attributes))
+
+    labels = ['%s - %s' % tuple(k.values) for k in keys]
+    plt.yticks(np.arange(len(labels)) + .5, labels)
+
+    plt.ylim(0, a.shape[0])
+    plt.legend()
+
+
+def report_morphology_y_scatter(column):
+    '''create a scatter plot of used unique morphologies representing each soma height as a dot'''
+    for lid in column.properties.layer.unique():
+        mask = (column.properties.layer == lid).values
+        unique_morphologies, morphology_indices = np.unique(column.properties[mask].morphology,
+                                                            return_inverse=True)
+        plt.figure(figsize=(15, 2))
+        plt.title('Cell Scatter Plot - Layer %d (%d cells)' %
+                  (lid + 1, column.positions[mask, :].shape[0]))
+        plt.xlabel('morphologies')
+        plt.ylabel('height (microns)')
+        plt.scatter(morphology_indices, column.positions[mask, 1], marker=',', s=1, lw = 0)
+        plt.xlim(0, len(unique_morphologies))
+
+
+def report_height_histogram(columns):
+    '''plot a height histogram for each layer'''
+    layer_colors = {0: '#7800cc', 1: '#fdff00', 2:
+                    '#b0ff00', 3: '#00ecff', 4: '#00db25', 5: '#db008f'}
+
+    for lid in layer_colors:
+        plt.figure()
+        plt.title('Layer %d' % (lid + 1))
+        plt.xlabel('bin centre (microns)')
+        plt.ylabel('cell count')
+
+        all_bincenters = []
+        all_counts = []
+        for c in columns:
+            y = c.positions[(c.properties.layer == lid).values, 1]
+            counts, bins = np.histogram(y, bins=20)
+            bincenters = 0.5 * (bins[1:] + bins[:-1])
+            all_bincenters.append(bincenters)
+            all_counts.append(counts)
+            plt.plot(bincenters, counts, color=layer_colors[lid], linestyle='dotted')
+
+        plt.plot(np.mean(all_bincenters, axis=0), np.mean(all_counts, axis=0),
+                 color=layer_colors[lid])
+
+
+def report_tiling(columns, hexagon_side):
+    '''Plot a cell density histogram of a stripe on the Z axis of every pair of two hexagons
+    one right above the other (so their flat sides touch)'''
+    nbins = 25
+    bins = np.arange(1.5 * nbins + 1) * (hexagon_side * 3.) / nbins - hexagon_side * .5
+    bincenters = 0.5 * (bins[1:] + bins[:-1])
+    stripe_width = 200
+    hexagon_height = 2 * hexagon_side * np.sin(2 * np.pi / 6)
+
+    plt.figure()
+    all_counts = []
+    for c1, c2 in itertools.product(columns, columns):
+        meanx1 = np.mean(c1.positions[:, 0])
+        stripe1 = np.abs(c1.positions[:, 0] - meanx1) < stripe_width * 0.5
+        meanx2 = np.mean(c2.positions[:, 0])
+        stripe2 = np.abs(c2.positions[:, 0] - meanx2) < stripe_width * 0.5
+        counts, _ = np.histogram(np.append(c2.positions[stripe2, 2],
+                                           c1.positions[stripe1, 2] + hexagon_height), bins=bins)
+        all_counts.append(counts)
+        plt.plot(bincenters, counts, linestyle='dotted', color='lightblue')
+
+    av_counts = np.average(all_counts, axis=0)
+    plt.plot(bincenters, av_counts, '-')
+    plt.plot([0, 0], [0, 100], 'r-')
+    plt.plot([hexagon_height, hexagon_height], [0, 100], 'r-')
+    plt.plot([hexagon_height * 2, hexagon_height * 2], [0, 100], 'r-')
+
+    plt.title('density in a %d micron-wide stripe on the Z axis' % stripe_width)
+    plt.ylabel('cell count')
+    plt.xlabel('z bin centre (microns)')
+
+
+def check_hexagon_diameter(columns, hexagon_side):
+    '''print warnings if any column goes outside their hexagon diameter'''
+    for i, c in enumerate(columns):
+        hexagon_diameter = hexagon_side * 2.
+        aabb_min, aabb_max = gb.get_positions_minimum_aabb(c.positions)
+        excess = (aabb_max - aabb_min) - hexagon_diameter
+        if excess[0] > 0:
+            print ('Column %d: X component is %f (%f%%) microns bigger than hexagon diameter' %
+                   (i, excess[0], 100 * excess[0] / hexagon_diameter))
+        if excess[2] > 0:
+            print ('Column %d: Z component is %f (%f%%) microns bigger than hexagon diameter' %
+                   (i, excess[2], 100 * excess[2] / hexagon_diameter))
+
