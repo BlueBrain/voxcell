@@ -5,6 +5,12 @@ import numpy as np
 
 def build_sphere_mask(shape, radius):
     '''build the boolean mask of a sphere centered in the middle
+
+    Note that the sphere shape is computed in continuous space but that the returned
+    mask has been voxelized, thus breaking the constant radius from the centre.
+    As shape and radius become bigger, the voxels cover proportionally less space
+    and the resulting shape approaches that of an ideal sphere.
+
     Args:
         shape: int or sequence of ints. Shape of the new mask.
         radius: float representing the sphere radius in number of voxels
@@ -71,7 +77,13 @@ def build_2d_triangular_mask(shape, v0, v1, v2):
 
 def build_2d_regular_convex_polygon_mask(shape, radius, vertex_count):
     '''build the boolean mask of a 2D regular convex polygon
-    see https://en.wikipedia.org/wiki/Regular_polygon'''
+    see https://en.wikipedia.org/wiki/Regular_polygon
+
+    Note that the polygon will be equilateral in continuous space but that the returned
+    mask has been voxelized, thus breaking equilaterally with an error range proportional
+    to the voxel dimensions. As shape and radius become bigger, the voxels cover
+    proportionally less space and the resulting shape approaches equilaterally.
+    '''
     assert vertex_count > 2
 
     angles = np.arange(vertex_count + 1) * ((2 * np.pi) / vertex_count)
