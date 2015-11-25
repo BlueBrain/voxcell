@@ -89,7 +89,8 @@ def load_recipe(recipe_filename):
                         if electro_type.tag == 'ElectroType':
 
                             percentage = (float(structural_type.attrib['percentage']) / 100 *
-                                          float(electro_type.attrib['percentage']) / 100)
+                                          float(electro_type.attrib['percentage']) / 100 *
+                                          float(layer.attrib['percentage']) / 100)
 
                             yield [
                                 int(layer.attrib['id']),
