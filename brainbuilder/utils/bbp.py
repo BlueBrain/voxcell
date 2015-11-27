@@ -125,10 +125,13 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
     for rid, layers in region_layers_map.iteritems():
         assert len(layers) == 1
         if layers[0] in percentages:
-            raw[annotation.raw == rid] = percentages[layers[0]]
+            region_mask = annotation.raw == rid
+            voxel_count = np.count_nonzero(region_mask)
+            raw[region_mask] = percentages[layers[0]] / float(voxel_count)
         else:
             L.warning('No percentage found in recipe for layer %d', layers[0])
 
+    raw /= np.sum(raw)
     return gb.VoxelData(raw,
                         voxel_dimensions=annotation.voxel_dimensions,
                         offset=annotation.offset)
