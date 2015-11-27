@@ -403,3 +403,26 @@ def test_get_regions_mask_by_ids_0():
     assert_equal(gb.get_regions_mask_by_ids(np.ones((3, 3)), set([3])),
                  np.zeros((3, 3), dtype=np.bool))
 
+
+def test_clip():
+    r = gb.clip(np.array([[0, 0, 0],
+                          [0, 1, 0],
+                          [0, 0, 0]]), (np.array([1, 1]), np.array([1, 1])))
+
+    assert_equal(r, np.array([[1]]))
+
+
+def test_clip_volume():
+    raw = np.array([[0, 0, 0],
+                    [0, 1, 0],
+                    [0, 0, 0]])
+
+    aabb = (np.array([1, 1]), np.array([1, 1]))
+
+    r = gb.clip_volume(gb.VoxelData(raw, (1, 1)), aabb)
+
+    assert_equal(r.raw, np.array([[1]]))
+
+    # check that they are independent
+    raw[1, 1] = 2
+    eq_(r.raw[0, 0], 1)

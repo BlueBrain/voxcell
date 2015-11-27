@@ -472,9 +472,16 @@ def get_positions_minimum_aabb(positions):
 
 
 def clip(mask, aabb):
-    '''take a numpy array it to an axis-aligned bounding box'''
+    '''take a numpy array and clip it to an axis-aligned bounding box
+    Accepts:
+        mask: numpy array
+        aabb: tuple of two sets of coordinates indicating, respectively,
+            the lowest and highest values for each dimension
+    Returns:
+        A new numpy array containing the same values as mask for the space defined by aabb
+    '''
     idx = [slice(s, e + 1) for s, e in zip(*aabb)]
-    return mask[idx]
+    return mask[idx].copy()
 
 
 def clip_volume(density, aabb):
