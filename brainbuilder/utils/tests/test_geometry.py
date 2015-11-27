@@ -146,3 +146,27 @@ def test_build_column_mask():
     eq_(geometry.build_column_mask(pattern, length=2, axis=0).shape, (2, 3, 3))
     eq_(geometry.build_column_mask(pattern, length=2, axis=1).shape, (3, 2, 3))
     eq_(geometry.build_column_mask(pattern, length=2, axis=2).shape, (3, 3, 2))
+
+
+def test_lattice_tiling_0():
+    r = list(geometry.lattice_tiling(0, 0, np.array([1, 0]), np.array([0, 1])))
+    eq_(r, [])
+
+
+def test_lattice_tiling_3():
+    r = np.array(list(geometry.lattice_tiling(3, 3, np.array([1, 0]), np.array([0, 1]))))
+    assert_equal(r, np.array([[0, 0],
+                              [2, 1],
+                              [3, 0],
+                              [1, 2],
+                              [3, 3],
+                              [4, 2],
+                              [2, 4],
+                              [4, 5],
+                              [5, 4]]))
+
+
+def test_build_tiled_pattern_0():
+    r = geometry.build_tiled_pattern(np.array([[True]]), [[0, 0], [1, 1]])
+    assert_equal(r, np.array([[1, 0],
+                              [0, 1]], dtype=np.bool))

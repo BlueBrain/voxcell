@@ -107,3 +107,48 @@ def build_column_mask(pattern, length, axis):
     '''given a 2D patter, repeat it in 3D to build a column along the given axis'''
     column = np.repeat([pattern], repeats=length, axis=0)
     return np.swapaxes(column, 0, axis)
+
+
+def lattice_tiling(n0, n1, v0, v1, ignore=None):
+    '''build a sequence of points representing the origin of the tiles in a pattern
+    Args:
+        n0: number of elements in the first dimension
+        n1: number of elements in the second dimension
+        v0: first 2D vector of the lattice base
+        v0: second 2D vector of the lattice base
+        ignore: a sequence of coordinates to be skipped
+
+    Returns:
+        Sequence of numpy arrays representing 2D points
+    '''
+    ignore = ignore or []
+
+    for i in range(0, n0):
+        for j in range(0, n1):
+            if (i, j) in ignore:
+                continue
+
+            yield ((i + j * 2 - (j // 2)) * v0 +
+                   (i * 2 + j - (j // 2) * 2) * v1)
+
+
+def build_tiled_pattern(pattern, tiling):
+    '''repeat a 2D pattern several times
+    Args:
+        pattern: 2D boolean numpy array
+        tiling: sequence of 2D coordinates for the individual tiles origin
+            the values of the coordinates must be integers representing voxel coordinates
+    Returns:
+        2D boolean numpy array
+    '''
+
+    tiling = list(tiling)
+    shape = np.array(pattern.shape) + np.max(tiling, axis=0)
+
+    result = np.zeros(shape, dtype=np.bool)
+
+    for origin in tiling:
+        result[origin[0]: origin[0] + pattern.shape[0],
+               origin[1]: origin[1] + pattern.shape[1]] |= pattern
+
+    return result
