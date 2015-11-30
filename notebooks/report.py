@@ -5,6 +5,7 @@ from matplotlib import pyplot as plt
 import itertools
 
 from brainbuilder.utils import genbrain as gb
+import logging
 
 
 def count_cell_percentages(recipe, cells, attributes):
@@ -183,3 +184,70 @@ def check_hexagon_diameter(columns, hexagon_side):
             print ('Column %d: Z component is %f (%f%%) microns bigger than hexagon diameter' %
                    (i, excess[2], 100 * excess[2] / hexagon_diameter))
 
+
+def collect_placement_hints(neurondb):
+    '''return a dict mapping tuples (layer, mtype, etype) that identify groups of morphologies,
+     to an array representing the sum of the placement hints of all of those morphologies'''
+    hints = {}
+
+    for lid, layerdf in neurondb.groupby('layer'):
+        for key, mtypedf in layerdf.groupby(['layer', 'mtype', 'etype']):
+            phs = list(mtypedf.placement_hints.values)
+            ph_lengths = np.array([len(l) for l in phs])
+            if np.all(ph_lengths == ph_lengths[0]):
+                hints[key] = np.sum(phs, axis=0)
+
+            else:
+                # this actually never happens with the current neurondb
+                logging.error('Ignoring %s because has different placement hint lengths: %s',
+                              (key[0], key[1], key[2],
+                               ', '.join(str(phl) for phl in np.unique(ph_lengths))))
+
+    return hints
+
+
+def check_bad_bins(hints, column):
+    '''confirm that any cell missing a morphology belongs to a group for which there are
+    sections of the layer with a placement hint score of zero'''
+    with_bad_bins = [k for k, v in hints.iteritems() if np.any(v == 0)]
+
+    no_morph = column.properties.morphology.isnull()
+    for k in column.properties[no_morph][['layer', 'mtype', 'etype']].drop_duplicates().values:
+        if tuple(k) not in with_bad_bins:
+            print ('Unexpected group %s %s %s does not have any bad bin. '
+                   'It should have got a morphology' % tuple(k))
+
+
+def report_placement_hints(hints):
+    '''plot placement hints for groups of morphologies and
+    warn about groups with bins of zero score'''
+    classification = {}
+    for k, summed in hints.iteritems():
+        classification.setdefault(k[0], {}).setdefault(len(summed), []).append((k, summed))
+
+    for lid, by_ph_length in classification.iteritems():
+        for phlength, data in by_ph_length.iteritems():
+            plt.figure(figsize=(15, 3))
+            plt.title('Placement Hints')
+            plt.xlabel('layer height bin number')
+            plt.ylabel('score')
+            for key, phs in data:
+                line = plt.plot(phs, ':')
+                color = line[0].get_color()
+                plt.plot(phs, 'o', color=color, label='%s %s %s' % key)
+                if np.any(phs == 0):
+                    print ('%s %s %s contains %d bins with score zero' %
+                           (key + (np.count_nonzero(phs == 0),)))
+
+            # the legend gets huge and unreadable
+            # plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+            plt.figure(figsize=(15, 3))
+            plt.title('Placement Hints (ZOOMED)')
+            plt.xlabel('layer height bin number')
+            plt.ylabel('score')
+            plt.ylim(-1, 20)
+            for key, phs in data:
+                line = plt.plot(phs, ':')
+                color = line[0].get_color()
+                plt.plot(phs, 'o', color=color)
