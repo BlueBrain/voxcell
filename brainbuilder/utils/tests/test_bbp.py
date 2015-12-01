@@ -64,6 +64,16 @@ def test_load_recipe_density_unknown_layer_0():
     assert_equal(density.raw, np.array([0.1, 0.9, 0.], dtype=np.float32))
 
 
+def test_load_recipe_density_no_voxels():
+    annotation_raw = np.array([1, 1])
+    density = bbp.load_recipe_density(
+        os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
+        gb.VoxelData(annotation_raw, voxel_dimensions=(25,)),
+        {1: (1,), 2: (2,)})
+
+    assert_equal(density.raw, np.array([0.5, 0.5], dtype=np.float32))
+
+
 def test_transform_into_spatial_distribution():
     annotation_raw = np.ones(shape=(3, 3, 3))
     annotation_raw[1, 1, 1] = 2

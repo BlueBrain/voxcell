@@ -127,7 +127,10 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
         if layers[0] in percentages:
             region_mask = annotation.raw == rid
             voxel_count = np.count_nonzero(region_mask)
-            raw[region_mask] = percentages[layers[0]] / float(voxel_count)
+            if voxel_count:
+                raw[region_mask] = percentages[layers[0]] / float(voxel_count)
+            else:
+                L.warning('No voxels tagged for layer %d', layers[0])
         else:
             L.warning('No percentage found in recipe for layer %d', layers[0])
 
