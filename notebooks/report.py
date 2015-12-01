@@ -254,3 +254,20 @@ def report_placement_hints(hints):
                 line = plt.plot(phs, ':')
                 color = line[0].get_color()
                 plt.plot(phs, 'o', color=color)
+
+
+def calculate_columns_densities(columns, height, radius):
+    '''compute, for each column the cell density, in cells per cubic micron,
+    of a cylindrical volume spanning y and centered around it's xz centre '''
+    volume = (np.pi * (radius ** 2) * height)
+    densities = []
+
+    for c in columns:
+        xz = c.positions[:, [0, 2]]
+        offset = np.mean(xz, axis=0)
+        distance2 = np.sum(np.square(xz - offset), axis=1)
+        mask = distance2 < (radius ** 2)
+        ncells = np.count_nonzero(mask)
+        densities.append(ncells / volume)
+
+    return np.array(densities)
