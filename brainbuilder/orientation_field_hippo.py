@@ -61,7 +61,7 @@ def compute_main_axis_hemispheric_field(mask, hemisphere):
         # change the direciton of the tangents on the YX plane
         dx *= -1
     else:
-        # TODO figure out what should be the symmetry convetion for morphology placement
+        # TODO figure out what should be the symmetry convention for morphology placement
         dx *= -1
         dz *= -1
         dy *= -1
@@ -118,7 +118,10 @@ def compute_orientation_field(annotation, hierarchy, region_name):
              if 'stratum lacunosum-moleculare' in name]
     last = [name for name in hierarchy.collect('name', region_name, 'name')
             if 'stratum oriens' in name]
+
     up_field = compute_depth_axis_field(annotation, hierarchy, first, last, region_mask)
+    # the value of sigma is hand-picked to soften the edge errors we get on the Allen atlas
+    up_field = vf.normalize(vf.gaussian_filter(up_field, sigma=2.5))
 
     right_field = np.cross(up_field, fwd_field)
 

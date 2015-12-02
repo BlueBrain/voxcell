@@ -15,6 +15,7 @@ and higher dimensionality levels.
 '''
 import numpy as np
 from scipy.ndimage import morphology
+import scipy.ndimage
 
 import brainbuilder.utils.genbrain as gb
 
@@ -142,6 +143,35 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
     tangents_field[points_idx] = tangents
 
     return tangents_field
+
+
+def normalize(vf):
+    '''normalize a vector field'''
+    lengths = np.sqrt(np.sum(np.square(vf), axis=-1))
+    return np.nan_to_num(vf / lengths[..., np.newaxis])
+
+
+def gaussian_filter(vf, sigma):
+    '''apply a gaussian filter to a vector field
+
+    Note that filter is applied without normalizing the input or output.
+
+    Args:
+        vf: Vector field
+        sigma : scalar. Standard deviation for Gaussian kernel.
+
+    Returns:
+        The resulting vector field not normalized.
+    '''
+    filtered = vf.copy()
+    mask = np.any(vf != 0, axis=-1)
+
+    # pylint: disable=E1101
+    filtered[..., 0] = mask * scipy.ndimage.gaussian_filter(filtered[..., 0], sigma=sigma)
+    filtered[..., 1] = mask * scipy.ndimage.gaussian_filter(filtered[..., 1], sigma=sigma)
+    filtered[..., 2] = mask * scipy.ndimage.gaussian_filter(filtered[..., 2], sigma=sigma)
+
+    return filtered
 
 
 def combine_vector_fields(fields):

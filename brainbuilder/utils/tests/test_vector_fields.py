@@ -133,3 +133,29 @@ def test_calculate_fields_by_distance_to_between():
     assert_equal(
         vf.calculate_fields_by_distance_between(reg, ref0, ref1),
         np.array([[1], [0.5], [1], [1]]))  # everything positive: pointing to ref1
+
+
+def test_normalize_empty():
+    assert_equal(vf.normalize(np.array([[]])), np.array([[]]))
+
+
+def test_normalize_0():
+    assert_equal(vf.normalize(np.array([[1, 0, 0]])), np.array([[1, 0, 0]]))
+
+
+def test_normalize_1():
+    assert_equal(vf.normalize(np.array([[2, 2, 1]])), np.array([[2./3, 2./3, 1./3]]))
+
+
+def test_normalize_3():
+    assert_equal(vf.normalize(np.array([[1, 0, 0], [0, 0, 0]])), np.array([[1, 0, 0], [0, 0, 0]]))
+
+
+def test_gaussian_filter_0():
+    assert_equal(vf.gaussian_filter(np.array([[1, 0, 0], [1, 0, 0]]), 1),
+                 np.array([[1, 0, 0], [1, 0, 0]]))
+
+
+def test_gaussian_filter_1():
+    assert_equal(vf.gaussian_filter(np.array([[10, 0, 0], [0, 10, 0]]), 5),
+                 np.array([[5, 4, 0], [4, 5, 0]]))
