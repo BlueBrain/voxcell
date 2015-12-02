@@ -116,10 +116,13 @@ def report_morphology_y_scatter(column):
 
 def report_height_histogram(columns):
     '''plot a height histogram for each layer'''
-    layer_colors = {0: '#7800cc', 1: '#fdff00', 2:
-                    '#b0ff00', 3: '#00ecff', 4: '#00db25', 5: '#db008f'}
+    layer_colors_light = {0: '#8700e5', 1: '#fdff00', 2: '#b0ff00',
+                          3: '#00ecff', 4: '#00db25', 5: '#ff65ca'}
 
-    for lid in layer_colors:
+    layer_colors_dark = {0: '#510089', 1: '#c9af13', 2: '#8ea72f',
+                         3: '#0296ab', 4: '#008917', 5: '#a3006a'}
+
+    for lid in layer_colors_dark:
         plt.figure()
         plt.title('Layer %d' % (lid + 1))
         plt.xlabel('bin centre (microns)')
@@ -133,10 +136,10 @@ def report_height_histogram(columns):
             bincenters = 0.5 * (bins[1:] + bins[:-1])
             all_bincenters.append(bincenters)
             all_counts.append(counts)
-            plt.plot(bincenters, counts, color=layer_colors[lid], linestyle='dotted')
+            plt.plot(bincenters, counts, color=layer_colors_light[lid], linestyle='dotted')
 
         plt.plot(np.mean(all_bincenters, axis=0), np.mean(all_counts, axis=0),
-                 color=layer_colors[lid])
+                 color=layer_colors_dark[lid])
 
 
 def report_tiling(columns, hexagon_side):
