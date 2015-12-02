@@ -13,6 +13,7 @@ unzip ../P56_Mouse_annotation.zip
 popd
 mv 1.json P56_Mouse_annotation/annotation_hierarchy.json
 
+kinit
 mkdir -p bbp_recipe
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/entities/bionames/SomatosensoryCxS1-v5.r0/bluerecipe_release_ChC_intervention_GSYNrescale/*.xml bbp_recipe/
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/entities/morphologies/2012.07.23/v4_24.09.14Final_NoBadClonesMEGatedAntiStuck0_NoL6MCsubs_ih_exp_SomatosensoryCxS1-v5_r0_NeuronDB.dat bbp_recipe/neurondb.dat
