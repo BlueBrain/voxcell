@@ -271,3 +271,21 @@ def calculate_columns_densities(columns, height, radius):
         densities.append(ncells / volume)
 
     return np.array(densities)
+
+
+def report_columns_densities(columns_groups, height, radius):
+    '''plot column densities for many O1 circuits'''
+    plt.figure()
+    plt.title('Column density in O1\n(n=%d, core radius=%d microns)' %
+              (len(columns_groups), radius))
+    plt.xlabel('column id')
+    plt.ylabel('density (cells per cubic millimeter)')
+
+    all_densities = []
+    for o7 in columns_groups:
+        densities = calculate_columns_densities(o7, height, radius) * (10 ** 9)
+        all_densities.append(densities)
+        plt.plot(densities, ':')
+
+    plt.plot(np.mean(all_densities, axis=0), '-b', label='average', linewidth=2)
+    plt.legend(loc='lower right')
