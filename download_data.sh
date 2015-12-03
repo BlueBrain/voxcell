@@ -1,12 +1,13 @@
+#!/usr/bin/env bash
 # This script pulls P56 Mouse data from Allen website
 # required as base data for the brainbuilder
-mkdir data
+mkdir -p data
 pushd data
 wget -O atlasVolume.zip http://api.brain-map.org/api/v2/well_known_file_download/113567585
 wget -O P56_Mouse_annotation.zip http://api.brain-map.org/api/v2/well_known_file_download/197642854
 wget http://api.brain-map.org/api/v2/structure_graph_download/1.json
 unzip atlasVolume.zip
-mkdir P56_Mouse_annotation
+mkdir -p P56_Mouse_annotation
 pushd P56_Mouse_annotation
 unzip ../P56_Mouse_annotation.zip
 popd
@@ -18,9 +19,9 @@ scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/entities/morphologies/2012.0
 
 mkdir -p bbp_circuits
 pushd bbp_circuits
-mkdir SomatosensoryCxS1-v5.r0_O1
+mkdir -p SomatosensoryCxS1-v5.r0_O1
 pushd SomatosensoryCxS1-v5.r0_O1
-mkdir 0 1 2 3 4 5 6 merged_circuit
+mkdir -p 0 1 2 3 4 5 6 merged_circuit
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/0/circuit.mvd2 0/
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/1/circuit.mvd2 1/
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/2/circuit.mvd2 2/
