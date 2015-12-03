@@ -1,4 +1,4 @@
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import core
 
 from nose.tools import eq_
 from numpy.testing import assert_equal, assert_almost_equal
@@ -56,7 +56,6 @@ def test_euler_to_matrix():  # testing the test
                             [1, 0, 0],
                             [0, 0, 1]])] * n))
 
-
     assert_almost_equal(
         euler_to_matrix([0] * n, [0] * n, [np.deg2rad(90)] * n),
         np.array([np.array([[0, 0, 1],
@@ -98,55 +97,55 @@ def assert_equal_cells(c0, c1):
 def check_roundtrip(original):
     with tempcwd():
         original.save('cells.h5')
-        restored = gb.CellCollection.load('cells.h5')
+        restored = core.CellCollection.load('cells.h5')
         assert_equal_cells(original, restored)
 
 
 def test_roundtrip_empty():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_single():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75]
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_multiple():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75, 0]
     cells.properties['z-factor'] = [0, 0.75, 0.5, 0.25]
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_text_single():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'pretty']
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_text_multiple():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'ugly', 'pretty']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha']
     check_roundtrip(cells)
 
 
 def test_roundtrip_positions():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     cells.positions = np.random.random((10, 3))
     check_roundtrip(cells)
 
 
 def test_roundtrip_orientations():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     cells.orientations = random_orientations(10)
     check_roundtrip(cells)
 
 
 def test_roundtrip_complex():
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
     n = 10
 
     cells.positions = np.random.random((n, 3))

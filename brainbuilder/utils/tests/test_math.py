@@ -202,3 +202,11 @@ def test_roundtrip_complex():
     quat = math.matrices_to_quaternions(series)
     restored = math.quaternions_to_matrices(quat)
     assert_almost_equal(series, restored, decimal=6)
+
+
+def test_clip():
+    r = math.clip(np.array([[0, 0, 0],
+                            [0, 1, 0],
+                            [0, 0, 0]]), (np.array([1, 1]), np.array([1, 1])))
+
+    assert_equal(r, np.array([[1]]))

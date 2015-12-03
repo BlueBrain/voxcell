@@ -4,8 +4,9 @@ import pandas as pd
 import itertools
 import xml.etree.ElementTree
 from collections import defaultdict
+
+from brainbuilder.utils import core
 from brainbuilder.utils import math
-from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
 
@@ -135,9 +136,8 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
             L.warning('No percentage found in recipe for layer %d', layers[0])
 
     raw /= np.sum(raw)
-    return gb.VoxelData(raw,
-                        voxel_dimensions=annotation.voxel_dimensions,
-                        offset=annotation.offset)
+
+    return core.VoxelData(raw, annotation.voxel_dimensions, annotation.offset)
 
 
 def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map):
@@ -157,7 +157,7 @@ def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers
             data = recipe[recipe.layer == layer_id]['percentage']
             distributions.loc[data.index, region_id] = data.values
 
-    distributions = tt.normalize_distribution_collection(distributions)
+    distributions /= distributions.sum()
 
     return tt.SpatialDistribution(annotation, distributions, recipe)
 
@@ -343,7 +343,7 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map, p
             for idx in me_groups.indices.values():
                 dists.iloc[idx] = clip_columns_to_percentile(dists.iloc[idx].copy(), percentile)
 
-            regions_dists[tuple(region_ids)] = tt.normalize_distribution_collection(dists)
+            regions_dists[tuple(region_ids)] = dists / dists.sum()
         else:
             L.warning('Layer %s from region-layer map not found in neurondb',
                       ', '.join(str(l) for l in layer_ids))
@@ -420,9 +420,9 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
         flat_field[flat_mask] = voxel_dist_indices + offset
         all_dists = pd.concat([all_dists, dists], axis=1)
 
-    field = gb.VoxelData(flat_field.reshape(annotation.raw.shape),
-                         annotation.voxel_dimensions,
-                         annotation.offset)
+    field = core.VoxelData(flat_field.reshape(annotation.raw.shape),
+                           annotation.voxel_dimensions,
+                           annotation.offset)
 
     return tt.SpatialDistribution(field, all_dists.fillna(0.0), neurondb)
 
@@ -511,7 +511,7 @@ def load_mvd2(filepath):
     '''loads an mvd2 as a CellCollection'''
     data = parse_mvd2(filepath)
 
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
 
     cells.positions = np.array([[c['x'], c['y'], c['z']] for c in data['Neurons Loaded']])
 

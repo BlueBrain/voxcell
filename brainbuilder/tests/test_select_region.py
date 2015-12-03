@@ -2,11 +2,11 @@ import numpy as np
 from nose.tools import raises
 from numpy.testing import assert_array_equal
 
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import core
 from brainbuilder import select_region as sr
 
 
-HIERARCHY = gb.Hierarchy({
+HIERARCHY = core.Hierarchy({
     'id': 0,
     'name': 'root',
     'children': [{'id': 1, 'name': 'r', 'children': []}]
@@ -18,7 +18,7 @@ def test_sr_0():
     annotation_raw = np.array([[0,  1],
                                [0,  1]], dtype=np.int)
 
-    density_in_region = sr.select_region(annotation_raw, gb.VoxelData(density_raw, (25, 25)),
+    density_in_region = sr.select_region(annotation_raw, core.VoxelData(density_raw, (25, 25)),
                                          HIERARCHY, 'r')
 
     assert_array_equal(density_in_region.raw,
@@ -31,7 +31,7 @@ def test_sr_inverse_0():
     annotation_raw = np.array([[0,  1],
                                [0,  1]], dtype=np.int)
 
-    density_in_region = sr.select_region(annotation_raw, gb.VoxelData(density_raw, (25, 25)),
+    density_in_region = sr.select_region(annotation_raw, core.VoxelData(density_raw, (25, 25)),
                                          HIERARCHY, 'r', inverse=True)
 
     assert_array_equal(density_in_region.raw,

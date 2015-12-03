@@ -17,7 +17,6 @@ import numpy as np
 from scipy.ndimage import morphology
 import scipy.ndimage
 
-import brainbuilder.utils.genbrain as gb
 
 import logging
 L = logging.getLogger(__name__)
@@ -113,6 +112,18 @@ def compute_cylindrical_tangent_vectors(points, center_point):
     return tangents_norm
 
 
+def _get_points_list_from_mask(mask):
+    '''get all the voxel indices for positive values of the binary voxel mask
+    for example: for a mask that has everything to true, the result will look like:
+    [[0, 0, 0],
+     [0, 0, 1],
+     [0, 1, 0],
+     [0, 1, 1],
+           ...]
+    '''
+    return np.array(np.nonzero(mask)).swapaxes(0, 1)
+
+
 def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
     '''create a vector field as a composition of two cylindrical tangent fields, one
     for each hemisphere
@@ -124,14 +135,14 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
     center_point[2] *= 1.25
     half_region_mask = region_mask.copy()
     half_region_mask[:, :, np.arange(0, region_mask.shape[2] // 2)] = False
-    points_left = gb.get_points_list_from_mask(half_region_mask)
+    points_left = _get_points_list_from_mask(half_region_mask)
     tangents_left = compute_cylindrical_tangent_vectors(points_left, center_point)
 
     center_point = np.array(annotation_raw.shape) * 0.5
     center_point[2] *= 0.75
     half_region_mask = region_mask.copy()
     half_region_mask[:, :, np.arange(region_mask.shape[2] // 2, region_mask.shape[2])] = False
-    points_right = gb.get_points_list_from_mask(half_region_mask)
+    points_right = _get_points_list_from_mask(half_region_mask)
     tangents_right = compute_cylindrical_tangent_vectors(points_right, center_point)
     tangents_right *= -1
 

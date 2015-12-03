@@ -1,9 +1,11 @@
-'''helper geometrical functions'''
+'''functions to build artificial shapes'''
 
 import numpy as np
+from brainbuilder.utils import core
+from brainbuilder.utils import math
 
 
-def build_sphere_mask(shape, radius):
+def sphere_mask(shape, radius):
     '''build the boolean mask of a sphere centered in the middle
 
     Note that the sphere shape is computed in continuous space but that the returned
@@ -24,7 +26,7 @@ def build_sphere_mask(shape, radius):
     return mask
 
 
-def is_in_triangle(p, v0, v1, v2, epsilon=0.00001):
+def _is_in_triangle(p, v0, v1, v2, epsilon=0.00001):
     '''return True if the point p is inside the triangle defined by the vertices v0, v1, v2'''
 
     def vector_to(p0, p1):
@@ -50,7 +52,7 @@ def is_in_triangle(p, v0, v1, v2, epsilon=0.00001):
     return np.fabs(angle - (2 * np.pi)) < epsilon
 
 
-def build_2d_triangular_mask(shape, v0, v1, v2):
+def triangular_mask(shape, v0, v1, v2):
     '''build the boolean mask of a 2D triangle
     Args:
         shape(tuple): sequence of two ints. Shape of the new mask.
@@ -68,14 +70,14 @@ def build_2d_triangular_mask(shape, v0, v1, v2):
 
     # TODO make is_in_triangle take arrays of points so we don't need to do one by one
     for i, p in enumerate(aidx):
-        r[i] = is_in_triangle(p, v0, v1, v2)
+        r[i] = _is_in_triangle(p, v0, v1, v2)
 
     mask[idx] = r
 
     return mask
 
 
-def build_2d_regular_convex_polygon_mask(shape, radius, vertex_count):
+def regular_convex_polygon_mask(shape, radius, vertex_count):
     '''build the boolean mask of a 2D regular convex polygon
     see https://en.wikipedia.org/wiki/Regular_polygon
 
@@ -97,20 +99,20 @@ def build_2d_regular_convex_polygon_mask(shape, radius, vertex_count):
     point_idx = np.arange(vertex_count + 1)
 
     for i0, i1 in zip(point_idx[:-1], point_idx[1:]):
-        m = build_2d_triangular_mask(shape, points[i0], center, points[i1])
+        m = triangular_mask(shape, points[i0], center, points[i1])
         mask |= m
 
     return mask
 
 
-def build_column_mask(pattern, length, axis):
+def column_mask(pattern, length, axis):
     '''given a 2D patter, repeat it in 3D to build a column along the given axis'''
     column = np.repeat([pattern], repeats=length, axis=0)
     return np.swapaxes(column, 0, axis)
 
 
 def lattice_tiling(n0, n1, v0, v1, ignore=None):
-    '''build a sequence of points representing the origin of the tiles in a pattern
+    '''create a sequence of points representing the origin of the tiles in a pattern
     Args:
         n0: number of elements in the first dimension
         n1: number of elements in the second dimension
@@ -132,7 +134,7 @@ def lattice_tiling(n0, n1, v0, v1, ignore=None):
                    (i * 2 + j - (j // 2) * 2) * v1)
 
 
-def build_tiled_pattern(pattern, tiling):
+def tiled_pattern(pattern, tiling):
     '''repeat a 2D pattern several times
     Args:
         pattern: 2D boolean numpy array
@@ -152,3 +154,75 @@ def build_tiled_pattern(pattern, tiling):
                origin[1]: origin[1] + pattern.shape[1]] |= pattern
 
     return result
+
+
+def density_from_positions(positions, voxel_dimensions, dtype=np.uint8):
+    '''calculate density from the positions'''
+    if positions.shape[0] == 0:
+        return core.VoxelData(np.zeros([1] * len(voxel_dimensions), dtype=dtype), voxel_dimensions)
+
+    else:
+        aabb_min, aabb_max = math.positions_minimum_aabb(positions)
+
+        dimensions = np.floor((aabb_max - aabb_min) / voxel_dimensions).astype(np.uint)
+        dimensions += np.ones_like(dimensions)
+
+        voxels = core.VoxelData(np.zeros(dimensions, dtype=dtype),
+                                voxel_dimensions, offset=aabb_min)
+
+        positions = positions - aabb_min
+        voxel_indices = voxels.positions_to_indices(positions)
+
+        for x, y, z in voxel_indices:
+            # need to iterate because some indices may be repeated
+            voxels.raw[x, y, z] += 1
+
+        return voxels
+
+
+def homogeneous_density(mask, voxel_dimensions, offset=None, value=255):
+    '''build an artificial homogeneous density'''
+    raw = np.zeros(mask.shape, dtype=np.uint8)
+    raw[mask] = value
+    return core.VoxelData(raw, voxel_dimensions=voxel_dimensions, offset=offset)
+
+
+def layered_annotation(shape, heights, layer_ids):
+    ''' build an artificial annotation composed of layers along the Y axis
+    Args:
+        shape: 2-tuple with the size of the resulting array in X and Z in number of voxels
+        heights: sequence of layer heights in number of voxels from lower to higher layer
+        layer_ids: sequence of layer ids ordered from lower to higher layer
+    '''
+    assert len(layer_ids) == len(heights)
+    boundaries = np.zeros(len(heights) + 1, dtype=np.uint)
+    boundaries[1:] = np.cumsum(heights)
+
+    raw = np.zeros((shape[0], boundaries[-1], shape[1]), dtype=np.uint32)
+
+    idx = 0
+    for i, j in zip(boundaries[:-1], boundaries[1:]):
+        raw[:, i:j, :] = layer_ids[idx]
+        idx += 1
+
+    return raw
+
+
+def mask_by_region_ids(annotation_raw, region_ids):
+    '''get a binary voxel mask where the voxel belonging to the given region ids are True'''
+
+    in_region = np.in1d(annotation_raw, list(region_ids))
+    in_region = in_region.reshape(np.shape(annotation_raw))
+    return in_region
+
+
+def mask_by_region_names(annotation_raw, hierarchy, names):
+    '''get a binary voxel mask where the voxel belonging to the given region names are True'''
+    all_ids = []
+    for n in names:
+        ids = hierarchy.collect('name', n, 'id')
+        if not ids:
+            raise KeyError(n)
+        all_ids.extend(ids)
+
+    return mask_by_region_ids(annotation_raw, all_ids)

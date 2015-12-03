@@ -6,7 +6,7 @@ import numpy as np
 
 from os.path import join as joinp
 
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import core
 from brainbuilder.utils import bbp
 from brainbuilder.orientation_field_sscx import compute_orientation_field
 from brainbuilder.select_region import select_region
@@ -50,11 +50,11 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     L.debug('Creating brain region: "%s", cell count: %d', region_name, total_cell_count)
 
-    annotation = gb.VoxelData.load_metaio(annotations_path)
+    annotation = core.VoxelData.load_metaio(annotations_path)
 
-    hierarchy = gb.Hierarchy.load(hierarchy_path)
+    hierarchy = core.Hierarchy.load(hierarchy_path)
 
-    full_density = gb.VoxelData.load_metaio(atlas_volume_path)
+    full_density = core.VoxelData.load_metaio(atlas_volume_path)
 
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
@@ -74,7 +74,7 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     orientation_field = compute_orientation_field(annotation, hierarchy, region_name)
 
-    cells = gb.CellCollection()
+    cells = core.CellCollection()
 
     cells.positions = cell_positioning(density, total_cell_count)
 

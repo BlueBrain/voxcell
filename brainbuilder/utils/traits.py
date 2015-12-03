@@ -160,7 +160,7 @@ class SpatialDistribution(object):
 
             # remove dists that have become empty
             dists = dists[dists.columns[dists.sum() != 0]]
-            dists = normalize_distribution_collection(dists)
+            dists /= dists.sum()
 
             grouped_distributions[attr_values] = SpatialDistribution(self.field, dists, traits)
 
@@ -227,12 +227,3 @@ class SpatialDistribution(object):
         probs_field = probs[self.field.flatten()]
         probs_field = probs_field.fillna(0)
         return probs_field.values.reshape(self.field.shape)
-
-
-# TODO review when we use the terms "probabilities", "distribution", etc and be more consitent
-# see module docstring
-
-
-def normalize_distribution_collection(distribution_collection):
-    '''take a collection of probability distributions and normalize them'''
-    return distribution_collection / distribution_collection.sum()

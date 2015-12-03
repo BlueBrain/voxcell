@@ -1,6 +1,8 @@
 '''algorithm to clip a cell density distributions'''
 import numpy as np
-from brainbuilder.utils import genbrain as gb
+
+from brainbuilder.utils import core
+from brainbuilder.utils import build
 
 
 def select_region(annotation_raw, density, hierarchy, region_name, inverse=False):
@@ -21,10 +23,10 @@ def select_region(annotation_raw, density, hierarchy, region_name, inverse=False
         density: exactly same format as input, but the values outside the region of interest has
         been set to 0
     '''
-    in_region = gb.get_regions_mask_by_names(annotation_raw, hierarchy, [region_name])
+    in_region = build.mask_by_region_names(annotation_raw, hierarchy, [region_name])
     if inverse:
         in_region = np.negative(in_region)
-    return gb.VoxelData(density.raw * in_region, density.voxel_dimensions, density.offset)
+    return core.VoxelData(density.raw * in_region, density.voxel_dimensions, density.offset)
 
 
 def select_hemisphere(density_raw, left=True):

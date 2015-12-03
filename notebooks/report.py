@@ -4,7 +4,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import itertools
 
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import math
 import logging
 
 
@@ -178,7 +178,7 @@ def check_hexagon_diameter(columns, hexagon_side):
     '''print warnings if any column goes outside their hexagon diameter'''
     for i, c in enumerate(columns):
         hexagon_diameter = hexagon_side * 2.
-        aabb_min, aabb_max = gb.get_positions_minimum_aabb(c.positions)
+        aabb_min, aabb_max = math.positions_minimum_aabb(c.positions)
         excess = (aabb_max - aabb_min) - hexagon_diameter
         if excess[0] > 0:
             print ('Column %d: X component is %f (%f%%) microns bigger than hexagon diameter' %

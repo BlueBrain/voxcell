@@ -1,5 +1,4 @@
 '''task that positions cell bodies from a density distribution'''
-from brainbuilder.utils import genbrain as gb
 from brainbuilder.utils.math import unique_with_counts
 import numpy as np
 
@@ -46,7 +45,7 @@ def cell_counts_to_cell_voxel_indices(cell_counts_per_voxel):
 def cell_positioning(density, total_cell_count):
     '''
     Args:
-        density_raw: VoxelData object representing cell body density.
+        density: VoxelData object representing cell body density.
             Each voxel represents a value that once normalised, can be treated as a probability of
             cells appearing in this voxel.
         total_cell_count: an int
@@ -62,7 +61,12 @@ def cell_positioning(density, total_cell_count):
 
     cell_voxel_indices = cell_counts_to_cell_voxel_indices(cell_counts_per_voxel)
 
-    positions = gb.cell_voxel_indices_to_positions(cell_voxel_indices,
-                                                   density.voxel_dimensions)
+    positions = _cell_voxel_indices_to_positions(cell_voxel_indices, density.voxel_dimensions)
 
     return positions + density.offset
+
+
+def _cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions):
+    '''create random position in the selected voxel. Add some random jitter'''
+    jitter = np.random.random(np.shape(cell_voxel_indices))
+    return ((cell_voxel_indices + 1) - jitter) * np.array(voxel_dimensions)

@@ -6,7 +6,7 @@ from nose.tools import eq_
 from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
 
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import core
 from brainbuilder.utils import bbp
 
 
@@ -17,7 +17,7 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def test_map_regions_to_layers_unknown_area():
-    h = gb.Hierarchy({"id": 997, "name": "mybrain", "children": []})
+    h = core.Hierarchy({"id": 997, "name": "mybrain", "children": []})
     region_layers_map = bbp.map_regions_to_layers(h,
                                                   'Primary somatosensory area, barrel field')
 
@@ -25,7 +25,7 @@ def test_map_regions_to_layers_unknown_area():
 
 
 def test_map_regions_to_layers_complex():
-    hierarchy = gb.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json'))
+    hierarchy = core.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json'))
 
     region_layers_map = bbp.map_regions_to_layers(hierarchy,
                                                   'Primary somatosensory area, barrel field')
@@ -48,7 +48,7 @@ def test_load_recipe_density_0():
     annotation_raw = np.array([1, 2])
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
-        gb.VoxelData(annotation_raw, voxel_dimensions=(25,)),
+        core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: (1,), 2: (2,)})
 
     assert_equal(density.raw, np.array([0.1, 0.9], dtype=np.float32))
@@ -58,7 +58,7 @@ def test_load_recipe_density_unknown_layer_0():
     annotation_raw = np.array([1, 2, 777])
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
-        gb.VoxelData(annotation_raw, voxel_dimensions=(25,)),
+        core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: (1,), 2: (2,), 999: (888,)})
 
     assert_equal(density.raw, np.array([0.1, 0.9, 0.], dtype=np.float32))
@@ -68,7 +68,7 @@ def test_load_recipe_density_no_voxels():
     annotation_raw = np.array([1, 1])
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
-        gb.VoxelData(annotation_raw, voxel_dimensions=(25,)),
+        core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: (1,), 2: (2,)})
 
     assert_equal(density.raw, np.array([0.5, 0.5], dtype=np.float32))
@@ -89,9 +89,10 @@ def test_transform_into_spatial_distribution():
         2: (23,)
     }
 
-    sdist = bbp.transform_recipe_into_spatial_distribution(gb.VoxelData(annotation_raw, **mhd),
-                                                           layer_distributions,
-                                                           region_layers_map)
+    sdist = bbp.transform_recipe_into_spatial_distribution(
+        core.VoxelData(annotation_raw, **mhd),
+        layer_distributions,
+        region_layers_map)
 
     assert_frame_equal(sdist.distributions,
                        pd.DataFrame({1: [0.5,  0.5, 0.],
@@ -111,9 +112,9 @@ def test_load_neurondb_v4():
 
 def test_transform_neurondb_into_spatial_distribution_empty():
     sd = bbp.transform_neurondb_into_spatial_distribution(
-        gb.VoxelData(np.ones(shape=(3, 3), dtype=np.int), **mhd),
+        core.VoxelData(np.ones(shape=(3, 3), dtype=np.int), **mhd),
         pd.DataFrame(), {},
-        np.zeros(shape=(3,3)),
+        np.zeros(shape=(3, 3)),
         percentile=0.0)
 
     assert sd.traits.empty
@@ -138,9 +139,10 @@ def test_transform_neurondb_into_spatial_distribution():
         {'name': 'd', 'layer': 3, 'etype': 4, 'mtype': 4, 'placement_hints': (1,)},
     ])
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
-                                                          np.zeros(shape=(3, 3)),
-                                                          percentile=0.0)
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        core.VoxelData(annotation, **mhd), neurondb, region_layers_map,
+        np.zeros(shape=(3, 3)),
+        percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -219,9 +221,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_0():
 
     annotation = np.array([0] + [1] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
-                                                          np.arange(len(annotation)),
-                                                          percentile=0.0)
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        core.VoxelData(annotation, **mhd), neurondb, region_layers_map,
+        np.arange(len(annotation)),
+        percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -254,9 +257,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
 
     annotation = np.array([0, 0] + [1] * 12)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
-                                                          np.array([0, 0] + range(12)),
-                                                          percentile=0.0)
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        core.VoxelData(annotation, **mhd), neurondb, region_layers_map,
+        np.array([0, 0] + range(12)),
+        percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -293,9 +297,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
 
     annotation = np.array([1] * 3 + [0])  # [bottom, middle, top, pia]
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
-                                                          np.array([3, 2, 1, 0]),
-                                                          percentile=0.0)
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        core.VoxelData(annotation, **mhd), neurondb, region_layers_map,
+        np.array([3, 2, 1, 0]),
+        percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -310,9 +315,9 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_order
     eq_(sd.distributions[sd.field.raw[2]][b], .25)  # top
 
     assert_equal(sd.field.raw, np.array([2,  # bottom
-                                     1,  # middle
-                                     0,  # top
-                                     -1]))  # pia
+                                         1,  # middle
+                                         0,  # top
+                                         -1]))  # pia
 
     expected = pd.DataFrame({
         #     a    b
@@ -338,9 +343,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
 
     annotation = np.array([0, 0] + [1] * 10)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
-                                                          np.array([0, 0] + range(10)),
-                                                          percentile=0.0)
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        core.VoxelData(annotation, **mhd), neurondb, region_layers_map,
+        np.array([0, 0] + range(10)),
+        percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -401,25 +407,27 @@ def test_get_region_distributions_from_placement_hints_percentile_selection():
 
     eq_(res.keys(), [(2,), (1,)])
 
-    #.5 percentile in of [3, 2, 1] includes 2, so where mtype & etype are grouped (ie: (1, 1))
+    # .5 percentile in of [3, 2, 1] includes 2,
+    # so where mtype & etype are grouped (ie: (1, 1))
     # only [3, 2, 0] should survive the culling by percentile
     assert_frame_equal(res[(1,)], pd.DataFrame({0: [2/5., 0/5., 3/5.],
                                                 1: [0/5., 2/5., 3/5.],
                                                 }))
-    assert_frame_equal(res[(2,)], pd.DataFrame({0: [1.,],
-                                                1: [1.,],
-                                                2: [1.,],
+    assert_frame_equal(res[(2,)], pd.DataFrame({0: [1., ],
+                                                1: [1., ],
+                                                2: [1., ],
                                                 }, index=[3]))
 
     res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.51)
-    #.51 percentile in of [3, 2, 1] doesn't includes 2, so where mtype & etype are grouped (ie: (1, 1))
+    # .51 percentile in of [3, 2, 1] doesn't includes 2,
+    # so where mtype & etype are grouped (ie: (1, 1))
     # only [3, 0, 0] should survive the culling by percentile
     assert_frame_equal(res[(1,)], pd.DataFrame({0: [0/3., 0/3., 3/3.],
                                                 1: [0/3., 0/3., 3/3.],
                                                 }))
-    assert_frame_equal(res[(2,)], pd.DataFrame({0: [1.,],
-                                                1: [1.,],
-                                                2: [1.,],
+    assert_frame_equal(res[(2,)], pd.DataFrame({0: [1., ],
+                                                1: [1., ],
+                                                2: [1., ],
                                                 }, index=[3]))
 
 
@@ -439,9 +447,10 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
 
     annotation = np.array([0, 0] + [1] * 4 + [2] * 6)
 
-    sd = bbp.transform_neurondb_into_spatial_distribution(gb.VoxelData(annotation, **mhd), neurondb, region_layers_map,
-                                                          np.array([0, 0] + range(10)),
-                                                          percentile=0.0)
+    sd = bbp.transform_neurondb_into_spatial_distribution(
+        core.VoxelData(annotation, **mhd), neurondb, region_layers_map,
+        np.array([0, 0] + range(10)),
+        percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
 
@@ -485,6 +494,7 @@ def test_assign_distributions_to_voxels_unordered():
     assert_equal(bbp.assign_distributions_to_voxels(np.array([3, 1, 2, 0]), 2),
                  np.array([1, 0, 1, 0]))
 
+
 def test_clip_columns_to_percentile():
     dists = pd.DataFrame([
         {'0': 0, '1': 4, '2': 0, '3': 1},
@@ -493,7 +503,7 @@ def test_clip_columns_to_percentile():
         {'0': 3, '1': 1, '2': 4, '3': 1},
         {'0': 4, '1': 0, '2': 4, '3': 1},
     ])
-    #should have no change in distribution
+    # should have no change in distribution
     ret = bbp.clip_columns_to_percentile(dists.copy(), 0.0)
     assert_equal(dists.values, ret.values)
 

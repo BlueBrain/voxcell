@@ -1,6 +1,8 @@
 from nose.tools import eq_
 import numpy as np
-from brainbuilder.utils import genbrain as gb
+
+from brainbuilder import cell_positioning
+from brainbuilder.utils import core
 from numpy.testing import assert_equal
 
 from brainbuilder import cell_positioning as cp
@@ -89,7 +91,7 @@ def test_assign_cell_counts_homogeneous_full():
 def test_cell_voxel_indices_to_positions_0():
     cell_voxel_indices = np.zeros((0, 3), dtype=np.int)
     voxel_dimensions = (3, 3, 3)
-    result = gb.cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
+    result = cell_positioning._cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
 
     eq_(np.shape(result), (0, 3))
 
@@ -97,7 +99,7 @@ def test_cell_voxel_indices_to_positions_0():
 def test_cell_voxel_indices_to_positions_1():
     cell_voxel_indices = np.zeros((1, 3), dtype=np.int)
     voxel_dimensions = (0, 1, 100)
-    result = gb.cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
+    result = cell_positioning._cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
 
     eq_(np.shape(result), (1, 3))
     eq_(result[0, 0], 0)
@@ -109,7 +111,7 @@ def test_cell_voxel_indices_to_positions_2():
     cell_voxel_indices = np.zeros((2, 3), dtype=np.int)
     cell_voxel_indices[1] = np.ones((1, 3))
     voxel_dimensions = (0, 1, 100)
-    result = gb.cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
+    result = cell_positioning._cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
 
     eq_(np.shape(result), (2, 3))
 
@@ -129,7 +131,7 @@ def test_cell_positioning_0():
     raw = np.ones((3, 3, 3))
     total_cell_count = 0
 
-    result = cp.cell_positioning(gb.VoxelData(raw, **mhd), total_cell_count)
+    result = cp.cell_positioning(core.VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
@@ -139,7 +141,7 @@ def test_cell_positioning_1():
     raw = np.ones((3, 3, 3))
     total_cell_count = 1
 
-    result = cp.cell_positioning(gb.VoxelData(raw, **mhd), total_cell_count)
+    result = cp.cell_positioning(core.VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
@@ -149,7 +151,7 @@ def test_cell_positioning_full():
     raw = np.ones((3, 3, 3))
     total_cell_count = 3 * 3 * 3
 
-    result = cp.cell_positioning(gb.VoxelData(raw, **mhd), total_cell_count)
+    result = cp.cell_positioning(core.VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))

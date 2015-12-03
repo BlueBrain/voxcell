@@ -138,3 +138,33 @@ def quaternions_to_matrices(q):
     m = np.vstack([m11, m12, m13, m21, m22, m23, m31, m32, m33]).transpose()
 
     return m.reshape(m.shape[:-1] + (3, 3))
+
+
+def minimum_aabb(mask):
+    '''calculate the minimum axis-aligned bounding box for a volume mask
+    Returns:
+        A tuple containing the minimum x,y,z and maximum x,y,z
+    '''
+    idx = np.nonzero(mask)
+    return np.min(idx, axis=1), np.max(idx, axis=1)
+
+
+def positions_minimum_aabb(positions):
+    '''calculate the minimum axis-aligned bounding box for a list of positions
+    Returns:
+        A tuple containing the minimum x,y,z and maximum x,y,z
+    '''
+    return np.min(positions, axis=0), np.max(positions, axis=0)
+
+
+def clip(mask, aabb):
+    '''take a numpy array and clip it to an axis-aligned bounding box
+    Accepts:
+        mask: numpy array
+        aabb: tuple of two sets of coordinates indicating, respectively,
+            the lowest and highest values for each dimension
+    Returns:
+        A new numpy array containing the same values as mask for the space defined by aabb
+    '''
+    idx = [slice(s, e + 1) for s, e in zip(*aabb)]
+    return mask[idx].copy()

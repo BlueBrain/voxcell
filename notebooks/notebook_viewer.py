@@ -3,8 +3,9 @@
 import os
 import numpy as np
 from os.path import join as joinp
+
+from brainbuilder.utils import core
 from brainbuilder.utils import viewer
-from brainbuilder.utils import genbrain as gb
 from IPython.display import HTML, display
 
 
@@ -38,7 +39,7 @@ class NotebookViewer(object):
         if isinstance(voxel, np.ndarray):
             if voxel.dtype == np.bool:
                 voxel = voxel * np.ones_like(voxel, dtype=np.uint8)
-            voxel = gb.VoxelData(voxel, (1, 1, 1))
+            voxel = core.VoxelData(voxel, (1, 1, 1))
 
         filename_mhd = name + '.mhd'
         filename_raw = name + '.raw'
@@ -76,8 +77,8 @@ class NotebookViewer(object):
         '''
         filename = 'sdist_' + value.replace(' ', '_')
         raw = sdist.get_probability_field(attribute, value).astype(np.float32)
-        mhd = gb.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
-        self.show_volume(filename, gb.VoxelData(mhd, raw))
+        mhd = core.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
+        self.show_volume(filename, core.VoxelData(mhd, raw))
 
     def show_vectors(self, name, field, point_count, voxel_dimensions):
         '''visualize a vector field'''

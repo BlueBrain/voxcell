@@ -1,5 +1,6 @@
 '''algorithm to compute orientation fields for SSCx'''
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import core
+from brainbuilder.utils import build
 from brainbuilder.utils import vector_fields as vf
 import numpy as np
 
@@ -18,11 +19,11 @@ def compute_orientation_field(annotation, hierarchy, region_name):
         dimension of size 3 contains the three i,j,k components of each vector
 
     '''
-    region_mask = gb.get_regions_mask_by_names(annotation.raw, hierarchy, [region_name])
+    region_mask = build.mask_by_region_names(annotation.raw, hierarchy, [region_name])
 
     right_field = vf.compute_hemispheric_spherical_tangent_fields(annotation.raw, region_mask)
 
-    reference_mask = gb.get_regions_mask_by_ids(annotation.raw, [0])
+    reference_mask = build.mask_by_region_ids(annotation.raw, [0])
     up_field = vf.calculate_fields_by_distance_to(region_mask, reference_mask)
 
     fwd_field = np.cross(up_field, right_field)
@@ -30,4 +31,4 @@ def compute_orientation_field(annotation, hierarchy, region_name):
 
     field = vf.combine_vector_fields([right_field, up_field, fwd_field])
 
-    return gb.VoxelData(field, annotation.voxel_dimensions, annotation.offset)
+    return core.VoxelData(field, annotation.voxel_dimensions, annotation.offset)

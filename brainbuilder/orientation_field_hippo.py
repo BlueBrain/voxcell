@@ -1,5 +1,6 @@
 '''algorithm to compute orientation fields for Hippocampus'''
-from brainbuilder.utils import genbrain as gb
+from brainbuilder.utils import core
+from brainbuilder.utils import build
 from brainbuilder.utils import vector_fields as vf
 from brainbuilder.select_region import select_hemisphere
 
@@ -90,8 +91,8 @@ def compute_depth_axis_field(annotation, hierarchy, first, last, region_mask):
     '''return a vector field that represents the direction
     of the depth axis (across layers) of the hippocampus'''
 
-    first_mask = gb.get_regions_mask_by_names(annotation.raw, hierarchy, first)
-    last_mask = gb.get_regions_mask_by_names(annotation.raw, hierarchy, last)
+    first_mask = build.mask_by_region_names(annotation.raw, hierarchy, first)
+    last_mask = build.mask_by_region_names(annotation.raw, hierarchy, last)
 
     return vf.calculate_fields_by_distance_between(region_mask, first_mask, last_mask)
 
@@ -111,7 +112,7 @@ def compute_orientation_field(annotation, hierarchy, region_name):
 
     '''
     subhierarchy = hierarchy.collect('name', region_name, 'id')
-    region_mask = gb.get_regions_mask_by_ids(annotation.raw, subhierarchy)
+    region_mask = build.mask_by_region_ids(annotation.raw, subhierarchy)
     fwd_field = compute_main_axis_field(region_mask)
 
     first = [name for name in hierarchy.collect('name', region_name, 'name')
@@ -127,4 +128,4 @@ def compute_orientation_field(annotation, hierarchy, region_name):
 
     field = vf.combine_vector_fields([right_field, up_field, fwd_field])
 
-    return gb.VoxelData(field, annotation.voxel_dimensions, annotation.offset)
+    return core.VoxelData(field, annotation.voxel_dimensions, annotation.offset)

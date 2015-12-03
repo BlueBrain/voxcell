@@ -7,7 +7,8 @@ import argparse
 import numpy as np
 
 from collections import defaultdict
-from brainbuilder.utils import genbrain as gb
+
+from brainbuilder.utils import core, build
 
 X, Y, Z = (0, 1, 2)
 
@@ -52,24 +53,25 @@ def create_annotations(positions, layers, dimensions, spacing, layer_map):
     Returns:
         VoxelData object with the annotations
     '''
-    annotations = np.zeros(dimensions, dtype=np.uint32)
+    annotations = core.VoxelData(np.zeros(dimensions, dtype=np.uint32), [spacing] * 3)
+
     counts = defaultdict(lambda: [0] * 6)
-    voxel_indices = gb.cell_positions_to_voxel_indices(positions, [spacing] * 3)
+    voxel_indices = annotations.positions_to_indices(positions)
 
     for idx, layer in zip(voxel_indices, layers):
         counts[tuple(idx)][layer] += 1
 
     for idx, layer_count in counts.iteritems():
         layer_value = layer_count.index(max(layer_count))
-        annotations[idx] = layer_map[layer_value]
+        annotations.raw[idx] = layer_map[layer_value]
 
-    annotations[annotations <= 0] = layer_map['VOID']
+    annotations.raw[annotations.raw <= 0] = layer_map['VOID']
 
     min_ind = np.amin(voxel_indices, axis=0)
     max_ind = np.amax(voxel_indices, axis=0)
-    annotations[min_ind[X]:max_ind[X], max_ind[Y], min_ind[Z]:max_ind[Z]] = layer_map['PIA']
+    annotations.raw[min_ind[X]:max_ind[X], max_ind[Y], min_ind[Z]:max_ind[Z]] = layer_map['PIA']
 
-    return gb.VoxelData(annotations, spacing)
+    return annotations
 
 
 def column2voxel(mvd2_path, spacing):
@@ -83,7 +85,7 @@ def column2voxel(mvd2_path, spacing):
     '''
     layers, positions = load_mvd2_layers_positions(mvd2_path)
 
-    density = gb.build_cell_density_from_positions(positions, [spacing] * 3, dtype=np.float32)
+    density = build.density_from_positions(positions, [spacing] * 3, dtype=np.float32)
 
     # from bbp_hierarchy.json
     layer_map = {0: 21,  # Primary somatosensory area, lower limb, layer 1
