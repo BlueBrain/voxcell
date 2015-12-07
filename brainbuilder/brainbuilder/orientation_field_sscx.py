@@ -1,7 +1,6 @@
 '''algorithm to compute orientation fields for SSCx'''
-from brainbuilder.utils import core
-from brainbuilder.utils import build
-from brainbuilder.utils import vector_fields as vf
+from voxcell import core, build
+from voxcell import vector_fields as vf
 import numpy as np
 
 

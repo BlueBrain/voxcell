@@ -1,17 +1,16 @@
 '''compatibility functions with existing BBP formats'''
-import numpy as np
-import pandas as pd
 import itertools
 import xml.etree.ElementTree
 from collections import defaultdict
+import logging
 
-from brainbuilder.utils import core
-from brainbuilder.utils import math
-from brainbuilder.utils import traits as tt
+import numpy as np
+import pandas as pd
+from voxcell import core
+from voxcell import math
+from voxcell import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
 
-
-import logging
 L = logging.getLogger(__name__)
 
 

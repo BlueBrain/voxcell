@@ -1,8 +1,9 @@
 '''task that positions cell bodies from a density distribution'''
-from brainbuilder.utils.math import unique_with_counts
+import logging
+
+from voxcell.math import unique_with_counts
 import numpy as np
 
-import logging
 L = logging.getLogger(__name__)
 
 

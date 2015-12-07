@@ -1,11 +1,11 @@
 '''a collection of very ad hoc tests and plots to analyse the rebuilt BBP microcircuit'''
+import itertools
+import logging
+
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
-import itertools
-
-from brainbuilder.utils import math
-import logging
+from voxcell import math
 
 
 def count_cell_percentages(recipe, cells, attributes):

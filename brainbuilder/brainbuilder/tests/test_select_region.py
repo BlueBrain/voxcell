@@ -1,10 +1,9 @@
-import numpy as np
 from nose.tools import raises
+
+import numpy as np
 from numpy.testing import assert_array_equal
-
-from brainbuilder.utils import core
+from voxcell import core
 from brainbuilder import select_region as sr
-
 
 HIERARCHY = core.Hierarchy({
     'id': 0,

@@ -1,8 +1,6 @@
 '''algorithm to clip a cell density distributions'''
 import numpy as np
-
-from brainbuilder.utils import core
-from brainbuilder.utils import build
+from voxcell import core, build
 
 
 def select_region(annotation_raw, density, hierarchy, region_name, inverse=False):

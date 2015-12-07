@@ -1,12 +1,11 @@
 '''main circuit building workflow'''
 import argparse
 import sys
+from os.path import join as joinp
+import logging
 
 import numpy as np
-
-from os.path import join as joinp
-
-from brainbuilder.utils import core
+from voxcell import core
 from brainbuilder.utils import bbp
 from brainbuilder.orientation_field_sscx import compute_orientation_field
 from brainbuilder.select_region import select_region
@@ -19,8 +18,6 @@ from brainbuilder.assignment_orientation import randomise_orientations
 from brainbuilder.export_viewer import export_viewer
 from brainbuilder.export_mvd2 import export_mvd2
 
-
-import logging
 L = logging.getLogger(__name__)
 
 

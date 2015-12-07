@@ -1,12 +1,12 @@
 '''simple integration of the brain builder viewer with ipython notebooks'''
 
 import os
-import numpy as np
 from os.path import join as joinp
-
-from brainbuilder.utils import core
-from brainbuilder.utils import viewer
 from IPython.display import HTML, display
+
+import numpy as np
+from voxcell import core
+from brainbuilder.utils import viewer
 
 
 class NotebookViewer(object):

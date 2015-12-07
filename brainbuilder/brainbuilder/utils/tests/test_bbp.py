@@ -1,14 +1,12 @@
 import os
+from nose.tools import eq_
+
 import numpy as np
 import pandas as pd
-
-from nose.tools import eq_
 from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
-
-from brainbuilder.utils import core
+from voxcell import core
 from brainbuilder.utils import bbp
-
 
 mhd = {'voxel_dimensions': (25, 25, 25)}
 

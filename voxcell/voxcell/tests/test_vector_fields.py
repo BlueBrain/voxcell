@@ -1,7 +1,7 @@
-from numpy.testing import assert_equal
 from nose.tools import eq_
 
-from brainbuilder.utils import vector_fields as vf
+from numpy.testing import assert_equal
+from voxcell import vector_fields as vf
 import numpy as np
 
 

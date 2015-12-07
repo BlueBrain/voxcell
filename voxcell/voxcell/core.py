@@ -5,14 +5,13 @@ import json
 import os
 from collections import OrderedDict
 from os.path import join as joinp
+import logging
 
 import h5py
 import numpy as np
 import pandas as pd
+from voxcell import math
 
-from brainbuilder.utils import math
-
-import logging
 L = logging.getLogger(__name__)
 
 

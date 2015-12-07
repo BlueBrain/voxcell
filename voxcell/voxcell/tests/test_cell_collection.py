@@ -1,14 +1,13 @@
-from brainbuilder.utils import core
-
 from nose.tools import eq_
-from numpy.testing import assert_equal, assert_almost_equal
-from pandas.util.testing import assert_frame_equal
-
-import numpy as np
 import tempfile
 import os
 import shutil
 from contextlib import contextmanager
+
+from voxcell import core
+from numpy.testing import assert_equal, assert_almost_equal
+from pandas.util.testing import assert_frame_equal
+import numpy as np
 
 
 def euler_to_matrix(bank, attitude, heading):

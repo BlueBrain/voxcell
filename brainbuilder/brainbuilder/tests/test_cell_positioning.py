@@ -1,10 +1,9 @@
 from nose.tools import eq_
+
 import numpy as np
-
 from brainbuilder import cell_positioning
-from brainbuilder.utils import core
+from voxcell import core
 from numpy.testing import assert_equal
-
 from brainbuilder import cell_positioning as cp
 
 

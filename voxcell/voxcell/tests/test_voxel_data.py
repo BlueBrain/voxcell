@@ -1,11 +1,10 @@
 import os
 import tempfile
+from nose.tools import eq_
 
 import numpy as np
-from nose.tools import eq_
 from numpy.testing import assert_equal
-
-from brainbuilder.utils import core
+from voxcell import core
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 

@@ -1,9 +1,8 @@
 import os
 import tempfile
-
 from nose.tools import eq_, raises
 
-from brainbuilder.utils import core
+from voxcell import core
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 

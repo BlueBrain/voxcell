@@ -3,12 +3,10 @@
 the voxel representation of densities that can be used by BrainBuilder
 '''
 import argparse
-
-import numpy as np
-
 from collections import defaultdict
 
-from brainbuilder.utils import core, build
+import numpy as np
+from voxcell import core, build
 
 X, Y, Z = (0, 1, 2)
 

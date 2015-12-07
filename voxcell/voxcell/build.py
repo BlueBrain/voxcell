@@ -1,8 +1,7 @@
 '''functions to build artificial shapes'''
 
 import numpy as np
-from brainbuilder.utils import core
-from brainbuilder.utils import math
+from voxcell import core, math
 
 
 def sphere_mask(shape, radius):

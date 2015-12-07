@@ -1,7 +1,7 @@
 from nose.tools import eq_
 
-from brainbuilder.utils import core
-from brainbuilder.utils.traits import SpatialDistribution
+from voxcell import core
+from voxcell.traits import SpatialDistribution
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_equal

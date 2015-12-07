@@ -1,8 +1,8 @@
-import numpy as np
 from nose.tools import eq_
-from numpy.testing import assert_equal
 
-from brainbuilder.utils import build
+import numpy as np
+from numpy.testing import assert_equal
+from voxcell import build
 
 
 def test_cell_density_from_positions_0():

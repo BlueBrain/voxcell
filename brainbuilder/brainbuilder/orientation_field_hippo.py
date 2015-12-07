@@ -1,7 +1,6 @@
 '''algorithm to compute orientation fields for Hippocampus'''
-from brainbuilder.utils import core
-from brainbuilder.utils import build
-from brainbuilder.utils import vector_fields as vf
+from voxcell import core, build
+from voxcell import vector_fields as vf
 from brainbuilder.select_region import select_hemisphere
 
 from scipy.optimize import leastsq  # pylint: disable=E0611
