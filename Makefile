@@ -6,7 +6,7 @@ INSTALL_MODULES=voxcell brainbuilder
 COVER_PACKAGES=voxcell,brainbuilder
 IGNORE_LINT=notebooks
 # documentation to build, separated by spaces
-#DOC_MODULES=brainbuilder/doc
+DOC_MODULES=voxcell/doc brainbuilder/doc
 
 ##### DO NOT MODIFY BELOW #####################
 

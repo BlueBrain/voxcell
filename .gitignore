@@ -15,3 +15,5 @@ ContinuousIntegration
 .noseids
 viewer/data/
 data/
+voxcell/doc/build/
+brainbuilder/doc/build/
