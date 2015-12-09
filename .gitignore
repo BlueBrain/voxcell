@@ -14,3 +14,4 @@ test-reports
 ContinuousIntegration
 .noseids
 viewer/data/
+data/
