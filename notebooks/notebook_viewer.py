@@ -12,11 +12,11 @@ from brainbuilder.utils import viewer
 class NotebookViewer(object):
     '''encapsulates the integration of the webgl in an ipython notebook'''
 
-    def __init__(self):
+    def __init__(self, directory=None):
         ''' NotebookViewer '''
         # The location where the output will be stored
         # under the viewer directory
-        self.directory = 'out'
+        self.directory = directory or 'out'
         self.output_directory = joinp('..', 'viewer', self.directory)
 
         if not os.path.isdir(self.output_directory):
