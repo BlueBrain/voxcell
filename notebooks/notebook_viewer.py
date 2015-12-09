@@ -3,6 +3,7 @@
 import os
 from os.path import join as joinp
 from IPython.display import HTML, display
+import urllib
 
 import numpy as np
 from voxcell import core
@@ -22,9 +23,14 @@ class NotebookViewer(object):
         if not os.path.isdir(self.output_directory):
             os.makedirs(self.output_directory)
 
-    def show(self, filename):
+
+    def show(self, filename, display_parameters=None):
         '''display the given local file'''
-        url = '../../static/index.html#' + joinp(self.directory, filename)
+        url_parameters = ""
+        if display_parameters:
+            url_parameters = "?" + urllib.urlencode(display_parameters)
+
+        url = '../../static/index.html' + url_parameters + '#' + joinp(self.directory, filename) 
         html = (
             '<iframe src="{url}"'
             ' scrolling="no" width="700" height="350" allowfullscreen></iframe>\n'
@@ -32,7 +38,7 @@ class NotebookViewer(object):
 
         display(HTML(html))
 
-    def show_volume(self, name, voxel):
+    def show_volume(self, name, voxel, display_parameters=None):
         '''save volumetric data locally and display it
         it may be a VoxelData object or a 3D numpy array'''
 
@@ -44,19 +50,19 @@ class NotebookViewer(object):
         filename_mhd = name + '.mhd'
         filename_raw = name + '.raw'
         voxel.save_metaio(joinp(self.output_directory, filename_mhd), filename_raw)
-        self.show(filename_mhd)
+        self.show(filename_mhd, display_parameters)
 
-    def show_points(self, name, cells):
+    def show_points(self, name, cells, display_parameters=None):
         '''save a bunch of positions locally and display them'''
-        self.show_property(name, cells)
+        self.show_property(name, cells, display_parameters)
 
-    def show_property(self, name, cells):
+    def show_property(self, name, cells, display_parameters=None):
         '''save a bunch of positions with properties locally and display them'''
         fullpath = joinp(self.output_directory, name + '.pts')
         viewer.export_points(fullpath, cells, name)
-        self.show(name + '.pts')
+        self.show(name + '.pts', display_parameters)
 
-    def show_placement(self, name, cells, coloring=None):
+    def show_placement(self, name, cells, coloring=None, display_parameters=None):
         '''save a bunch of morphologies placement and display them
 
         Args:
@@ -67,9 +73,9 @@ class NotebookViewer(object):
         viewer.export_positions_vectors(fullpath, cells, coloring)
         morph_fullpath = joinp(self.output_directory, name + '.txt')
         viewer.export_strings(morph_fullpath, cells.properties.morphology)
-        self.show(name + '.placement')
+        self.show(name + '.placement', display_parameters)
 
-    def show_sdist(self, sdist, attribute, value):
+    def show_sdist(self, sdist, attribute, value, display_parameters=None):
         '''visualize the 3D probability distribution of the particular value of an attribute
         from a spatial distribution
 
@@ -78,11 +84,11 @@ class NotebookViewer(object):
         filename = 'sdist_' + value.replace(' ', '_')
         raw = sdist.get_probability_field(attribute, value).astype(np.float32)
         mhd = core.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
-        self.show_volume(filename, core.VoxelData(mhd, raw))
+        self.show_volume(filename, core.VoxelData(mhd, raw), display_parameters)
 
-    def show_vectors(self, name, field, point_count, voxel_dimensions):
+    def show_vectors(self, name, field, point_count, voxel_dimensions, display_parameters=None):
         '''visualize a vector field'''
         filename = name + '.vcf'
         viewer.export_vector_field(joinp(self.output_directory, filename),
                                    field, point_count, voxel_dimensions)
-        self.show(filename)
+        self.show(filename, display_parameters)

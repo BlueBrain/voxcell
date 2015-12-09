@@ -23,7 +23,8 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
     datguiSettings.opacity = {};
     datguiSettings.opacity._datgui = datguiSettings._datgui.addFolder('opacity');
 
-    datguiSettings.size = Math.log(defaultParticleSize  + 1);
+    var paramParticleSize = parseFloat(viewerUtils.getParameterByName('particle_size'));
+    datguiSettings.size =  paramParticleSize || Math.log(defaultParticleSize + 1);
 
     var sizeGui = datguiSettings._datgui.add(
       datguiSettings, 'size', 0.0, Math.log(5000.0)).step(0.01);
@@ -214,7 +215,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
   }
 
   function getAutoDownsampleStep(data, filterMin, maxCap) {
-    var validCount = _.filter(data, function (v) { return v > filterMin; }).length;
+    var validCount = _.filter(data, function(v) { return v > filterMin; }).length;
     var downsampleStep = Math.max(Math.floor(validCount / maxCap), 1);
 
     console.log(
@@ -275,7 +276,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
         var c = new THREE.Color(palette[idx].r, palette[idx].g, palette[idx].b);
         c.lerp(palette[idx + 1], intensity);
         // console.log(intensity, idx);
-        return c
+        return c;
       };
 
       var i = 0;
@@ -293,8 +294,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
                 if (maxValue > minValue) {
                   var intensity = (value - minValue) / (maxValue - minValue);
-                }
-                else {
+                } else {
                   var intensity = 1;
                 }
 
@@ -310,7 +310,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
       console.log('max: ' + maxValue + ' min: ' + minValue);
       console.log('loaded: ' + count + ' points');
 
-      cloudMaterial = buildSquareCloudMaterial(defaultParticleSize);
+      cloudMaterial = buildSquareCloudMaterial(Math.exp(datguiSettings.size) - 1);
 
       return {
         object: new THREE.PointCloud(geometry, cloudMaterial),
@@ -346,7 +346,7 @@ var brainBuilderViewer = brainBuilderViewer ? brainBuilderViewer : {};
 
     console.log('loaded: ' + count + ' points');
 
-    cloudMaterial = buildCircleCloudMaterial(defaultParticleSize);
+    cloudMaterial = buildCircleCloudMaterial(Math.exp(datguiSettings.size) - 1);
 
     return {
       object: new THREE.PointCloud(geometry, cloudMaterial),

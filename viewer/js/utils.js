@@ -1,8 +1,8 @@
 'use strict';
-var viewerUtils= viewerUtils ? viewerUtils : {};
+var viewerUtils = viewerUtils ? viewerUtils : {};
 
 (function() {
-	viewerUtils.getFile = function(url, responseType) {
+  viewerUtils.getFile = function(url, responseType) {
     console.log('loading: ' + url);
 
     // Return a new promise.
@@ -33,6 +33,14 @@ var viewerUtils= viewerUtils ? viewerUtils : {};
       // Make the request
       req.send();
     });
-  }
+  };
+  // from http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+  viewerUtils.getParameterByName = function(name) {
+    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)'),
+    results = regex.exec(location.search);
+    var result = results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+    return result;
+  };
 
 }());
