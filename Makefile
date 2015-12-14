@@ -1,9 +1,9 @@
 #modules that have tests
 TEST_MODULES=voxcell/voxcell brainbuilder/brainbuilder
 #modules that are installable (ie: ones with setup.py)
-INSTALL_MODULES=voxcell brainbuilder
+INSTALL_MODULES=voxcell voxcellview brainbuilder
 #packages to cover
-COVER_PACKAGES=voxcell,brainbuilder
+COVER_PACKAGES=voxcell,voxcellview,brainbuilder
 IGNORE_LINT=notebooks
 # documentation to build, separated by spaces
 DOC_MODULES=voxcell/doc brainbuilder/doc
