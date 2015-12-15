@@ -25,7 +25,7 @@ The notebook server will serve the notebooks and the static content that is loca
 
 within the virtualenv, in the "BrainBuilder" directory, launch the ipython server:
 
-ipython notebook --NotebookApp.extra_static_paths="['${PWD}/viewer/']" --ip=put_your_ip_here --port=put_your_port_here
+ipython notebook --NotebookApp.extra_static_paths="['${PWD}/voxcellview/voxcellview/webviewer/']" --ip=put_your_ip_here --port=put_your_port_here
 
 
 

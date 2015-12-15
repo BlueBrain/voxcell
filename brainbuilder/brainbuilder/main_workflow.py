@@ -15,7 +15,6 @@ from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
 from brainbuilder.assignment_orientation import randomise_orientations
-from brainbuilder.export_viewer import export_viewer
 from brainbuilder.export_mvd2 import export_mvd2
 
 L = logging.getLogger(__name__)
@@ -89,10 +88,6 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     chosen_morphology = assign_morphology(cells.positions, cells.properties[['mtype', 'etype']],
                                           neuron_sdist)
     cells.add_properties(chosen_morphology)
-
-    acronym = hierarchy.find('name', region_name)[0]['acronym']
-    export_viewer(joinp(output_path, 'intermediates_%s_%d' % (acronym, total_cell_count)),
-                  orientation_field, cells)
 
     # export data to file formats from the BBP pipeline:
     circuit_path = export_mvd2(output_path, 'mpath', cells)

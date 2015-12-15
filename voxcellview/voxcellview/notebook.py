@@ -1,28 +1,39 @@
 '''simple integration of the brain builder viewer with ipython notebooks'''
 
 import os
+import shutil
 from os.path import join as joinp
-from IPython.display import HTML, display
+from IPython.display import HTML, display  # pylint: disable=F0401
 import urllib
 
 import numpy as np
 from voxcell import core
-from brainbuilder.utils import viewer
+from voxcellview import viewer
 
 
 class NotebookViewer(object):
     '''encapsulates the integration of the webgl in an ipython notebook'''
 
-    def __init__(self, directory=None):
-        ''' NotebookViewer '''
-        # The location where the output will be stored
-        # under the viewer directory
-        self.directory = directory or 'out'
-        self.output_directory = joinp('..', 'viewer', self.directory)
+    def __init__(self, tmp_path='out', server_path='../../static'):
+        ''' NotebookViewer
 
-        if not os.path.isdir(self.output_directory):
-            os.makedirs(self.output_directory)
+        Args:
+            tmp_path: the location where the temporary output will be stored relative to the
+                web viewer source directory. To ensure that the server is able to load it,
+                it must placed under the web viewer source directory.
+            server_path: path to the server of the web viewer code.
+        '''
+        self.server_path = server_path
 
+        self.output_rel_path = tmp_path
+        self.output_abs_path = joinp(os.path.dirname(__file__), 'webviewer', self.output_rel_path)
+
+        if not os.path.isdir(self.output_abs_path):
+            os.makedirs(self.output_abs_path)
+
+    def clean(self):
+        '''delete the tmp folder'''
+        shutil.rmtree(self.output_abs_path)
 
     def show(self, filename, display_parameters=None):
         '''display the given local file'''
@@ -30,7 +41,8 @@ class NotebookViewer(object):
         if display_parameters:
             url_parameters = "?" + urllib.urlencode(display_parameters)
 
-        url = '../../static/index.html' + url_parameters + '#' + joinp(self.directory, filename) 
+        index_path = joinp(self.server_path, 'index.html')
+        url = index_path + url_parameters + '#' + joinp(self.output_rel_path, filename)
         html = (
             '<iframe src="{url}"'
             ' scrolling="no" width="700" height="350" allowfullscreen></iframe>\n'
@@ -49,7 +61,7 @@ class NotebookViewer(object):
 
         filename_mhd = name + '.mhd'
         filename_raw = name + '.raw'
-        voxel.save_metaio(joinp(self.output_directory, filename_mhd), filename_raw)
+        voxel.save_metaio(joinp(self.output_abs_path, filename_mhd), filename_raw)
         self.show(filename_mhd, display_parameters)
 
     def show_points(self, name, cells, display_parameters=None):
@@ -58,7 +70,7 @@ class NotebookViewer(object):
 
     def show_property(self, name, cells, display_parameters=None):
         '''save a bunch of positions with properties locally and display them'''
-        fullpath = joinp(self.output_directory, name + '.pts')
+        fullpath = joinp(self.output_abs_path, name + '.pts')
         viewer.export_points(fullpath, cells, name)
         self.show(name + '.pts', display_parameters)
 
@@ -68,10 +80,10 @@ class NotebookViewer(object):
         Args:
             coloring: the name of the property to use as color (default: morphology)
         '''
-        fullpath = joinp(self.output_directory, name + '.placement')
+        fullpath = joinp(self.output_abs_path, name + '.placement')
         coloring = coloring if coloring is not None else 'morphology'
         viewer.export_positions_vectors(fullpath, cells, coloring)
-        morph_fullpath = joinp(self.output_directory, name + '.txt')
+        morph_fullpath = joinp(self.output_abs_path, name + '.txt')
         viewer.export_strings(morph_fullpath, cells.properties.morphology)
         self.show(name + '.placement', display_parameters)
 
@@ -89,6 +101,6 @@ class NotebookViewer(object):
     def show_vectors(self, name, field, point_count, voxel_dimensions, display_parameters=None):
         '''visualize a vector field'''
         filename = name + '.vcf'
-        viewer.export_vector_field(joinp(self.output_directory, filename),
+        viewer.export_vector_field(joinp(self.output_abs_path, filename),
                                    field, point_count, voxel_dimensions)
         self.show(filename, display_parameters)
