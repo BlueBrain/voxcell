@@ -16,6 +16,9 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   introduction
+   data
+   mvd3
    api
 
 
