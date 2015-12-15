@@ -2,6 +2,7 @@
 import itertools
 import xml.etree.ElementTree
 from collections import defaultdict
+from itertools import izip
 import logging
 
 import numpy as np
@@ -10,6 +11,7 @@ from voxcell import core
 from voxcell import math
 from voxcell import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
+from brainbuilder.version import VERSION
 
 L = logging.getLogger(__name__)
 
@@ -523,12 +525,75 @@ def load_mvd2(filepath):
     props = pd.DataFrame({
         'synapse_class': [synapse_class_alias[data['MorphTypes'][c['mtype']]['sclass']]
                           for c in data['Neurons Loaded']],
+        'morph_class': [data['MorphTypes'][c['mtype']]['mclass'] for c in data['Neurons Loaded']],
         'mtype': [data['MorphTypes'][c['mtype']]['name'] for c in data['Neurons Loaded']],
         'etype': [data['ElectroTypes'][c['etype']]['name'] for c in data['Neurons Loaded']],
         'morphology': [c['morphology'] for c in data['Neurons Loaded']],
         'layer': [c['layer'] for c in data['Neurons Loaded']],
         'minicolumn': [c['miniColumn'] for c in data['Neurons Loaded']],
+        'metype': [c['metype'] for c in data['Neurons Loaded']],
     })
 
     cells.add_properties(props)
     return cells
+
+
+def save_mvd2(filepath, morphology_path, cells):
+    '''saves a CellCollection as mvd2
+
+    Rotations are lost in the process.
+    Cells are expected to have the properties:
+    morphology, mtype, etype, minicolumn, layer, morph_class and synapse_class
+    '''
+
+    map_exc_inh = {
+        'excitatory': 'EXC',
+        'inhibitory': 'INH',
+    }
+
+    electro_types, chosen_etype = np.unique(cells.properties.etype, return_inverse=True)
+
+    mtype_names, chosen_mtype = np.unique(cells.properties.mtype, return_inverse=True)
+
+    morph_types = []
+    for mtype_name in mtype_names:
+        mask = (cells.properties.mtype == mtype_name).values
+        morph_types.append((mtype_name,
+                            cells.properties[mask].morph_class.values[0],
+                            map_exc_inh[cells.properties[mask].synapse_class.values[0]]))
+
+    def get_mvd2_neurons():
+        '''return the data for all the neurons used in the circuit'''
+        data = izip(cells.properties.morphology,
+                    cells.positions,
+                    chosen_mtype,
+                    chosen_etype,
+                    cells.properties.minicolumn,
+                    cells.properties.layer,
+                    cells.properties.metype)
+
+        for morph, pos, mtype_idx, etype_idx, minicolumn, layer, metype in data:
+            yield dict(name=morph, morphology=mtype_idx, electrophysiology=etype_idx,
+                       rotation=0.0, x=pos[0], y=pos[1], z=pos[2],
+                       minicolumn=minicolumn, layer=layer, metype=metype)
+
+    with open(filepath, 'w') as fd:
+        fd.write("Application:'BrainBuilder {version}'\n"
+                 "{morphology_path}\n"
+                 "/unknown/\n".format(version=VERSION, morphology_path=morphology_path))
+
+        fd.write('Neurons Loaded\n')
+        line = ('{name} {database} {hyperColumn} {minicolumn} {layer} {morphology} '
+                '{electrophysiology} {x} {y} {z} {rotation} {metype}\n')
+        fd.writelines(line.format(database=0, hyperColumn=0, **c) for c in get_mvd2_neurons())
+
+        # skipping sections:
+        # MicroBox Data
+        # MiniColumnsPosition
+        # CircuitSeeds
+
+        fd.write('MorphTypes\n')
+        fd.writelines('%s %s %s\n' % m for m in morph_types)
+
+        fd.write('ElectroTypes\n')
+        fd.writelines('%s\n' % e for e in electro_types)

@@ -7,6 +7,8 @@ from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
 from voxcell import core
 from brainbuilder.utils import bbp
+import tempfile
+import shutil
 
 mhd = {'voxel_dimensions': (25, 25, 25)}
 
@@ -537,8 +539,8 @@ def test_load_mvd2():
     eq_(cells.orientations.shape, (5, 3, 3))
 
     eq_(set(cells.properties.columns),
-        set(['etype', 'morphology', 'mtype', 'synapse_class',
-             'layer', 'minicolumn']))
+        set(['etype', 'morphology', 'mtype', 'synapse_class', 'morph_class',
+             'layer', 'minicolumn', 'metype']))
 
     eq_(list(cells.properties.synapse_class.unique()),
         ['inhibitory', 'excitatory'])
@@ -551,3 +553,21 @@ def test_load_mvd2():
 
     eq_(list(cells.properties.synapse_class),
         ['inhibitory', 'excitatory', 'inhibitory', 'excitatory', 'inhibitory'])
+
+
+def test_roundtrip_mvd2():
+    original = bbp.load_mvd2(os.path.join(DATA_PATH, 'circuit.mvd2'))
+
+    cwd = tempfile.mkdtemp()
+
+    try:
+        filename = os.path.join(cwd, 'exported.mvd2')
+        bbp.save_mvd2(filename, '/here', original)
+        restored = bbp.load_mvd2(filename)
+
+        # orientations are lost in the process
+        assert_equal(original.positions, restored.positions)
+        assert_frame_equal(original.properties, restored.properties)
+
+    finally:
+        shutil.rmtree(cwd)

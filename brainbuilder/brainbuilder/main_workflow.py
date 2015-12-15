@@ -15,7 +15,7 @@ from brainbuilder.assignment_metype import assign_metype
 from brainbuilder.assignment_morphology import assign_morphology
 from brainbuilder.assignment_orientation import assign_orientations
 from brainbuilder.assignment_orientation import randomise_orientations
-from brainbuilder.export_mvd2 import export_mvd2
+
 
 L = logging.getLogger(__name__)
 
@@ -89,10 +89,8 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
                                           neuron_sdist)
     cells.add_properties(chosen_morphology)
 
-    # export data to file formats from the BBP pipeline:
-    circuit_path = export_mvd2(output_path, 'mpath', cells)
-
-    cells.save(joinp(output_path, 'cells.h5'))
+    circuit_path = joinp(output_path, 'cells.h5')
+    cells.save(circuit_path)
 
     return circuit_path
 
