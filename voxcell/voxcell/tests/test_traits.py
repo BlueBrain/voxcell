@@ -1,7 +1,7 @@
 from nose.tools import eq_
 
 from voxcell import core
-from voxcell.traits import SpatialDistribution
+from voxcell.traits import SpatialDistribution, _drop_duplicate_columns
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_equal
@@ -227,3 +227,77 @@ def test_assign_conditional_multiple_impossible_1():
     # preassigned values exist but combination does not
     preassigned = pd.DataFrame({'name': ['a'], 'type': ['y']})
     check_assign_conditional(preassigned, -1)
+
+
+def test_drop_duplicate_columns_0():
+    df = pd.DataFrame([[0.4, 0.2],
+                       [0.6, 0.8]])
+
+    unique, inverse = _drop_duplicate_columns(df)
+
+    expected = pd.DataFrame([[0.4, 0.2],
+                             [0.6, 0.8]])
+    assert_frame_equal(unique, expected)
+
+    assert_equal(inverse, np.array([0, 1]))
+
+
+def test_drop_duplicate_columns_single_0():
+    df = pd.DataFrame([[0.4, 0.4], [0.6, 0.6]])
+
+    unique, inverse = _drop_duplicate_columns(df)
+
+    assert_frame_equal(unique, pd.DataFrame([[0.4], [0.6]]))
+    assert_equal(inverse, np.array([0, 0]))
+
+
+def test_drop_duplicate_columns_single_rounded_0():
+    df = pd.DataFrame([[0.39999999999999997, 0.40000000000000002], [0.6, 0.6]])
+
+    unique, inverse = _drop_duplicate_columns(df, decimals=100)
+
+    # no change
+    assert_frame_equal(unique, pd.DataFrame([[0.39999999999999997, 0.40000000000000002],
+                                             [0.6, 0.6]]))
+    assert_equal(inverse, np.array([0, 1]))
+
+
+def test_drop_duplicate_columns_single_rounded_1():
+    df = pd.DataFrame([[0.39999999999999997, 0.40000000000000002], [0.6, 0.6]])
+
+    unique, inverse = _drop_duplicate_columns(df, decimals=20)
+
+    # dropped the second column
+    assert_frame_equal(unique, pd.DataFrame([[0.4],
+                                             [0.6]]))
+    assert_equal(inverse, np.array([0, 0]))
+
+
+def test_drop_duplicate_columns_1():
+    df = pd.DataFrame([[0.4, 0.2, 0.2, 0.4, 0.2],
+                       [0.6, 0.8, 0.8, 0.6, 0.8]])
+
+    unique, inverse = _drop_duplicate_columns(df)
+
+    expected = pd.DataFrame([[0.4, 0.2],
+                             [0.6, 0.8]])
+    assert_frame_equal(unique, expected)
+
+    assert_equal(inverse, np.array([0, 1, 1, 0, 1]))
+
+
+def test_drop_duplicates():
+
+    sd = SpatialDistribution(
+        field=np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]),
+        distributions=pd.DataFrame([[0.4, 0.2, 0.2, 0.4, 0.2],
+                                    [0.6, 0.8, 0.8, 0.6, 0.8]]),
+        traits=pd.DataFrame({'size': ['Large', 'Small'], 'speed': ['Fast', 'Slow']}))
+
+    result = sd.drop_duplicates()
+
+    assert_equal(result.field, np.array([0, 0, 1, 1, 1, 1, 0, 0, 1, 1]))
+    assert_frame_equal(result.distributions, pd.DataFrame([[0.4, 0.2], [0.6, 0.8]]))
+
+    # original is not modified
+    assert_equal(sd.field, np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]))
