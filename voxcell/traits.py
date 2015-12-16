@@ -227,3 +227,36 @@ class SpatialDistribution(object):
         probs_field = probs[self.field.flatten()]
         probs_field = probs_field.fillna(0)
         return probs_field.values.reshape(self.field.shape)
+
+    def drop_duplicates(self, decimals=None):
+        '''return a new SpatialDistribution with duplicate distributions removed
+        Args:
+            decimals: Number of decimal places to round each column to beforehand.
+        '''
+        dists, inverse = _drop_duplicate_columns(self.distributions, decimals)
+
+        field = np.ones_like(self.field) * -1
+        for col_idx, unique_idx in enumerate(inverse):
+            field[self.field == col_idx] = unique_idx
+
+        return SpatialDistribution(field, dists, self.traits.copy())
+
+
+def _drop_duplicate_columns(dataframe, decimals=None):
+    '''drop duplicate columns from a dataframe and return the indices of the columns
+    of the resulting dataframe that can be used to reconstruct the original one
+    Args:
+        dataframe: pandas.Dataframe object
+        decimals: Number of decimal places to round each column to beforehand.
+    '''
+    df = dataframe.transpose()
+
+    if decimals is not None:
+        df = df.round(decimals)
+
+    g = df.groupby(list(df.columns))
+    df1 = df.set_index(list(df.columns))
+    tags = df1.index.map(lambda ind: g.indices[ind][0])
+    unique_rows_idx, inverse = np.unique(tags, return_inverse=True)
+
+    return df.ix[unique_rows_idx].transpose(), inverse
