@@ -44,7 +44,7 @@ class SpatialDistribution(object):
             traits: a traits collection, see module docstring
         '''
         self.field = field
-        self.distributions = distributions
+        self.distributions = distributions / distributions.sum()
         self.traits = traits
 
     def assign(self, positions):
