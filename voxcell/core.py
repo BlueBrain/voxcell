@@ -65,10 +65,10 @@ class VoxelData(object):
             mhd_path(string): full path to mhd file
             raw_filename(string): name of raw file relative to mhd file.
                 If not provided, defaults to the same as mhd_path but with the extension
-                of the file changed to .raw
+                of the file extension changed to .raw
         '''
         if raw_filename is None:
-            raw_filename = os.path.splitext(mhd_path)[0] + '.raw'
+            raw_filename = os.path.basename(os.path.splitext(mhd_path)[0] + '.raw')
 
         mhd = get_mhd_info(self.raw, raw_filename, self.voxel_dimensions, self.offset)
         save_mhd(mhd_path, mhd)
