@@ -306,10 +306,28 @@ def test_drop_duplicates():
 def test_get_probability_field():
 
     sd = SpatialDistribution(
-        field=core.VoxelData(np.array([0, 0, -1, 1, 1]), None),
+        field=core.VoxelData(np.array([0, 0, -1, 1, 1]), ()),
         distributions=pd.DataFrame([[0.4, 0.2],
                                     [0.6, 0.8]]),
         traits=pd.DataFrame({'size': ['Large', 'Small']}))
 
+    assert_equal(sd.get_probability_field('size', 'Large').raw, np.array([0.4, 0.4, -1, 0.2, 0.2]))
+    assert_equal(sd.get_probability_field('size', 'Small').raw, np.array([0.6, 0.6, -1, 0.8, 0.8]))
+
+
+def test_from_probability_field():
+
+    sd = SpatialDistribution.from_probability_field(
+        core.VoxelData(np.array([0.4, 0.4, -1, 0.2, 0.2]), ()),
+        'size', 'Large', 'Small'
+    )
+
+    # same as previous test but the columns in distributions are swapped
+    # the reason for this is internal to numpy.unique but it doesn't really affect the result
+    assert_equal(sd.field.raw, np.array([1, 1, -1, 0, 0]))
+    assert_frame_equal(sd.distributions, pd.DataFrame([[0.2, 0.4], [0.8, 0.6]]))
+    assert_frame_equal(sd.traits, pd.DataFrame({'size': ['Large', 'Small']}))
+
+    # round trip
     assert_equal(sd.get_probability_field('size', 'Large').raw, np.array([0.4, 0.4, -1, 0.2, 0.2]))
     assert_equal(sd.get_probability_field('size', 'Small').raw, np.array([0.6, 0.6, -1, 0.8, 0.8]))
