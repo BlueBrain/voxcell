@@ -16,6 +16,12 @@ Voxcell supports loading and saving MetaIO_ files as support for basic voxel dat
     density = VoxelData.load_metaio('/path/to/file.mhd')
     density.save_metaio('/path/to/file.mhd')
 
+
+VoxelData objects are also used to hold vector fields (each voxel contains a 3-D vector)
+and orientation fields (each voxel contains a 3x3 rotation matrix) which define orientations
+in space. These can be used, for example, to orient reconstructed morphologies.
+See the API of :ref:`vfapi` for more details.
+
 Data Examples
 ~~~~~~~~~~~~~
 
