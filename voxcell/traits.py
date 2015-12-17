@@ -29,6 +29,7 @@
 
 import numpy as np
 import pandas as pd
+from voxcell.core import VoxelData
 
 
 import logging
@@ -229,9 +230,9 @@ class SpatialDistribution(object):
             in that voxel.
         '''
         probs = self.distributions[self.traits[attribute] == value].sum()
-        probs_field = probs[self.field.flatten()]
+        probs_field = probs[self.field.raw.flatten()]
         probs_field = probs_field.fillna(0)
-        return probs_field.values.reshape(self.field.shape)
+        return probs_field.values.reshape(self.field.raw.shape)
 
     def drop_duplicates(self, decimals=None):
         '''return a new SpatialDistribution with duplicate distributions removed
@@ -241,11 +242,12 @@ class SpatialDistribution(object):
         '''
         dists, inverse = _drop_duplicate_columns(self.distributions, decimals)
 
-        field = np.ones_like(self.field) * -1
+        field = np.ones_like(self.field.raw) * -1
         for col_idx, unique_idx in enumerate(inverse):
-            field[self.field == col_idx] = unique_idx
+            field[self.field.raw == col_idx] = unique_idx
 
-        return SpatialDistribution(field, dists, self.traits.copy())
+        return SpatialDistribution(VoxelData(field, self.field.voxel_dimensions),
+                                   dists, self.traits.copy())
 
 
 def _drop_duplicate_columns(dataframe, decimals=None):
