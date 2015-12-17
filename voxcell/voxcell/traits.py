@@ -227,11 +227,11 @@ class SpatialDistribution(object):
         Returns:
             A VoxelData with the same shape as sdist.field where every voxel is a float
             representing the probability of an attribute value being assigned to a cell
-            in that voxel.
+            in that voxel. For voxels with unknown values -1 is used.
         '''
         probs = self.distributions[self.traits[attribute] == value].sum()
         probs_field = probs[self.field.raw.flatten()]
-        probs_field = probs_field.fillna(0)
+        probs_field = probs_field.fillna(-1)
         return VoxelData(probs_field.values.reshape(self.field.raw.shape),
                          self.field.voxel_dimensions,
                          self.field.offset)

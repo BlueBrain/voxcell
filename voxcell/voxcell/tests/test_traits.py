@@ -301,3 +301,15 @@ def test_drop_duplicates():
 
     # original is not modified
     assert_equal(sd.field.raw, np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]))
+
+
+def test_get_probability_field():
+
+    sd = SpatialDistribution(
+        field=core.VoxelData(np.array([0, 0, -1, 1, 1]), None),
+        distributions=pd.DataFrame([[0.4, 0.2],
+                                    [0.6, 0.8]]),
+        traits=pd.DataFrame({'size': ['Large', 'Small']}))
+
+    assert_equal(sd.get_probability_field('size', 'Large').raw, np.array([0.4, 0.4, -1, 0.2, 0.2]))
+    assert_equal(sd.get_probability_field('size', 'Small').raw, np.array([0.6, 0.6, -1, 0.8, 0.8]))
