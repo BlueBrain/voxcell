@@ -13,6 +13,8 @@ Traits
 .. automodule:: voxcell.traits
    :members:
 
+.. _vfapi:
+
 Vector Fields
 -------------
 
