@@ -236,6 +236,38 @@ class SpatialDistribution(object):
                          self.field.voxel_dimensions,
                          self.field.offset)
 
+    @classmethod
+    def from_probability_field(cls, probs_field, name, positive_value, negative_value):
+        '''creates a binary SpatialDistribution object from a single probability field
+
+        Args:
+            probs_field: A VoxelData where every voxel is a float representing the probability
+                of an attribute value being assigned to a cell in that voxel. For voxels with
+                unknown values -1 is used.
+            name: name of the trait.
+            positive_value: value of the trait that corresponds to probs_field.
+            negative_value: value of the trait that corresponds to the probability field
+                complementary to probs_field.
+
+        Returns:
+            A SpatialDistribution object
+        '''
+        valid = probs_field.raw != -1
+
+        probs_field_complete = probs_field.raw.copy()
+        any_value = probs_field.raw[valid].flatten()[0]
+        probs_field_complete[~valid] = any_value
+        unique_probs, field = np.unique(probs_field_complete, return_inverse=True)
+
+        field = field.reshape(probs_field.raw.shape)
+        field[~valid] = -1
+        field = VoxelData(field, probs_field.voxel_dimensions)
+
+        distributions = pd.DataFrame([unique_probs, 1 - unique_probs])
+        traits = pd.DataFrame({name: [positive_value, negative_value]})
+
+        return cls(field, distributions, traits)
+
     def drop_duplicates(self, decimals=None):
         '''return a new SpatialDistribution with duplicate distributions removed
 
