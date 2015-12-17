@@ -289,15 +289,15 @@ def test_drop_duplicate_columns_1():
 def test_drop_duplicates():
 
     sd = SpatialDistribution(
-        field=np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]),
+        field=core.VoxelData(np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]), None),
         distributions=pd.DataFrame([[0.4, 0.2, 0.2, 0.4, 0.2],
                                     [0.6, 0.8, 0.8, 0.6, 0.8]]),
         traits=pd.DataFrame({'size': ['Large', 'Small'], 'speed': ['Fast', 'Slow']}))
 
     result = sd.drop_duplicates()
 
-    assert_equal(result.field, np.array([0, 0, 1, 1, 1, 1, 0, 0, 1, 1]))
+    assert_equal(result.field.raw, np.array([0, 0, 1, 1, 1, 1, 0, 0, 1, 1]))
     assert_frame_equal(result.distributions, pd.DataFrame([[0.4, 0.2], [0.6, 0.8]]))
 
     # original is not modified
-    assert_equal(sd.field, np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]))
+    assert_equal(sd.field.raw, np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]))
