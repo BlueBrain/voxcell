@@ -92,10 +92,12 @@ class NotebookViewer(object):
 
         Voxels where the probability is missing or zero are not shown.
         '''
-        filename = 'sdist_' + value.replace(' ', '_')
-        raw = sdist.get_probability_field(attribute, value).astype(np.float32)
-        mhd = core.get_mhd_info(raw.shape, np.float32, sdist.voxel_dimensions, filename + '.raw')
-        self.show_volume(filename, core.VoxelData(mhd, raw), display_parameters)
+        probs = sdist.get_probability_field(attribute, value)
+        probs.raw = probs.raw.astype(np.float32)
+        probs.raw[probs.raw == -1] = 0
+
+        name = ('sdist_%s_%s' % (attribute, value)).replace(' ', '_')
+        self.show_volume(name, probs, display_parameters)
 
     def show_vectors(self, name, field, point_count, voxel_dimensions, display_parameters=None):
         '''visualize a vector field'''

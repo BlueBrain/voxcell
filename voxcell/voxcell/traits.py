@@ -225,14 +225,16 @@ class SpatialDistribution(object):
         Voxels where the probability is missing will contain a probability of zero.
 
         Returns:
-            A numpy array with the same shape as sdist.field where every voxel is a float
+            A VoxelData with the same shape as sdist.field where every voxel is a float
             representing the probability of an attribute value being assigned to a cell
             in that voxel.
         '''
         probs = self.distributions[self.traits[attribute] == value].sum()
         probs_field = probs[self.field.raw.flatten()]
         probs_field = probs_field.fillna(0)
-        return probs_field.values.reshape(self.field.raw.shape)
+        return VoxelData(probs_field.values.reshape(self.field.raw.shape),
+                         self.field.voxel_dimensions,
+                         self.field.offset)
 
     def drop_duplicates(self, decimals=None):
         '''return a new SpatialDistribution with duplicate distributions removed
