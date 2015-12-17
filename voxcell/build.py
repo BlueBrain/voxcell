@@ -53,6 +53,7 @@ def _is_in_triangle(p, v0, v1, v2, epsilon=0.00001):
 
 def triangular_mask(shape, v0, v1, v2):
     '''build the boolean mask of a 2D triangle
+
     Args:
         shape(tuple): sequence of two ints. Shape of the new mask.
         v0(numpy.ndarray): 2D vertex of the triangle
@@ -112,6 +113,7 @@ def column_mask(pattern, length, axis):
 
 def lattice_tiling(n0, n1, v0, v1, ignore=None):
     '''create a sequence of points representing the origin of the tiles in a pattern
+
     Args:
         n0: number of elements in the first dimension
         n1: number of elements in the second dimension
@@ -135,10 +137,12 @@ def lattice_tiling(n0, n1, v0, v1, ignore=None):
 
 def tiled_pattern(pattern, tiling):
     '''repeat a 2D pattern several times
+
     Args:
         pattern: 2D boolean numpy array
         tiling: sequence of 2D coordinates for the individual tiles origin
             the values of the coordinates must be integers representing voxel coordinates
+
     Returns:
         2D boolean numpy array
     '''
@@ -188,6 +192,7 @@ def homogeneous_density(mask, voxel_dimensions, offset=None, value=255):
 
 def layered_annotation(shape, heights, layer_ids):
     ''' build an artificial annotation composed of layers along the Y axis
+
     Args:
         shape: 2-tuple with the size of the resulting array in X and Z in number of voxels
         heights: sequence of layer heights in number of voxels from lower to higher layer
