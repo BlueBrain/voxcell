@@ -71,7 +71,7 @@ def test_save_metaio():
         eq_(sorted(contents.keys()), sorted(original_contents.keys()))
 
         # compare RAW
-        rawname = contents['ElementDataFile']
+        rawname = os.path.join(os.path.dirname(f.name), contents['ElementDataFile'])
         original_rawname = os.path.join(DATA_PATH, original_contents['ElementDataFile'])
         with open(rawname) as r:
             with open(original_rawname) as ro:

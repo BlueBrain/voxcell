@@ -60,8 +60,7 @@ class NotebookViewer(object):
             voxel = core.VoxelData(voxel, (1, 1, 1))
 
         filename_mhd = name + '.mhd'
-        filename_raw = name + '.raw'
-        voxel.save_metaio(joinp(self.output_abs_path, filename_mhd), filename_raw)
+        voxel.save_metaio(joinp(self.output_abs_path, filename_mhd))
         self.show(filename_mhd, display_parameters)
 
     def show_points(self, name, cells, display_parameters=None):
