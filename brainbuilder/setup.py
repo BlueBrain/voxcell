@@ -8,16 +8,27 @@ try:
 except ImportError:
     from distutils.core import setup
 
-
+import pip
 from pip.req import parse_requirements
 from optparse import Option
 
 from brainbuilder import __version__
 
-OPTIONS = Option("--workaround")
-OPTIONS.skip_requirements_regex = None
-INSTALL_REQS = parse_requirements("./requirements.txt", options=OPTIONS)
-REQS = [str(ir.req) for ir in INSTALL_REQS]
+options = Option('--workaround')
+options.skip_requirements_regex = None
+REQ_FILE = './requirements.txt'
+# Hack for old pip versions: Versions greater than 1.x
+# have a required parameter "sessions" in parse_requierements
+if pip.__version__.startswith('1.'):
+    install_reqs = parse_requirements(REQ_FILE, options=options)
+else:
+    from pip.download import PipSession  # pylint:disable=E0611
+    options.isolated_mode = False
+    install_reqs = parse_requirements(REQ_FILE,  # pylint:disable=E1123
+                                      options=options,
+                                      session=PipSession)
+
+REQS = [str(ir.req) for ir in install_reqs]
 
 setup(
     name='brainbuilder',
