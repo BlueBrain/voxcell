@@ -23,11 +23,13 @@ but taking into account that type A is much more probable in Isocortex than anyw
 
     from voxcell.core import VoxelData, Hierarchy, CellCollection
     from voxcell.traits import SpatialDistribution
+    from voxcell.positions import create_cell_positions
     from voxcell import build
 
     import numpy as np
     import pandas as pd
 
+    # Use an atlas to construct a spatial distribution of types A/B in a brain
     atlas = VoxelData.load_metaio('data/P56_Mouse_annotation.mhd')
     hierarchy = Hierarchy.load('data/annotation_hierarchy.json')
 
@@ -35,10 +37,17 @@ but taking into account that type A is much more probable in Isocortex than anyw
 
     field = np.zeros_like(atlas.raw)
     field[isocortex_mask] = 1
-    distributions = pd.DataFrame({0: [0.5, 0.5], 1: [0.95, 0.05]})
-    traits = pd.DataFrame({'type': ['A', 'B']})
+    distributions = pd.DataFrame({ 1: [0.95, 0.05],  # isocortex
+                                   0: [0.5, 0.5],})  # rest of the brain
+    sdist = SpatialDistribution(field, distributions, pd.DataFrame({'type': ['A', 'B']}))
 
-    sd = SpatialDistribution(field, distributions, traits)
+    # Use a density to build a collection of cells in space
+    density = Hierarchy.load('data/annotation_hierarchy.json')
 
+    cells = CellCollection()
+    cells.positions = create_cell_positions(density, 1000)
 
+    # Use the spatial distribution to assign a type A/B to each cell
+    chosen = sdist.assign(cells.positions)
+    cells.add_properties(sdist.collect_traits(chosen, ['type']))
 
