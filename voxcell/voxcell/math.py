@@ -36,7 +36,7 @@ def matrices_to_quaternions(matrices):
     Based on multibranch algorithm described here:
     http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
 
-    Accepts:
+    Args:
         matrices: A Nx3x3 numpy array containing N rotation matrices.
 
     Returns:
@@ -115,7 +115,7 @@ def quaternions_to_matrices(q):
     Based on algorigthm described here:
     http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
 
-    Accepts:
+    Args:
         q: A Nx4 numpy array containing a quaternion for each rotation matrix.
         The quaternion components are stored as (x, y, z, w)
 
@@ -142,6 +142,7 @@ def quaternions_to_matrices(q):
 
 def minimum_aabb(mask):
     '''calculate the minimum axis-aligned bounding box for a volume mask
+
     Returns:
         A tuple containing the minimum x,y,z and maximum x,y,z
     '''
@@ -151,6 +152,7 @@ def minimum_aabb(mask):
 
 def positions_minimum_aabb(positions):
     '''calculate the minimum axis-aligned bounding box for a list of positions
+
     Returns:
         A tuple containing the minimum x,y,z and maximum x,y,z
     '''
@@ -159,10 +161,12 @@ def positions_minimum_aabb(positions):
 
 def clip(mask, aabb):
     '''take a numpy array and clip it to an axis-aligned bounding box
-    Accepts:
+
+    Args:
         mask: numpy array
         aabb: tuple of two sets of coordinates indicating, respectively,
             the lowest and highest values for each dimension
+
     Returns:
         A new numpy array containing the same values as mask for the space defined by aabb
     '''

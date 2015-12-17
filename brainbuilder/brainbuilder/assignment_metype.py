@@ -10,6 +10,7 @@ L = logging.getLogger(__name__)
 
 def assign_metype_random(positions, mtypes, etypes):
     '''for every cell in positions, assign me-type to each cell randomly
+
     Args:
         positions: list of positions for soma centers (x, y, z).
         mtypes: list of all mtypes

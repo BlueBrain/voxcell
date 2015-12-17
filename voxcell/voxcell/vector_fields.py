@@ -224,6 +224,7 @@ def split_orientation_field(field):
 def join_vector_fields(vf0, *vfs):
     '''performs an union of several vector fields.
     A voxel on a vector field is considered "empty" if all of its components are zero.
+
     Args:
         vf0: first vector field.
         vfs: rest of vector fields. All of them must have the same shape.

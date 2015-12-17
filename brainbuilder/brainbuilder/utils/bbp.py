@@ -231,6 +231,7 @@ def get_morphologies_by_layer_group(morphs_by_layer, layer_ids):
 def clip_columns_to_percentile(dists, percentile):
     '''Clip distribution to, by region (ie: column)
 
+    Args:
         dists(DataFrame): each row is a morphology, each column is a region
         percentile(float): percentile above which the morphologies are used, below which, their
             probability is set to 0 (ie: not used) range from (0.0, 1.0]

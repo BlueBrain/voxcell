@@ -40,7 +40,7 @@ class VoxelData(object):
             raw_path(string): path to raw file, if None, .mhd file is read
                 and ElementDataFile is used instead
 
-        Return:
+        Returns:
             VoxelData object
         '''
         if not mhd_path.endswith('.mhd'):
@@ -76,8 +76,10 @@ class VoxelData(object):
 
     def lookup(self, positions):
         '''find the values in raw corresponding to the given positions
+
         Args:
             positions: list of positions (x, y, z). Expected in atlas-space.
+
         Returns:
             Numpy array with the values of the voxels corresponding to each position
         '''
@@ -315,7 +317,7 @@ def load_raw(element_type, shape, data_path):
         shape(tuple): the dimensions of the array
         data_path(str): path to the raw data file
 
-    Return:
+    Returns:
         numpy array of correct type
     '''
     dtype = METAIO_TO_DTYPE[element_type]

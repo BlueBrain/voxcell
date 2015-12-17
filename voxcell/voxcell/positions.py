@@ -39,6 +39,7 @@ def create_cell_counts(density, total_count):
 
 def create_cell_positions(density, total_count):
     ''' create a series of cell positions
+
     Args:
         density: VoxelData object representing cell body density.
             Each voxel represents a value that once normalised, can be treated as a probability of

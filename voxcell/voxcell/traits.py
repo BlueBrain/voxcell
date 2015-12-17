@@ -3,7 +3,8 @@
     A "trait" is a set of properties and their values.
     A "traits collection" is a group of traits. It's represented as a pandas
     DataFrame object where each trait is a row and each property is a column.
-    For example:
+    For example::
+
            sclass      mtype
         0  inhibitory  Pyramidal
         1  excitatory  Pyramidal
@@ -13,7 +14,9 @@
     being assigned to a given cell.
     A "distributions collection" is a group of distributions. It's represented
     as a pandas DataFrame object where each trait is a row and each distribution
-    is a column. For example:
+    is a column.
+    For example::
+
             0     1    2     3
          0  0.25  0.5  0.5   0.0
          1  0.75  0.5  0.25  0.1
@@ -33,16 +36,16 @@ L = logging.getLogger(__name__)
 
 
 class SpatialDistribution(object):
-    '''encapsulates the data relative to the 3D probability distributions of traits'''
+    '''encapsulates the data relative to the 3D probability distributions of traits
+
+    Args:
+        field: VoxelData where every voxel is an index in the distributions list
+               -1 means unavailable data.
+        distributions: a distributions collection, see module docstring
+        traits: a traits collection, see module docstring
+    '''
 
     def __init__(self, field, distributions, traits):
-        '''
-        Args:
-            field: VoxelData where every voxel is an index in the distributions list
-                   -1 means unavailable data.
-            distributions: a distributions collection, see module docstring
-            traits: a traits collection, see module docstring
-        '''
         self.field = field
         self.distributions = distributions / distributions.sum()
         self.traits = traits
@@ -170,29 +173,31 @@ class SpatialDistribution(object):
         '''given a spatial distribution, extract an equivalent one where all of the properties
         of the traits collection have been removed except for a specific one.
 
-        For example:
+        For example, taking the traits collection::
 
-            Taking the traits collection:
-                   sclass      mtype
-                0  inhibitory  Pyramidal
-                1  excitatory  Pyramidal
-                2  inhibitory  Martinotti
+               sclass      mtype
+            0  inhibitory  Pyramidal
+            1  excitatory  Pyramidal
+            2  inhibitory  Martinotti
 
-            And the distributions collection:
-                   0
-                0  0.2
-                1  0.4
-                2  0.4
+        and the distributions collection::
 
-            Ignoring all properties except 'sclass' would give the simplified traits collection:
-                   sclass
-                0  inhibitory
-                1  excitatory
+               0
+            0  0.2
+            1  0.4
+            2  0.4
 
-            And the distributions collection:
-                   0
-                0  0.6
-                1  0.4
+        Ignoring all properties except 'sclass' would give the simplified traits collection::
+
+               sclass
+            0  inhibitory
+            1  excitatory
+
+        and the distributions collection::
+
+               0
+            0  0.6
+            1  0.4
 
         Note that because for every distribution we are creating a new one,
         the indexes of any associated field are still valid.
@@ -230,6 +235,7 @@ class SpatialDistribution(object):
 
     def drop_duplicates(self, decimals=None):
         '''return a new SpatialDistribution with duplicate distributions removed
+
         Args:
             decimals: Number of decimal places to round each column to beforehand.
         '''
@@ -245,6 +251,7 @@ class SpatialDistribution(object):
 def _drop_duplicate_columns(dataframe, decimals=None):
     '''drop duplicate columns from a dataframe and return the indices of the columns
     of the resulting dataframe that can be used to reconstruct the original one
+
     Args:
         dataframe: pandas.Dataframe object
         decimals: Number of decimal places to round each column to beforehand.
