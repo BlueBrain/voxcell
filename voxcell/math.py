@@ -40,7 +40,7 @@ def matrices_to_quaternions(matrices):
         matrices: A Nx3x3 numpy array containing N rotation matrices.
 
     Returns:
-        A Nx4 numpy array containing a quaternion for each rotation matrix.
+        A Nx4 numpy array containing a unit quaternion for each rotation matrix.
         The quaternion components are stored as (x, y, z, w)
     '''
 
@@ -106,7 +106,7 @@ def matrices_to_quaternions(matrices):
     w = (m[..., 1, 0] - m[..., 0, 1]) / s
     quat[mask] = np.array([x, y, z, w]).transpose()
 
-    return quat
+    return quat / np.sqrt((quat ** 2).sum(-1))[..., np.newaxis]
 
 
 def quaternions_to_matrices(q):

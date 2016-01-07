@@ -4,9 +4,14 @@ import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
 
 
+def check_normalized(mat):
+    assert_almost_equal(np.dot(mat, mat.T)[0][0], 1.0)
+
+
 def check_matrices_to_quaternions(count, matrix, quaternion):
     quat = math.matrices_to_quaternions(np.array([matrix] * count))
     assert_almost_equal(quat, np.array([quaternion] * count), decimal=6)
+    check_normalized(quat)
 
 
 def check_quaternions_to_matrices(count, matrix, quaternion):
@@ -45,7 +50,7 @@ def test_quaternion_copysign():
     # see:
     # http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/paul.htm
     m = np.diag([1, 1, -1])
-    q = np.array([0, 0, 0, 0.707107])
+    q = np.array([0, 0, 0, 1])
 
     check_matrices_to_quaternions(1, m, q)
     check_matrices_to_quaternions(2, m, q)
@@ -202,6 +207,7 @@ def test_roundtrip_complex():
     quat = math.matrices_to_quaternions(series)
     restored = math.quaternions_to_matrices(quat)
     assert_almost_equal(series, restored, decimal=6)
+    check_normalized(quat)
 
 
 def test_clip():
