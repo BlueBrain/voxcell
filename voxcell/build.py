@@ -1,6 +1,7 @@
 '''functions to build artificial shapes'''
 
 import numpy as np
+import fractions
 from voxcell import core, math
 
 
@@ -103,6 +104,15 @@ def regular_convex_polygon_mask(shape, radius, vertex_count):
         mask |= m
 
     return mask
+
+
+def regular_convex_polygon_mask_from_side(side_size, vertex_count, voxel_size):
+    ''' build the boolean mask if a 2D regular convex polygon
+    see regular_convex_polygon_mask
+    '''
+    angle = 2 * np.pi / vertex_count
+    radius = (side_size * np.sin((np.pi - angle) / 2.) / np.sin(angle)) / voxel_size
+    return regular_convex_polygon_mask((radius * 2, radius * 2), radius, vertex_count)
 
 
 def column_mask(pattern, length, axis):
@@ -230,3 +240,13 @@ def mask_by_region_names(annotation_raw, hierarchy, names):
         all_ids.extend(ids)
 
     return mask_by_region_ids(annotation_raw, all_ids)
+
+
+def get_voxel_side(layer_heights, min_value=5):
+    ''' compute an optimize size for the voxels '''
+    rounded_heights = np.round(layer_heights)
+    result = rounded_heights[0]
+    for n in rounded_heights:
+        result = fractions.gcd(result, n)
+    result = max(min_value, result)
+    return result
