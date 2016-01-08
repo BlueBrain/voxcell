@@ -65,11 +65,43 @@ def _parse_recipe(recipe_filename):
     return xml.etree.ElementTree.parse(recipe_filename, parser=parser)
 
 
-def load_recipe(recipe_filename):
+def get_lattice_vectors(recipe_filename):
+    ''' get lattice vectors from recipe '''
+    r = _parse_recipe(recipe_filename)
+    lattice_vectors = r.find('column').findall('latticeVector')
+
+    def get_lattice_by_id(lattice_vectors, id_lv):
+        ''' search for the first lattice that has attribute "id" being id_lv '''
+        return next(lv for lv in lattice_vectors if lv.attrib['id'] == id_lv)
+
+    a1 = get_lattice_by_id(lattice_vectors, 'a1')
+    a2 = get_lattice_by_id(lattice_vectors, 'a2')
+
+    return {
+        'a1': np.array([float(a1.attrib['x']), float(a1.attrib['z'])]),
+        'a2': np.array([float(a2.attrib['x']), float(a2.attrib['z'])])
+    }
+
+
+def get_layer_thickness(recipe_filename):
+    ''' get a map  id of the layer to their thickness '''
+    r = _parse_recipe(recipe_filename)
+    layers = r.find('column').findall('layer')
+    return dict((int(l.attrib['id']), float(l.attrib['thickness'])) for l in layers)
+
+
+def get_total_neurons(recipe_filename):
+    ''' get the total number of neurons according to the recipe '''
+    r = _parse_recipe(recipe_filename)
+    total_neurons = r.find('NeuronTypes').attrib['totalNeurons']
+    return int(total_neurons)
+
+
+def get_distribution_from_recipe(recipe_filename):
     '''take a BBP builder recipe and return the probability distributions for each type
 
     Returns:
-        A DataFrame with one row for each posibility and columns:
+        A DataFrame with one row for each possibility and columns:
             layer, mtype, etype, mClass, sClass, percentage
     '''
     recipe_tree = _parse_recipe(recipe_filename)
@@ -171,7 +203,7 @@ def load_recipe_as_spatial_distribution(recipe_filename, annotation, hierarchy, 
     '''
     region_layers_map = map_regions_to_layers(hierarchy, region_name)
 
-    recipe = load_recipe(recipe_filename)
+    recipe = get_distribution_from_recipe(recipe_filename)
 
     return transform_recipe_into_spatial_distribution(annotation,
                                                       recipe,

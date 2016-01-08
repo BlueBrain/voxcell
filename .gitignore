@@ -14,6 +14,6 @@ test-reports
 ContinuousIntegration
 .noseids
 viewer/data/
-data/
+/data/
 voxcell/doc/build/
 brainbuilder/doc/build/

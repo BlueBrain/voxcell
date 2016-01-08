@@ -1,4 +1,7 @@
 import os
+import tempfile
+import shutil
+
 from nose.tools import eq_
 
 import numpy as np
@@ -7,14 +10,13 @@ from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
 from voxcell import core
 from brainbuilder.utils import bbp
-import tempfile
-import shutil
 
 mhd = {'voxel_dimensions': (25, 25, 25)}
 
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
-
+BUILDER_RECIPE = os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml')
+BUILDER_RECIPE_LATTICE = os.path.join(DATA_PATH, 'builderRecipeAllPathways_with_lattice.xml')
 
 def test_map_regions_to_layers_unknown_area():
     h = core.Hierarchy({"id": 997, "name": "mybrain", "children": []})
@@ -35,7 +37,7 @@ def test_map_regions_to_layers_complex():
 
 
 def test_load_recipe_as_layer_distributions_complex():
-    layer_dists = bbp.load_recipe(
+    layer_dists = bbp.get_distribution_from_recipe(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'))
 
     eq_(list(layer_dists.keys()),
@@ -67,7 +69,7 @@ def test_load_recipe_density_unknown_layer_0():
 def test_load_recipe_density_no_voxels():
     annotation_raw = np.array([1, 1])
     density = bbp.load_recipe_density(
-        os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
+        BUILDER_RECIPE,
         core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: (1,), 2: (2,)})
 
@@ -571,3 +573,22 @@ def test_roundtrip_mvd2():
 
     finally:
         shutil.rmtree(cwd)
+
+def test_get_lattice_vectors():
+    lattice_vectors = bbp.get_lattice_vectors(BUILDER_RECIPE_LATTICE)
+    eq_(len(lattice_vectors), 2)
+    assert_equal(lattice_vectors['a1'], np.array([480.56, 0.0]))
+    assert_equal(lattice_vectors['a2'], np.array([-240.28, 416.18]))
+
+def test_get_layer_thickness():
+    layer_thickness = bbp.get_layer_thickness(BUILDER_RECIPE_LATTICE)
+    eq_(layer_thickness, {1: 10.0,
+                          2: 200.0,
+                          3: 300.0,
+                          4: 40.0,
+                          5: 160.0,
+                          6: 10.0})
+
+def test_get_total_neurons():
+    total_neurons = bbp.get_total_neurons(BUILDER_RECIPE_LATTICE)
+    eq_(2195, total_neurons)
