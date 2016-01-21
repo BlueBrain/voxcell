@@ -32,6 +32,13 @@ scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/6/circuit.mvd2 6/
 scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj1/circuits/SomatosensoryCxS1-v5.r0/O1/merged_circuit/circuit.mvd2 merged_circuit/
 popd  # SomatosensoryCxS1-v5.r0_O1
+
 popd  # bbp_circuits
+
+mkdir -p hippo_recipe
+pushd hippo_recipe
+scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj42/circuits/CA1draftModel/morphologies/v4neuronDB.dat .
+scp bbpviz1.cscs.ch:/gpfs/bbp.cscs.ch/project/proj42/circuits/CA1draftModel/bionames/builderRecipeAllPathways.xml .
+popd  # hippo_recipe
 
 popd  # data
