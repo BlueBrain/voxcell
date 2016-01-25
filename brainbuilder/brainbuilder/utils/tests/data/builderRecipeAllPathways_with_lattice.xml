@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE blueColumn [
+  <!ELEMENT blueColumn (column,NeuronTypes,Seeds?,SynapsesProperties,SynapsesClassification,DendriticMorphologyProbabilities,TouchRules,InterBoutonInterval?)>
+  <!ELEMENT column (layer*)>
+  <!ATTLIST column id CDATA #REQUIRED x CDATA #REQUIRED z CDATA #REQUIRED>
+  <!ELEMENT layer (#PCDATA)>
+  <!ATTLIST layer	id CDATA #REQUIRED height CDATA #REQUIRED>
+  <!ELEMENT NeuronTypes (Layer*)>
+  <!ATTLIST NeuronTypes totalNeurons CDATA #REQUIRED miniColumns CDATA #REQUIRED IntExtendedMinicolumnRadious CDATA #REQUIRED>
+  <!ELEMENT Layer (StructuralType*)>
+  <!ATTLIST Layer id CDATA #REQUIRED percentage CDATA #REQUIRED>
+  <!ELEMENT StructuralType (ElectroType*)>
+  <!ATTLIST StructuralType id CDATA #REQUIRED percentage CDATA #REQUIRED sigma CDATA #REQUIRED exclusionRadius CDATA #REQUIRED mClass CDATA #REQUIRED sClass CDATA #REQUIRED spineLength CDATA #REQUIRED>
+  <!ELEMENT ElectroType (#PCDATA)>
+  <!ATTLIST ElectroType id CDATA #REQUIRED percentage CDATA #REQUIRED>
+  <!ELEMENT Seeds (#PCDATA)>
+  <!ATTLIST Seeds recipeSeed CDATA #IMPLIED columnSeed CDATA #IMPLIED synapseSeed CDATA #IMPLIED>
+  <!ELEMENT InterBoutonInterval (#PCDATA)>
+  <!ATTLIST InterBoutonInterval minDistance CDATA #IMPLIED maxDistance CDATA #IMPLIED regionGap CDATA #IMPLIED>
+  <!ELEMENT SynapsesProperties (synapse*)>
+  <!ELEMENT synapse (#PCDATA)>
+  <!ATTLIST synapse id1 CDATA #REQUIRED id2 CDATA #REQUIRED id3 CDATA #REQUIRED id4 CDATA #REQUIRED GAB1 CDATA #REQUIRED GAB2 CDATA #REQUIRED>
+  <!ELEMENT SynapsesClassification (class*)>
+  <!ELEMENT class (#PCDATA)>
+  <!ATTLIST class id CDATA #REQUIRED gsyn CDATA #REQUIRED gsynVar CDATA #REQUIRED nsyn CDATA #REQUIRED nsynVar CDATA #REQUIRED dtc CDATA #REQUIRED dtcVar CDATA #REQUIRED u CDATA #REQUIRED uVar CDATA #REQUIRED d CDATA #REQUIRED dVar CDATA #REQUIRED f CDATA #REQUIRED fVar CDATA #REQUIRED ase CDATA #REQUIRED>
+  <!ELEMENT ConnectionRules (class*)>  
+  <!ELEMENT TouchRules (class*)>
+  <!ENTITY connectivityRecipe SYSTEM "builderConnectivityRecipeAllPathways.xml">
+]>
+
+
+<!-- @version: -->
+
+<blueColumn>
+<!-- use following line to modify inter-bouton interval algorithm paramters; defaults are min=3, max=7, gap=5
+        <InterBoutonInterval minDistance="5.0" maxDistance="9.0" regionGap="5.0"/> 
+-->
+    <InterBoutonInterval minDistance="5.0" maxDistance="7.0" regionGap="5.0"/> 
+
+	<column id="hexagon">
+        <latticeVector id="a1" x="480.56" z="0" />
+		<latticeVector id="a2" x="-240.28" z="416.18" />
+		<!-- id="a1" x=side z=0 -->
+		<!-- id="a2" x=-side/2 z=side*root(3)/2 -->
+
+		<!-- geometry necessary to have 2000 PCs and at least 1 example of the rarest interneurons. See lab book 19-03-2015 -->
+
+<!--
+		layer 1 - hippocampus fissure (HF)
+		layer 2 - stratum lacunosum-moleculare (SLM)
+		layer 3 - stratum radiatum (SR)
+		layer 4 - stratum pyramidale (SP)
+		layer 5 - stratum oriens (SO)
+		layer 6 - alveus (AL)
+-->
+		<layer id="1" thickness="10" />
+		<layer id="2" thickness="200" />
+		<layer id="3" thickness="300" />
+		<layer id="4" thickness="40" />
+		<layer id="5" thickness="160" />	
+		<layer id="6" thickness="10" />
+
+<!--
+		data for layers derived from 980205AB and took into consideration also 990803 and HP3011031. See lab book 27-01-2015
+		data for HF and AL are dummy
+-->
+
+	</column>
+	
+	<NeuronTypes totalNeurons="2195" miniColumns="1000" IntExtendedMinicolumnRadious="0">
+	<!-- for number of cells and percentages see lab book 19-03-2015  -->
+
+		<Layer id="1" percentage="0.0">
+		</Layer>
+
+		<Layer id="2" percentage="0.143338">
+		  <StructuralType id="L2_PPA" percentage="100.00" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="-120">
+		    <ElectroType id="bAC" percentage="100.00"/>
+		  </StructuralType>
+		</Layer>
+
+		<Layer id="3" percentage="1.725903">
+		  <StructuralType id="L3_SCA" percentage="6.779661" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cAC" percentage="100.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L3_IS1" percentage="72.033898" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cAC" percentage="100.00"/>
+          </StructuralType>
+
+		  <StructuralType id="L3_IS3" percentage="21.186441" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="-120">
+		    <ElectroType id="cAC" percentage="100.00"/>
+		  </StructuralType>
+		</Layer>
+
+		<Layer id="4" percentage="97.291210">
+		  <StructuralType id="L4_PC" percentage="93.658859" sigma="25" exclusionRadius="3.0" mClass="PYR" sClass="EXC" spineLength="2.5" maxHeightRestriction="0">
+		    <ElectroType id="cACpyr" percentage="100.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L4_PVBC" percentage="1.662708" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cNAC" percentage="70.00"/>
+		    <ElectroType id="bAC" percentage="30.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L4_CCKBC" percentage="1.082414" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cAC" percentage="100.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L4_BS" percentage="0.505126" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cNAC" percentage="75.00"/>
+		    <ElectroType id="bAC" percentage="25.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L4_AA" percentage="0.441986" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="bAC" percentage="100.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L4_Ivy" percentage="2.648907" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cNAC" percentage="33.33"/>
+		    <ElectroType id="bAC" percentage="66.67"/>
+		  </StructuralType>
+		</Layer>
+
+		<Layer id="5" percentage="0.839550">
+		  <StructuralType id="L5_OLM" percentage="57.142857" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cAC" percentage="100.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L5_BS" percentage="18.466899" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cNAC" percentage="75.00"/>
+		    <ElectroType id="bAC" percentage="25.00"/>
+		  </StructuralType>
+
+		  <StructuralType id="L5_Tri" percentage="24.390244" sigma="25" exclusionRadius="3.0" mClass="INT" sClass="INH" spineLength="0.5" maxHeightRestriction="0">
+		    <ElectroType id="cAC" percentage="100.00"/>
+		  </StructuralType>
+		</Layer>
+
+		<Layer id="6" percentage="0.0">
+		</Layer>
+
+	</NeuronTypes>
+
+
+	<SynapsesProperties>
+		<synapse fromSClass="EXC" toSClass="EXC" type="E2" /> <!-- dummy parameter -->
+		<synapse fromSClass="EXC" toSClass="INH" type="E2" /> <!-- dummy parameter -->
+		<synapse fromSClass="INH" toSClass="EXC" type="I2" /> <!-- dummy parameter -->
+		<synapse fromSClass="INH" toSClass="INH" type="I2" /> <!-- dummy parameter -->
+	</SynapsesProperties>
+
+
+	<SynapsesClassification>
+
+		<!-- dummy values -->
+		<class id="E2"  gsyn="0.30" gsynVar="0.20" nsyn="5.00" nsynVar="2.00" dtc="1.74" dtcVar="0.18" u="0.50" uVar="0.02" d="671" dVar="17" f="017" fVar="5" ase="1" />
+		<class id="I2"  gsyn="0.30" gsynVar="0.20" nsyn="5.00" nsynVar="2.00" dtc="1.74" dtcVar="0.18" u="0.50" uVar="0.02" d="671" dVar="17" f="017" fVar="5" ase="1" />
+
+	</SynapsesClassification>
+    
+	&connectivityRecipe;
+
+	<TouchRules>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PC" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Ivy" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_OLM" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PVBC" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_CCKBC" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_BS" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_SCA" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_PPA" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS1" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_IS3" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_PC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_PC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_Ivy" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_Ivy" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_OLM" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_OLM" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_PVBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_PVBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_CCKBC" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_CCKBC" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_BS" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_BS" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_AA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_AA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_SCA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_SCA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_PPA" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_PPA" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_IS1" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_IS1" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_IS3" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_IS3" type="soma"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_Tri" type="dendrite"/>
+        <touchRule fromLayer="*" fromMType="L*_Tri" toLayer="*" toMType="L*_Tri" type="soma"/>
+
+        <touchRule fromLayer="*" fromMType="L*_AA" toLayer="*" toMType="L*_PC" type="axon" />
+	</TouchRules>
+	
+</blueColumn>
