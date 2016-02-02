@@ -1,0 +1,155 @@
+require.config({
+  map: {
+    '*': {
+      'brainbuilderviewer': 'nbextensions/voxcellview/voxcellview/main',
+      'bigscreen': 'nbextensions/voxcellview/extern/bigscreen.min'
+    }
+  },
+  // shim is for lib that do not support AMD. let's manage the dependencies for them.
+  shim: {
+    // all trackballcontrols to listen to same event when multiple instances on the same page
+    'nbextensions/voxcellview/extern/OrbitControls':
+    {deps: ['nbextensions/voxcellview/extern/three.min']},
+    'nbextensions/voxcellview/extern/three.min': {exports: 'THREE'},
+    'nbextensions/voxcellview/voxcellview/main':
+      {exports: 'brainBuilderViewer',
+       deps: ['nbextensions/voxcellview/extern/three.min',
+              'nbextensions/voxcellview/extern/Detector',
+              'nbextensions/voxcellview/extern/OrbitControls',
+              'nbextensions/voxcellview/extern/dat.gui.min',
+              'nbextensions/voxcellview/voxcellview/utils',
+              'nbextensions/voxcellview/extern/bigscreen.min']},
+    'nbextensions/voxcellview/extern/bigscreen.min': {exports: 'BigScreen'}
+  }
+});
+
+define(['nbextensions/widgets/widgets/js/widget',
+        'nbextensions/widgets/widgets/js/manager',
+        'base/js/utils',
+        // TODO see if we can move to lodash
+        'underscore',
+        'brainbuilderviewer'
+       ],
+       function(widget, manager, utils, _, brainBuilderViewer) {
+
+         function loadVoxcellAsBytes(name, b64, shape, dtype, bb){
+           // TODO get rid of encoding.
+           var bString = atob(b64);
+           var bytes = new Uint8Array(bString.length);
+           for (var i = 0; i < bString.length; i++){
+             bytes[i] = bString.charCodeAt(i);
+           }
+           var reader = new FileReader();
+           var promise = new Promise(function(resolve, reject) {
+
+             reader.onloadend = function() {
+               resolve(reader.result);
+             };
+           });
+           bb.loadUrl(name, promise, shape, dtype);
+
+           reader.readAsArrayBuffer(new Blob([bytes]));
+         }
+
+         function addShaders(dom){
+           // TODO put that into main.js
+           var vertexShader = $('<script type=\'x-shader/x-vertex\' id=\'vertexshader\'>\
+               attribute float size;\
+               attribute vec3 customColor;\
+               varying vec3 vColor;\
+               void main() {\
+                 vColor = customColor;\
+                 vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\
+                 gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\
+                 gl_Position = projectionMatrix * mvPosition;\
+               }\
+               </script>');
+           var fragmentShader = $('<script type=\'x-shader/x-fragment\' id=\'fragmentshader\'>\
+               uniform vec3 color;\
+               uniform sampler2D texture;\
+               varying vec3 vColor;\
+               void main() {\
+                 gl_FragColor = vec4(color * vColor, 1.0);\
+                 gl_FragColor = gl_FragColor * texture2D(texture, gl_PointCoord);\
+                 if(gl_FragColor.a < ALPHATEST)\
+                    discard;\
+                }\
+              </script>');
+           dom.append(vertexShader);
+           dom.append(fragmentShader);
+         }
+
+         var register = {};
+
+         var CircuitView = widget.WidgetView.extend({
+
+           render: function() {
+             // TODO: find a way to deactivate properly the save state callback.
+
+             this.on('displayed', this.show, this);
+             this.id = utils.uuid();
+             // this sets the default heights for the notebook cell
+             var cellContainer = this.$el.empty()[0];
+             cellContainer.style.width = '100%';
+             cellContainer.style.height = '300px';
+             cellContainer.style.display = 'block';
+
+             // this can go fullscreen
+             var container = document.createElement('div');
+             container.style.width = '100%';
+             container.style.height = '100%';
+             // this is required for children absolute position
+             container.style.position = 'relative';
+
+             cellContainer.appendChild(container);
+
+             addShaders(this.$el);
+
+             this.bb = new brainBuilderViewer.Viewer(container,
+                                                     this.model.get('display_parameters'));
+             this.bb.init();
+
+             var that = this;
+             this.model.on('change:bytes_data', function(model, value, options) {
+               loadVoxcellAsBytes(model.get('name'),
+                                  model.get('bytes_data'),
+                                  model.get('shape'),
+                                  model.get('dtype'),
+                                  that.bb);
+             });
+
+             loadVoxcellAsBytes(this.model.get('name'),
+                                this.model.get('bytes_data'),
+                                this.model.get('shape'),
+                                this.model.get('dtype'),
+                                this.bb);
+           },
+           show: function() {
+             // certain actions can be performed only if the DOM node has been added to the document
+             this.bb.onShow();
+           },
+           initialize: function() {
+             widget.WidgetView.prototype.initialize.apply(this, arguments);
+             this.scalar_properties = [];
+             this.bytes_properties = [];
+             this.array_properties = [];
+             this.new_properties();
+           },
+           new_properties: function() {
+             // TODO: check if this is really necessary
+             this.scalar_properties.push('name');
+             this.scalar_properties.push('dtype');
+             this.array_properties.push('shape');
+             this.bytes_properties.push('bytes_data');
+           }
+         });
+
+         register.CircuitView = CircuitView;
+         register.CircuitModel = widget.WidgetModel.extend({}, {
+           serializers: _.extend({
+               }, widget.WidgetModel.serializers)
+         });
+
+         return register;
+
+       });

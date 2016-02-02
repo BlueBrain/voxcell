@@ -7,14 +7,13 @@ from collections import namedtuple
 import fractions
 import numpy as np
 import pandas as pd
+from voxcellview.widget import VoxcellWidget
+
 
 from voxcell.core import CellCollection, VoxelData
 from voxcell import build
-from voxcellview.notebook import NotebookViewer
 
 get_ipython().magic(u'matplotlib inline')
-
-notebook = NotebookViewer('out/cerebellum')
 
 
 # network properties from: https://collab.humanbrainproject.eu/#/collab/375/nav/3533
@@ -73,7 +72,7 @@ annotation = VoxelData(build.layered_annotation((volume_length_voxel, volume_wid
 
 # In[6]:
 
-notebook.show_volume('annotation', annotation, {"particle_size": 3})
+VoxcellWidget().show_volume('annotation', annotation, {"particle_size": 3})
 
 
 # ## layer densities
@@ -134,7 +133,7 @@ voxel_density = VoxelData(voxel_raw, annotation.voxel_dimensions, annotation.off
 
 # In[12]:
 
-notebook.show_volume('density', voxel_density, {"particle_size": 3})
+VoxcellWidget().show_volume('density', voxel_density, {"particle_size": 3})
 
 
 # # cell positions
@@ -179,7 +178,7 @@ new_cells.positions = cell_positioning(voxel_density, int(total_cell_count))
 
 # In[20]:
 
-notebook.show_points('position', new_cells, {"particle_size": 1})
+VoxcellWidget().show_points('position', new_cells, {"particle_size": 1})
 
 
 # # mtype assignment
@@ -266,7 +265,7 @@ get_density_delta(density, new_cells, layer_volumes)
 
 # In[30]:
 
-notebook.show_property('mtype', new_cells, {"particle_size": 1.5})
+VoxcellWidget().show_property('mtype', new_cells, display_parameters={"particle_size": 1.5})
 
 
 # # morphology assignment
@@ -357,7 +356,7 @@ get_density_delta(density, new_cells, layer_volumes)
 
 # In[42]:
 
-notebook.show_property('morph_name', new_cells, {"particle_size": 1.5})
+VoxcellWidget().show_property('morph_name', new_cells, display_parameters={"particle_size": 1.5})
 
 
 # # orientation assignment (WIP)
@@ -403,7 +402,20 @@ orientation_field.raw.shape
 # In[50]:
 
 sub_fields = vf.split_orientation_field(orientation_field.raw)
-notebook.show_vectors('Z', sub_fields[2], 5000, orientation_field.voxel_dimensions)
-notebook.show_vectors('Y', sub_fields[1], 5000, orientation_field.voxel_dimensions)
-notebook.show_vectors('X', sub_fields[0], 5000, orientation_field.voxel_dimensions)
+VoxcellWidget().show_vectors('Z', sub_fields[2], 5000, orientation_field.voxel_dimensions)
+
+
+# In[51]:
+
+VoxcellWidget().show_vectors('Y', sub_fields[1], 5000, orientation_field.voxel_dimensions)
+
+
+# In[52]:
+
+VoxcellWidget().show_vectors('X', sub_fields[0], 5000, orientation_field.voxel_dimensions)
+
+
+# In[ ]:
+
+
 

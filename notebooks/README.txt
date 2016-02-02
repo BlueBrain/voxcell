@@ -4,7 +4,7 @@ Installation
 ============
 
 install ipython in your virtual environment:
-pip install ipython[notebook]==3.2.1
+pip install ipython[notebook]
 
 notes:
 
@@ -26,11 +26,17 @@ Starting the server
 
 ipython notebook
 ----------------
-The notebook server will serve the notebooks and the static content that is located in the "viewer" directory.
+the notebook requires the extension to be installed:
+
+within the virtualenv:
+python -n voxcellview.install --user
+
+This can be done inside a notebook: !python -n voxcellview.install --user
+
 
 within the virtualenv, in the "BrainBuilder" directory, launch the ipython server:
 
-ipython notebook --NotebookApp.extra_static_paths="['${PWD}/voxcellview/voxcellview/webviewer/']" --ip=put_your_ip_here --port=put_your_port_here
+ipython notebook --ip=put_your_ip_here --port=put_your_port_here
 
 
 

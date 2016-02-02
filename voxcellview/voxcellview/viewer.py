@@ -99,8 +99,15 @@ def sample_vector_field(field, point_count, voxel_dimensions):
 
 def export_vector_field(filename, field, point_count, voxel_dimensions):
     '''save a vector field to binary to a format that can be loaded by the JS viewer'''
-    positions, all_vectors = sample_vector_field(field, point_count, voxel_dimensions)
-    export_vectors(filename, positions, all_vectors)
+    block = serialize_vector_field(field, point_count, voxel_dimensions)
+    block.tofile(filename)
+
+
+def serialize_vector_field(field, point_count, voxel_dimensions):
+    ''' convert a vector field to a format that can be loaded by the JS viewer'''
+    positions, vectors = sample_vector_field(field, point_count, voxel_dimensions)
+    block = serialize_vectors(positions, vectors)
+    return block
 
 
 def export_positions_vectors(filename, cells, attribute):

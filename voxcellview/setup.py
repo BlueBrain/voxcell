@@ -36,5 +36,6 @@ setup(
     install_requires=REQS,
     packages=['voxcellview'],
     include_package_data=True,
-    scripts=[],
+    entry_points={'console_scripts':
+                  ['install_extension=voxcellview.install:main']}
 )
