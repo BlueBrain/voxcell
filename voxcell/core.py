@@ -10,6 +10,7 @@ import logging
 import h5py
 import numpy as np
 import pandas as pd
+import nrrd
 from voxcell import math
 
 L = logging.getLogger(__name__)
@@ -57,6 +58,19 @@ class VoxelData(object):
 
         raw = load_raw(mhd['ElementType'], mhd['DimSize'], raw_path)
         return cls(raw, mhd['ElementSpacing'])
+
+    @classmethod
+    def load_nrrd(cls, nrrd_path):
+        ''' read volumetric data from a nrrd file '''
+        raw, option = nrrd.read(nrrd_path)
+        raw = np.reshape(raw, raw.shape, order="F")
+        if 'spacing' in option:
+            spacing = option['spacing']
+        else:
+            #TODO assert when new data will be delivered by NeuroInf.
+            L.warning("spacing not defined in nrrd")
+            spacing = [25, 25, 25]
+        return cls(raw, spacing)
 
     def save_metaio(self, mhd_path, raw_filename=None):
         '''save a VoxelData header file and its accompanying data file
