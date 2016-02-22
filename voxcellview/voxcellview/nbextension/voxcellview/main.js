@@ -243,8 +243,10 @@ var BigScreen = require('bigscreen');
     return function(inputData) {
       var DTYPE_TYPE_MAP = {
         'uint8': Uint8Array,
-        'uint32': Uint32Array
+        'uint32': Uint32Array,
+        'float32': Float32Array
       };
+
       var data = new DTYPE_TYPE_MAP[mhd.ElementType](inputData);
       var dimsizeX = mhd.DimSize[0];
       var dimsizeY = mhd.DimSize[1];
