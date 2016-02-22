@@ -195,7 +195,8 @@ class CellCollection(object):
 
                     unique_values, indices = np.unique(data, return_inverse=True)
                     f.create_dataset('cells/properties/' + name, data=indices.astype(np.uint32))
-                    f.create_dataset('library/' + name, data=unique_values)
+                    dt = h5py.special_dtype(vlen=unicode)
+                    f.create_dataset('library/' + name, data=unique_values, dtype=dt)
 
                 else:
                     f.create_dataset('cells/properties/' + name, data=data)
