@@ -124,3 +124,11 @@ def test_clip_volume():
     # check that they are independent
     raw[1, 1] = 2
     eq_(r.raw[0, 0], 1)
+
+
+def test_load_nrrd():
+    ''' test loading a test nrrd file and check basic attributes '''
+    got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
+    eq_(got.raw.shape, (528, 320, 456))
+    eq_(got.voxel_dimensions, [25, 25, 25])
+    assert_equal(got.offset, np.array([0, 0, 0]))
