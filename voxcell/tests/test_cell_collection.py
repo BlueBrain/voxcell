@@ -99,6 +99,7 @@ def check_roundtrip(original):
         original.save('cells.h5')
         restored = core.CellCollection.load('cells.h5')
         assert_equal_cells(original, restored)
+        return restored
 
 
 def test_roundtrip_empty():
@@ -122,14 +123,17 @@ def test_roundtrip_properties_numeric_multiple():
 def test_roundtrip_properties_text_single():
     cells = core.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'pretty']
-    check_roundtrip(cells)
+    restored = check_roundtrip(cells)
+    restored.properties['y-type'].to_frame()
 
 
 def test_roundtrip_properties_text_multiple():
     cells = core.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'ugly', 'pretty']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha']
-    check_roundtrip(cells)
+    restored = check_roundtrip(cells)
+    restored.properties['y-type'].to_frame()
+    restored.properties['z-type'].to_frame()
 
 
 def test_roundtrip_positions():

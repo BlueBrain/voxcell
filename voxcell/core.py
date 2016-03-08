@@ -257,7 +257,16 @@ class CellCollection(object):
                     data = np.array(data)
 
                     if name in f['library']:
-                        unique_values = np.array(f['library'][name])
+                        labels = f['library'][name]
+                        # older versions of h5py don't properly return
+                        # variable length strings that pandas can consume
+                        # (ie: they fail the to_frame() command with a KeyError
+                        # due to the vlen in the dtype, force the conversion
+                        # using the numpy array
+                        if 'vlen' in labels.dtype.names:
+                            unique_values = np.array(labels, dtype=object)
+                        else:
+                            unique_values = np.array(labels)
                         cells.properties[name] = unique_values[data]
 
                     else:
