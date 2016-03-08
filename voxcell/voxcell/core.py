@@ -180,6 +180,13 @@ class CellCollection(object):
         '''
         self.properties = pd.concat([self.properties, new_properties], axis=1)
 
+    def remove_unassigned_cells(self):
+        ''' remove cells with one or more unassigned property '''
+        idx_unassigned = self.properties[self.properties.isnull().any(axis=1)].index
+        self.properties = self.properties.drop(idx_unassigned)
+        self.orientations = np.delete(self.orientations, idx_unassigned, 0)
+        self.positions = np.delete(self.positions, idx_unassigned, 0)
+
     def save(self, filename):
         '''save this cell collection to HDF5
 
