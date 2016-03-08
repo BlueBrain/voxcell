@@ -1,2 +1,2 @@
-voxcell==1.0.0.dev0
+voxcell==1.0.0
 ipywidgets==4.1.1
