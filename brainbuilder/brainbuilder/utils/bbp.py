@@ -106,11 +106,6 @@ def get_distribution_from_recipe(recipe_filename):
     '''
     recipe_tree = _parse_recipe(recipe_filename)
 
-    synapse_class_alias = {
-        'INH': 'inhibitory',
-        'EXC': 'excitatory'
-    }
-
     def read_records():
         '''parse each neuron posibility in the recipe'''
 
@@ -131,7 +126,7 @@ def get_distribution_from_recipe(recipe_filename):
                                 structural_type.attrib['id'],
                                 electro_type.attrib['id'],
                                 structural_type.attrib['mClass'],
-                                synapse_class_alias[structural_type.attrib['sClass']],
+                                structural_type.attrib['sClass'],
                                 percentage
                             ]
 
@@ -553,10 +548,8 @@ def load_mvd2(filepath):
     cells.orientations = np.array([[[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
                                    for cos, sin in zip(np.cos(angles), np.sin(angles))])
 
-    synapse_class_alias = {'INH': 'inhibitory', 'EXC': 'excitatory'}
-
     props = pd.DataFrame({
-        'synapse_class': [synapse_class_alias[data['MorphTypes'][c['mtype']]['sclass']]
+        'synapse_class': [data['MorphTypes'][c['mtype']]['sclass']
                           for c in data['Neurons Loaded']],
         'morph_class': [data['MorphTypes'][c['mtype']]['mclass'] for c in data['Neurons Loaded']],
         'mtype': [data['MorphTypes'][c['mtype']]['name'] for c in data['Neurons Loaded']],
@@ -579,11 +572,6 @@ def save_mvd2(filepath, morphology_path, cells):
     morphology, mtype, etype, minicolumn, layer, morph_class and synapse_class
     '''
 
-    map_exc_inh = {
-        'excitatory': 'EXC',
-        'inhibitory': 'INH',
-    }
-
     electro_types, chosen_etype = np.unique(cells.properties.etype, return_inverse=True)
 
     mtype_names, chosen_mtype = np.unique(cells.properties.mtype, return_inverse=True)
@@ -593,7 +581,7 @@ def save_mvd2(filepath, morphology_path, cells):
         mask = (cells.properties.mtype == mtype_name).values
         morph_types.append((mtype_name,
                             cells.properties[mask].morph_class.values[0],
-                            map_exc_inh[cells.properties[mask].synapse_class.values[0]]))
+                            cells.properties[mask].synapse_class.values[0]))
 
     def get_mvd2_neurons():
         '''return the data for all the neurons used in the circuit'''

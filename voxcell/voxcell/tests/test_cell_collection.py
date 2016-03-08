@@ -149,7 +149,7 @@ def test_roundtrip_complex():
 
     cells.positions = np.random.random((n, 3))
     cells.orientations = random_orientations(n)
-    cells.properties['synapse_class'] = np.random.choice(['inhibitory', 'excitatory'], n)
+    cells.properties['synapse_class'] = np.random.choice(['INH', 'EXC'], n)
     cells.properties['mtype'] = np.random.choice(['L5_NGC', 'L5_BTC', 'L6_LBC'], n)
     cells.properties['etype'] = np.random.choice(['cADpyr', 'dNAC', 'bSTUT'], n)
     cells.properties['morphology'] = np.random.choice([

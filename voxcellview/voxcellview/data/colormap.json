@@ -106,7 +106,7 @@
 
   "synapse_class": {
     "default": [255, 255, 255],
-    "excitatory": [255, 0, 0],
-    "inhibitory": [0, 0, 255]
+    "EXC": [255, 0, 0],
+    "INH": [0, 0, 255]
   }
 }

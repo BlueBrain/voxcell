@@ -545,7 +545,7 @@ def test_load_mvd2():
              'layer', 'minicolumn', 'metype']))
 
     eq_(list(cells.properties.synapse_class.unique()),
-        ['inhibitory', 'excitatory'])
+        ['INH', 'EXC'])
 
     eq_(list(cells.properties.mtype.unique()),
         ['L1_DLAC', 'L23_PC', 'L4_NBC', 'L5_TTPC1', 'L6_LBC'])
@@ -554,7 +554,7 @@ def test_load_mvd2():
         ['cNAC', 'cADpyr', 'dNAC'])
 
     eq_(list(cells.properties.synapse_class),
-        ['inhibitory', 'excitatory', 'inhibitory', 'excitatory', 'inhibitory'])
+        ['INH', 'EXC', 'INH', 'EXC', 'INH'])
 
 
 def test_roundtrip_mvd2():

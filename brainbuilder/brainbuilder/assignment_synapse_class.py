@@ -14,7 +14,7 @@ def assign_synapse_class_randomly(positions, inhibitory_fraction):
         A pandas DataFrame with one row for each position and one column: sclass.
         For those positions whose morphology could not be determined, nan is used.
     '''
-    chosen = np.random.choice(np.array(['excitatory', 'inhibitory']),
+    chosen = np.random.choice(np.array(['EXC', 'INH']),
                               size=positions.shape[0],
                               p=np.array([1.0 - inhibitory_fraction, inhibitory_fraction]))
 
