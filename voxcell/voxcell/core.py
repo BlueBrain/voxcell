@@ -204,6 +204,12 @@ class CellCollection(object):
                 f.create_dataset('cells/orientations',
                                  data=math.matrices_to_quaternions(self.orientations))
 
+            # TODO this should be managed by the application that requires that.
+            # This is in the current MVD3 spec and this is a legacy from MVD2.
+            # This is not used in load
+            f.create_dataset('circuit/seeds',
+                             data=np.random.random_sample((4,)).astype(np.float64))
+
             for name, series in self.properties.iteritems():
                 data = series.values
 
