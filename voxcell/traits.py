@@ -6,9 +6,9 @@
     For example::
 
            sclass      mtype
-        0  inhibitory  Pyramidal
-        1  excitatory  Pyramidal
-        2  inhibitory  Martinotti
+        0  INH         Pyramidal
+        1  EXC         Pyramidal
+        2  INH         Martinotti
 
     A "probability distribution" specifies the probability of each trait in a collection
     being assigned to a given cell.
@@ -177,9 +177,9 @@ class SpatialDistribution(object):
         For example, taking the traits collection::
 
                sclass      mtype
-            0  inhibitory  Pyramidal
-            1  excitatory  Pyramidal
-            2  inhibitory  Martinotti
+            0  INH         Pyramidal
+            1  EXC         Pyramidal
+            2  INH         Martinotti
 
         and the distributions collection::
 
@@ -191,8 +191,8 @@ class SpatialDistribution(object):
         Ignoring all properties except 'sclass' would give the simplified traits collection::
 
                sclass
-            0  inhibitory
-            1  excitatory
+            0  INH
+            1  EXC
 
         and the distributions collection::
 
