@@ -1,6 +1,7 @@
 import tempfile
 import os
 import shutil
+import h5py
 from contextlib import contextmanager
 from nose.tools import eq_
 
@@ -175,3 +176,13 @@ def test_remove_unassigned():
     eq_(len(cells.orientations), 3)
     assert_equal(cells.properties['foo'], np.array(['', 'b', 'c']))
     assert_equal(cells.properties['bar'], np.array([0, 3, 4]))
+
+
+def test_circuit_seeds():
+    ''' test that 4 seeds are generated in the MVD3 during save '''
+    cells = core.CellCollection()
+    cells.properties['foo'] = ['a', 'b', 'c']
+    with tempcwd():
+        cells.save('cells.h5')
+        with h5py.File('cells.h5') as f:
+            eq_(f['circuit']['seeds'].shape, (4,))
