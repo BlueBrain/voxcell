@@ -1,8 +1,8 @@
-from nose.tools import eq_
 import tempfile
 import os
 import shutil
 from contextlib import contextmanager
+from nose.tools import eq_
 
 from voxcell import core
 from numpy.testing import assert_equal, assert_almost_equal
@@ -159,3 +159,19 @@ def test_roundtrip_complex():
     ], n)
 
     check_roundtrip(cells)
+
+
+def test_remove_unassigned():
+    ''' test that cells with unassigned properties are removed '''
+    cells = core.CellCollection()
+    n = 5
+
+    cells.positions = np.random.random((n, 3))
+    cells.orientations = random_orientations(n)
+    cells.properties['foo'] = np.array(['', 'a', None, 'b', 'c'])
+    cells.properties['bar'] = np.array([0, None, 2, 3, 4])
+    cells.remove_unassigned_cells()
+    eq_(len(cells.positions), 3)
+    eq_(len(cells.orientations), 3)
+    assert_equal(cells.properties['foo'], np.array(['', 'b', 'c']))
+    assert_equal(cells.properties['bar'], np.array([0, 3, 4]))
