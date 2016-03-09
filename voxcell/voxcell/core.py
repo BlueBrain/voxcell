@@ -282,12 +282,22 @@ def read_mhd(path):
                            for k, v in (line.split('=')
                                         for line in mhd.readlines() if line.strip()))
 
-    numerical_keys = ('CenterOfRotation', 'DimSize', 'NDims', 'ElementSpacing',
-                      'Offset', 'TransformMatrix')
+    # types come from: http://www.itk.org/Wiki/ITK/MetaIO/Documentation
+    numerical_keys = {
+        # MetaObject Tags
+        'NDims': int,
+        # Tags Added by MetaImage
+        'DimSize': int,
+        # Associated transformations
+        'CenterOfRotation': float,
+        'ElementSpacing': float,
+        'Offset': float,
+        'TransformMatrix': float,
+    }
 
-    for k in numerical_keys:
+    for k, _type in numerical_keys.iteritems():
         if k in data and data[k] != '???':
-            data[k] = tuple(int(v) for v in data[k].split())
+            data[k] = tuple(_type(v) for v in data[k].split())
             data[k] = data[k][0] if len(data[k]) == 1 else np.array(data[k])
 
     for k in data.keys():

@@ -16,15 +16,15 @@ def test_read_mhd():
         'AnatomicalOrientation': '???',
         'BinaryData': True,
         'BinaryDataByteOrderMSB': False,
-        'CenterOfRotation': np.array([0, 0, 0]),
+        'CenterOfRotation': np.array([0.0, 0.0, 0]),
         'DimSize': np.array([52, 32, 45]),
         'ElementDataFile': 'atlasVolume.raw',
-        'ElementSpacing': np.array([25, 25, 25]),
+        'ElementSpacing': np.array([25.0, 25, 25]),
         'ElementType': 'MET_UCHAR',
         'NDims': 3,
         'ObjectType': 'Image',
-        'Offset': np.array([0, 0, 0]),
-        'TransformMatrix': np.array([1, 0, 0, 0, 1, 0, 0, 0, 1])
+        'Offset': np.array([0.0, 0, 0]),
+        'TransformMatrix': np.array([1.0, 0, 0, 0, 1, 0, 0, 0, 1])
     }
 
     eq_(set(got.keys()), set(expected.keys()))
