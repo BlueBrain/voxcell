@@ -1,6 +1,6 @@
 import os
 import tempfile
-from nose.tools import eq_
+from nose.tools import eq_, ok_
 
 import numpy as np
 from numpy.testing import assert_equal
@@ -130,5 +130,30 @@ def test_load_nrrd():
     ''' test loading a test nrrd file and check basic attributes '''
     got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
     eq_(got.raw.shape, (528, 320, 456))
-    eq_(got.voxel_dimensions, [25, 25, 25])
+    ok_(np.allclose(got.voxel_dimensions, [25, 25, 25]))
     assert_equal(got.offset, np.array([0, 0, 0]))
+
+def test_save_nrrd():
+    ''' test saving a test nrrd file and check basic attributes '''
+    vd = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+        vd.save_nrrd(f.name)
+        f.flush()
+        f.seek(0)
+        new = core.VoxelData.load_nrrd(f.name)
+        ok_(np.allclose(vd.raw, new.raw))
+        ok_(np.allclose(vd.voxel_dimensions, new.voxel_dimensions))
+        ok_(np.allclose(vd.offset, new.offset))
+
+def test_roundtrip_nrrd():
+    vd = core.VoxelData.load_metaio(os.path.join(DATA_PATH, 'atlasVolume.mhd'),
+                                    os.path.join(DATA_PATH, 'atlasVolume.raw'))
+
+    with tempfile.NamedTemporaryFile() as f:
+        vd.save_nrrd(f.name)
+        f.flush()
+        f.seek(0)
+        new = core.VoxelData.load_nrrd(f.name)
+        ok_(np.allclose(vd.raw, new.raw))
+        ok_(np.allclose(vd.voxel_dimensions, new.voxel_dimensions))
+        ok_(np.allclose(vd.offset, new.offset))

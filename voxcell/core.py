@@ -64,12 +64,12 @@ class VoxelData(object):
         ''' read volumetric data from a nrrd file '''
         raw, option = nrrd.read(nrrd_path)
         raw = np.reshape(raw, raw.shape, order="F")
-        if 'spacing' in option:
-            spacing = option['spacing']
+        if 'spacings' in option:
+            spacing = np.array([float(v) for v in option['spacings']])
         else:
             #TODO assert when new data will be delivered by NeuroInf.
             L.warning("spacing not defined in nrrd")
-            spacing = [25, 25, 25]
+            spacing = np.array([25, 25, 25])
         return cls(raw, spacing)
 
     def save_metaio(self, mhd_path, raw_filename=None):
@@ -87,6 +87,18 @@ class VoxelData(object):
         mhd = get_mhd_info(self.raw, raw_filename, self.voxel_dimensions, self.offset)
         save_mhd(mhd_path, mhd)
         self.raw.transpose().tofile(joinp(os.path.dirname(mhd_path), mhd['ElementDataFile']))
+
+    def save_nrrd(self, nrrd_path):
+        '''save a VoxelData to an nrrd file
+
+        Args:
+            nrrd_path(string): full path to nrrd file
+        '''
+        #from: http://teem.sourceforge.net/nrrd/format.html#space
+        options = {'spacings': self.voxel_dimensions,
+                   'space origin': self.offset,
+                   }
+        nrrd.write(nrrd_path, self.raw, options=options)
 
     def lookup(self, positions):
         '''find the values in raw corresponding to the given positions
