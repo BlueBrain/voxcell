@@ -115,9 +115,10 @@ def compute_orientation_field(annotation, hierarchy, region_name):
     fwd_field = compute_main_axis_field(region_mask)
 
     first = [name for name in hierarchy.collect('name', region_name, 'name')
-             if 'stratum lacunosum-moleculare' in name]
+             if 'stratum oriens' in name]
+
     last = [name for name in hierarchy.collect('name', region_name, 'name')
-            if 'stratum oriens' in name]
+            if 'stratum lacunosum-moleculare' in name]
 
     up_field = compute_depth_axis_field(annotation, hierarchy, first, last, region_mask)
     # the value of sigma is hand-picked to soften the edge errors we get on the Allen atlas
