@@ -2,7 +2,7 @@ import os
 import tempfile
 import shutil
 
-from nose.tools import eq_
+from nose.tools import eq_, raises
 
 import numpy as np
 import pandas as pd
@@ -51,17 +51,17 @@ def test_load_recipe_density_0():
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
         core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
-        {1: (1,), 2: (2,)})
+        {1: "1", 2: "2"})
 
     assert_equal(density.raw, np.array([0.1, 0.9], dtype=np.float32))
 
-
+@raises(AssertionError)
 def test_load_recipe_density_unknown_layer_0():
     annotation_raw = np.array([1, 2, 777])
     density = bbp.load_recipe_density(
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'),
         core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
-        {1: (1,), 2: (2,), 999: (888,)})
+        {1: "1", 2: "2", 999: "888"})
 
     assert_equal(density.raw, np.array([0.1, 0.9, 0.], dtype=np.float32))
 
@@ -71,7 +71,7 @@ def test_load_recipe_density_no_voxels():
     density = bbp.load_recipe_density(
         BUILDER_RECIPE,
         core.VoxelData(annotation_raw, voxel_dimensions=(25,)),
-        {1: (1,), 2: (2,)})
+        {1: "1", 2: "2"})
 
     assert_equal(density.raw, np.array([0.5, 0.5], dtype=np.float32))
 

@@ -122,7 +122,7 @@ def get_distribution_from_recipe(recipe_filename):
                                           float(layer.attrib['percentage']) / 100)
 
                             yield [
-                                int(layer.attrib['id']),
+                                layer.attrib['id'],
                                 structural_type.attrib['id'],
                                 electro_type.attrib['id'],
                                 structural_type.attrib['mClass'],
@@ -145,7 +145,7 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
     '''
     recipe_tree = _parse_recipe(recipe_filename)
 
-    percentages = dict((int(layer.attrib['id']), float(layer.attrib['percentage']) / 100)
+    percentages = dict((layer.attrib['id'], float(layer.attrib['percentage']) / 100)
                        for layer in recipe_tree.findall('NeuronTypes')[0].getchildren()
                        if layer.tag == 'Layer')
 
@@ -159,9 +159,9 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
             if voxel_count:
                 raw[region_mask] = percentages[layers[0]] / float(voxel_count)
             else:
-                L.warning('No voxels tagged for layer %d', layers[0])
+                L.warning('No voxels tagged for layer %s', layers[0])
         else:
-            L.warning('No percentage found in recipe for layer %d', layers[0])
+            L.warning('No percentage found in recipe for layer %s', layers[0])
 
     raw /= np.sum(raw)
 
@@ -222,7 +222,7 @@ def load_neurondb_v4(neurondb_filename):
             morphology, layer, mtype, etype, _ = fields[:5]
             placement_hints = list(float(h) for h in fields[5:])
             # skipping metype because it's just a combination of the mtype and etype values
-            yield [morphology, int(layer), mtype, etype, placement_hints]
+            yield [morphology, layer, mtype, etype, placement_hints]
 
     with open(neurondb_filename) as f:
         return pd.DataFrame(read_records(f.readlines()),
@@ -375,7 +375,7 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map, p
             regions_dists[tuple(region_ids)] = dists / dists.sum()
         else:
             L.warning('Layer %s from region-layer map not found in neurondb',
-                      ', '.join(str(l) for l in layer_ids))
+                      ', '.join(l for l in layer_ids))
 
     return regions_dists
 
@@ -492,7 +492,7 @@ def parse_mvd2(filepath):
         'Neurons Loaded': (
             ('morphology', str),
             ('database', int), ('hyperColumn', int), ('miniColumn', int),
-            ('layer', int), ('mtype', int), ('etype', int),
+            ('layer', str), ('mtype', int), ('etype', int),
             ('x', float), ('y', float), ('z', float), ('r', float), ('metype', str)
         ),
         'MicroBox Data': (
