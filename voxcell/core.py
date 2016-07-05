@@ -245,7 +245,7 @@ class CellCollection(object):
         '''load a cell collection from HDF5
 
         Args:
-            filename(str): fullpath to filename to write
+            filename(str): fullpath to filename to read
 
         Returns:
             CellCollection object
@@ -275,7 +275,7 @@ class CellCollection(object):
                         # (ie: they fail the to_frame() command with a KeyError
                         # due to the vlen in the dtype, force the conversion
                         # using the numpy array
-                        if 'vlen' in labels.dtype.names:
+                        if labels.dtype.names and 'vlen' in labels.dtype.names:
                             unique_values = np.array(labels, dtype=object)
                         else:
                             unique_values = np.array(labels)
