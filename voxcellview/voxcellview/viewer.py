@@ -23,10 +23,18 @@ def load_traits_colormap(filepath):
                        colormap)
 
 
-def get_cell_color(cells, attribute):
-    '''compute an array with colors for each cell depending on a given attribute'''
+def get_cell_color(cells, attribute, input_color_map):
+    '''compute an array with colors for each cell depending on a given attribute.
+    input_color_map is a callable that returns a list of 3 elements corresponding
+    to r,g,b value between 0 and 1.
+    '''
+    # TODO: allow for transparency in color_map
+    if input_color_map:
+        return [np.array(input_color_map(t)[:3]) for t in cells.properties[attribute]]
+
     colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
     colormap = colormap[attribute]
+
     if isinstance(colormap, dict):
         return [np.array(colormap[t]) / 255.0 for t in cells.properties[attribute]]
     else:
@@ -34,7 +42,7 @@ def get_cell_color(cells, attribute):
         return [colormap] * len(cells.positions)
 
 
-def serialize_points(cells, attribute):
+def serialize_points(cells, attribute, color_map):
     '''convert a collection of cells to binary to a format that can be loaded by the JS viewer
         The serialized data format is a long array of float32 representing,
         for each cell, its position and color:
@@ -44,7 +52,7 @@ def serialize_points(cells, attribute):
         Color components are in the range [0, 1]
     '''
     L.debug("serializing %d points", cells.positions.shape[0])
-    colors = get_cell_color(cells, attribute)
+    colors = get_cell_color(cells, attribute, color_map)
     return np.append(cells.positions, colors, axis=1).astype(np.float32)
 
 

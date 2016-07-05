@@ -37,11 +37,11 @@ class VoxcellWidget(Widget): # pylint: disable=R0901
         self.show_property(name, cells, '.pts', display_parameters)
 
     # TODO: remove the remaining extension switch in js code
-    def show_property(self, name, cells, extension='.pts', display_parameters=None):
+    def show_property(self, name, cells, extension='.pts', display_parameters=None, color_map=None):
         ''' display a bunch of positions with properties '''
-        block = viewer.serialize_points(cells, name)
+        block = viewer.serialize_points(cells, name, color_map)
         self.name = name + extension
-        self._show(block, display_parameters)
+        self._show(block, display_parameters=display_parameters)
 
     def show_vectors(self, name, field, point_count, voxel_dimensions, display_parameters=None):
         ''' display a vector field '''
