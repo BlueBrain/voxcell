@@ -51,34 +51,6 @@ define(['nbextensions/widgets/widgets/js/widget',
            reader.readAsArrayBuffer(new Blob([bytes]));
          }
 
-         function addShaders(dom){
-           // TODO put that into main.js
-           var vertexShader = $('<script type=\'x-shader/x-vertex\' id=\'vertexshader\'>\
-               attribute float size;\
-               attribute vec3 customColor;\
-               varying vec3 vColor;\
-               void main() {\
-                 vColor = customColor;\
-                 vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\
-                 gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\
-                 gl_Position = projectionMatrix * mvPosition;\
-               }\
-               </script>');
-           var fragmentShader = $('<script type=\'x-shader/x-fragment\' id=\'fragmentshader\'>\
-               uniform vec3 color;\
-               uniform sampler2D texture;\
-               varying vec3 vColor;\
-               void main() {\
-                 gl_FragColor = vec4(color * vColor, 1.0);\
-                 gl_FragColor = gl_FragColor * texture2D(texture, gl_PointCoord);\
-                 if(gl_FragColor.a < ALPHATEST)\
-                    discard;\
-                }\
-              </script>');
-           dom.append(vertexShader);
-           dom.append(fragmentShader);
-         }
-
          var register = {};
 
          var CircuitView = widget.WidgetView.extend({
@@ -102,8 +74,6 @@ define(['nbextensions/widgets/widgets/js/widget',
              container.style.position = 'relative';
 
              cellContainer.appendChild(container);
-
-             addShaders(this.$el);
 
              this.bb = new brainBuilderViewer.Viewer(container,
                                                      this.model.get('display_parameters'));

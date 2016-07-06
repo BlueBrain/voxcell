@@ -3,7 +3,7 @@ var brainBuilderViewer = brainBuilderViewer || {};
 // manage the dependency manually
 var BigScreen = require('bigscreen');
 (function() {
-  var DEFAULTPARTICLESIZE = 100;
+  var DEFAULTPARTICLESIZE = 25;
   var NEAR = 0.1;
   var FAR = 50000;
   brainBuilderViewer.Viewer = function(inputContainer, displayParameters) {
@@ -79,8 +79,64 @@ var BigScreen = require('bigscreen');
     };
 
     this.particleSizeChange = function(amount) {
-      that.cloudMaterial.size = amount;
+      that.cloudMaterial.uniforms.size.value = amount;
       that.render();
+    };
+
+    this.addSliceSettings = function() {
+      var bb = that.geometry.boundingBox;
+      that.datguiSettings.slice = {};
+      that.datguiSettings.slice._datgui = that.datguiSettings._datgui.addFolder('slice');
+
+      ['x', 'y', 'z'].forEach(function(value, idx) {
+        that.cloudMaterial.uniforms.threshold.value[idx] = bb.min[value];
+        that.datguiSettings.slice[value] = bb.min[value];
+
+        var spliceGui = that.datguiSettings.slice._datgui
+              .add(that.datguiSettings.slice,
+                   value,
+                   bb.min[value],
+                   bb.max[value]);
+
+        spliceGui.onChange(function(value) {
+          that.cloudMaterial.uniforms.threshold.value[idx] = value;
+          that.render();
+        });
+      });
+    };
+
+    this.addShaders = function() {
+      var vertexShader = $('<script type=\'x-shader/x-vertex\' id=\'vertexshader\'>\
+               uniform float size;\
+               uniform vec3 threshold;\
+               attribute vec3 customColor;\
+               varying vec3 vColor;\
+               varying float vDiscard;\
+               void main() {\
+                 vColor = customColor;\
+                 vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\
+                 gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\
+                 gl_Position = projectionMatrix * mvPosition;\
+                 if (position[0] < threshold[0] || \
+                     position[1] < threshold[1] || \
+                     position[2] < threshold[2]  ){\
+                         vDiscard=1.0;}\
+                 else {vDiscard=0.0;}\
+               }\
+               </script>');
+      var fragmentShader = $('<script type=\'x-shader/x-fragment\' id=\'fragmentshader\'>\
+               uniform vec3 color;\
+               uniform sampler2D texture;\
+               varying vec3 vColor;\
+               varying float vDiscard;\
+               void main() {\
+                 gl_FragColor = vec4(color * vColor, 1.0);\
+                 gl_FragColor = gl_FragColor * texture2D(texture, gl_PointCoord);\
+                 if (gl_FragColor.w < 0.5 || vDiscard != 0.0){discard;}\
+                }\
+              </script>');
+      that.container.appendChild(vertexShader[0]);
+      that.container.appendChild(fragmentShader[0]);
     };
 
   };
@@ -95,6 +151,7 @@ var BigScreen = require('bigscreen');
       if (!Detector.webgl) {
         Detector.addGetWebGLMessage();
       }
+      this.addShaders();
       this.initScene();
       var gui = new dat.GUI({autoPlace: false});
       this.datguiSettings._datgui = gui;
@@ -123,6 +180,7 @@ var BigScreen = require('bigscreen');
                     'fullscreen'
                 );
       }
+
       settings._datgui.close();
 
       sizeGui.onChange(function(value) {
@@ -329,30 +387,39 @@ var BigScreen = require('bigscreen');
     var data = new Float32Array(inputData);
     var rowLength = 2 * 3; // point and color (3 components each)
     var count = data.length / rowLength;
-    var geometry = new THREE.Geometry();
     var averagePoint = new THREE.Vector3(0, 0, 0);
 
-    for (var i = 0; i < count; ++i) {
+    var geometry = new THREE.BufferGeometry();
+    var positions = new Float32Array(count * 3);
+    var colors = new Float32Array(count * 3);
+    var filter = new Int32Array(3);
+    for (var i = 0, i3 = 0; i < count; i ++, i3 += 3){
       var offset = i * rowLength;
       var x = data[offset];
       var y = data[offset + 1];
       var z = data[offset + 2];
 
-      offset = i * rowLength + 3;
-      var r = data[offset];
-      var g = data[offset + 1];
-      var b = data[offset + 2];
+      positions[i3 + 0] = x;
+      positions[i3 + 1] = y;
+      positions[i3 + 2] = z;
 
+      offset = i * rowLength + 3;
+      colors[i3 + 0] = data[offset];
+      colors[i3 + 1] = data[offset + 1];
+      colors[i3 + 2] = data[offset + 2];
       var p = new THREE.Vector3(x, y, z);
       averagePoint.add(p);
-
-      geometry.vertices.push(p);
-      geometry.colors.push(new THREE.Color(r, g, b));
     }
-
     console.log('loaded: ' + count + ' points');
 
-    this.cloudMaterial = buildCircleCloudMaterial(Math.exp(this.datguiSettings.size) - 1);
+    geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.addAttribute('customColor', new THREE.BufferAttribute(colors, 3));
+    geometry.addAttribute('filter', new THREE.BufferAttribute(filter, 3));
+    geometry.computeBoundingBox();
+
+    this.cloudMaterial = buildShaderCloudMaterial(Math.exp(this.datguiSettings.size) - 1);
+    this.geometry = geometry;
+    this.addSliceSettings();
 
     return {
       object: new THREE.PointCloud(geometry, this.cloudMaterial),
@@ -425,7 +492,7 @@ var BigScreen = require('bigscreen');
     });
   }
 
-  function buildCircleCloudMaterial(size) {
+  function buildShaderCloudMaterial(size){
     var c = $('<canvas width="256" height="256" />').get(0);
     var ctx = c.getContext('2d');
     ctx.beginPath();
@@ -436,13 +503,18 @@ var BigScreen = require('bigscreen');
     var tex = new THREE.Texture(c);
     tex.needsUpdate = true;
 
-    return new THREE.PointCloudMaterial({
-      size: size,
-      vertexColors: THREE.VertexColors,
+    return new THREE.ShaderMaterial({
+      uniforms: {
+        color: {value: new THREE.Color(0xffffff)},
+        texture: {value: tex},
+        size: {value: size},
+        threshold: {value: [0, 0, 0]}
+      },
+      vertexShader: document.getElementById('vertexshader').textContent,
+      fragmentShader: document.getElementById('fragmentshader').textContent,
       transparent: true,
-      opacity: 1,
-      alphaTest: 0.5,
-      map: tex
+      blending: THREE.NormalBlending,
+      depthTest: true
     });
   }
 
