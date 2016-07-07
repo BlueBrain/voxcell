@@ -8,14 +8,14 @@ require.config({
   // shim is for lib that do not support AMD. let's manage the dependencies for them.
   shim: {
     // all trackballcontrols to listen to same event when multiple instances on the same page
-    'nbextensions/voxcellview/extern/OrbitControls':
+    'nbextensions/voxcellview/extern/TrackballControls':
     {deps: ['nbextensions/voxcellview/extern/three.min']},
     'nbextensions/voxcellview/extern/three.min': {exports: 'THREE'},
     'nbextensions/voxcellview/voxcellview/main':
       {exports: 'brainBuilderViewer',
        deps: ['nbextensions/voxcellview/extern/three.min',
               'nbextensions/voxcellview/extern/Detector',
-              'nbextensions/voxcellview/extern/OrbitControls',
+              'nbextensions/voxcellview/extern/TrackballControls',
               'nbextensions/voxcellview/extern/dat.gui.min',
               'nbextensions/voxcellview/voxcellview/utils',
               'nbextensions/voxcellview/extern/bigscreen.min']},

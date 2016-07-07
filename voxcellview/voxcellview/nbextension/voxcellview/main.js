@@ -210,9 +210,8 @@ var BigScreen = require('bigscreen');
                                                 NEAR, FAR);
       this.camera.position.z = 150;
 
-      this.controls = new THREE.OrbitControls(this.camera,
-                                              document,
-                                              this.renderer.domElement);
+      this.controls = new THREE.TrackballControls(this.camera,
+                                                  this.renderer.domElement);
       var controls = this.controls;
       controls.rotateSpeed = 1.0;
       controls.zoomSpeed = 1.2;
