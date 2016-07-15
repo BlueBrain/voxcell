@@ -79,7 +79,11 @@ var BigScreen = require('bigscreen');
     };
 
     this.particleSizeChange = function(amount) {
-      that.cloudMaterial.uniforms.size.value = amount;
+      if (that.cloudMaterial.uniforms !== undefined){
+        that.cloudMaterial.uniforms.size.value = amount;
+      } else {
+        that.cloudMaterial.size = amount;
+      }
       that.render();
     };
 
