@@ -6,9 +6,13 @@ var BigScreen = require('bigscreen');
   var DEFAULTPARTICLESIZE = 25;
   var NEAR = 0.1;
   var FAR = 50000;
-  brainBuilderViewer.Viewer = function(inputContainer, displayParameters) {
+  var HELPERSIZE = 120;
+  var AXISSIZE = 5;
+  var HELPERCAMERALENGTH = 10;
+  brainBuilderViewer.Viewer = function(inputContainer, helperContainer, displayParameters) {
 
     this.container = inputContainer;
+    this.helperContainer = helperContainer;
 
     // map of all objects loaded in the scene.
     this.loadedObjects = {};
@@ -18,12 +22,6 @@ var BigScreen = require('bigscreen');
     // since the children folder cannot be retrieved from the root object with datgui API.
     this.datguiSettings = {};
     this.displayParameters = displayParameters;
-
-    var scene = null;
-    var controls = null;
-    var renderer = null;
-    var camera = null;
-    var cloudMaterial = null;
 
     // privileged methods
     var that = this;
@@ -35,21 +33,39 @@ var BigScreen = require('bigscreen');
       that.scene.add(light);
       var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
       that.scene.add(directionalLight);
-      var axisHelper = new THREE.AxisHelper(5);
+      var axisHelper = new THREE.AxisHelper(AXISSIZE);
       that.scene.add(axisHelper);
       that.root = new THREE.Object3D();
       that.scene.add(that.root);
     };
 
     this.render = function() {
-      that.renderer.render(that.scene, that.camera);
+      if (that.renderer !== undefined){
+        that.renderer.render(that.scene, that.camera);
+      }
+      if (that.rendererHelper !== undefined){
+        that.rendererHelper.render(that.sceneHelper, that.cameraHelper);
+      }
     };
 
     this.animate = function() {
+      that.updateAxisHelper();
+
       if (that.controls){
         that.controls.update();
       }
+
       requestAnimationFrame(that.animate);
+      that.render();
+    };
+
+    this.updateAxisHelper = function() {
+      if (that.cameraHelper){
+        that.cameraHelper.position.copy(that.camera.position);
+        that.cameraHelper.position.sub(that.controls.target);
+        that.cameraHelper.position.setLength(HELPERCAMERALENGTH);
+        that.cameraHelper.lookAt(that.sceneHelper.position);
+      }
     };
 
     this.updateControls = function(center) {
@@ -143,6 +159,20 @@ var BigScreen = require('bigscreen');
       that.container.appendChild(fragmentShader[0]);
     };
 
+    this.initAxisHelper = function() {
+      that.sceneHelper = new THREE.Scene();
+      var axisSceneHelper = new THREE.AxisHelper(AXISSIZE);
+      that.sceneHelper.add(axisSceneHelper);
+      that.rendererHelper = new THREE.WebGLRenderer({alpha: true});
+      that.rendererHelper.setClearColor(0x000000, 0);
+      that.rendererHelper.setSize(HELPERSIZE, HELPERSIZE);
+      that.helperContainer.appendChild(that.rendererHelper.domElement);
+      that.cameraHelper = new THREE.PerspectiveCamera(30,
+                                                      1,
+                                                      NEAR, FAR);
+      that.cameraHelper.up = that.camera.up;
+      that.updateAxisHelper();
+    };
   };
 
   brainBuilderViewer.Viewer.constructor = brainBuilderViewer.Viewer;
@@ -202,7 +232,6 @@ var BigScreen = require('bigscreen');
 
       this.renderer.domElement.style.display = 'inline';
       this.container.appendChild(this.renderer.domElement);
-      this.animate();
 
       var height = this.container.clientHeight;
       var width = this.container.clientWidth;
@@ -226,9 +255,8 @@ var BigScreen = require('bigscreen');
       controls.dynamicDampingFactor = 0.3;
       controls.keys = [65, 83, 68];
       controls.addEventListener('change', this.render);
-
-      this.render();
-
+      this.initAxisHelper();
+      this.animate();
     },
 
     loadUrl: function(url, promise, shape, dtype) {
@@ -380,7 +408,7 @@ var BigScreen = require('bigscreen');
       this.cloudMaterial = buildSquareCloudMaterial(Math.exp(this.datguiSettings.size) - 1);
 
       return {
-        object: new THREE.PointCloud(geometry, this.cloudMaterial),
+        object: new THREE.Points(geometry, this.cloudMaterial),
         center: averagePoint.divideScalar(count)
       };
     };
@@ -425,7 +453,7 @@ var BigScreen = require('bigscreen');
     this.addSliceSettings();
 
     return {
-      object: new THREE.PointCloud(geometry, this.cloudMaterial),
+      object: new THREE.Points(geometry, this.cloudMaterial),
       center: averagePoint.divideScalar(count)
     };
   }

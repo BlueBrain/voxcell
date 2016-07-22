@@ -75,7 +75,12 @@ define(['nbextensions/widgets/widgets/js/widget',
 
              cellContainer.appendChild(container);
 
-             this.bb = new brainBuilderViewer.Viewer(container,
+             var helperContainer = document.createElement('div');
+             helperContainer.style.position = 'absolute';
+             helperContainer.style.bottom = '0px';
+             container.appendChild(helperContainer);
+
+             this.bb = new brainBuilderViewer.Viewer(container, helperContainer,
                                                      this.model.get('display_parameters'));
              this.bb.init();
 
