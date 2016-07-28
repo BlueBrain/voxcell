@@ -62,7 +62,7 @@ define(['nbextensions/widgets/widgets/js/widget',
              this.id = utils.uuid();
              // this sets the default heights for the notebook cell
              var cellContainer = this.$el.empty()[0];
-             cellContainer.style.width = '100%';
+             cellContainer.style.width = 'auto';
              cellContainer.style.height = '300px';
              cellContainer.style.display = 'block';
 
@@ -72,7 +72,6 @@ define(['nbextensions/widgets/widgets/js/widget',
              container.style.height = '100%';
              // this is required for children absolute position
              container.style.position = 'relative';
-
              cellContainer.appendChild(container);
 
              var helperContainer = document.createElement('div');

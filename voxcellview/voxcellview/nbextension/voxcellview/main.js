@@ -85,13 +85,21 @@ var BigScreen = require('bigscreen');
     };
 
     this.onResize = function(evt) {
-      var width = that.container.clientWidth;
-      var height = that.container.clientHeight;
+      // this forces the renderer to have the same size
+      // as the containing cell and container.clientWidth
+      // to be updated.
+      that.renderer.domElement.style.height = '100%';
+      that.renderer.domElement.style.width = '100%';
 
-      that.renderer.setSize(width, height);
-      that.camera.aspect = width / height;
-      that.camera.updateProjectionMatrix();
-      that.render();
+      _.debounce(function() {
+        var width = that.container.clientWidth;
+        var height = that.container.clientHeight;
+        that.renderer.setSize(width, height);
+        that.camera.aspect = width / height;
+        that.camera.updateProjectionMatrix();
+        that.render();
+      }, 250)();
+
     };
 
     this.particleSizeChange = function(amount) {
@@ -208,7 +216,7 @@ var BigScreen = require('bigscreen');
         settings._datgui.add(
                     {
                       fullscreen: function() {
-                        BigScreen.toggle(that.container);
+                        BigScreen.toggle(that.container, that.onResize, that.onResize);
                       }
                     },
                     'fullscreen'
@@ -220,8 +228,6 @@ var BigScreen = require('bigscreen');
       sizeGui.onChange(function(value) {
         that.particleSizeChange(Math.exp(value) - 1);
       });
-      //TODO: check if it is a window or a document one
-      window.addEventListener('resize', this.onResize, false);
     },
 
     onShow: function() {
@@ -230,7 +236,9 @@ var BigScreen = require('bigscreen');
       });
       this.renderer.setClearColor(this.scene.fog.color, 1);
 
-      this.renderer.domElement.style.display = 'inline';
+      this.renderer.domElement.style.display = 'block';
+      this.renderer.domElement.style.height = '100%';
+      this.renderer.domElement.style.width = '100%';
       this.container.appendChild(this.renderer.domElement);
 
       var height = this.container.clientHeight;
