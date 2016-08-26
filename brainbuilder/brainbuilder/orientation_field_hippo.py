@@ -86,23 +86,14 @@ def compute_main_axis_field(mask):
     return vf.join_vector_fields(left, right)
 
 
-def compute_depth_axis_field(annotation, hierarchy, first, last, region_mask):
-    '''return a vector field that represents the direction
-    of the depth axis (across layers) of the hippocampus'''
-
-    first_mask = build.mask_by_region_names(annotation.raw, hierarchy, first)
-    last_mask = build.mask_by_region_names(annotation.raw, hierarchy, last)
-
-    return vf.calculate_fields_by_distance_between(region_mask, first_mask, last_mask)
-
-
-def compute_orientation_field(annotation, hierarchy, region_name):
+def compute_orientation_field(annotation, region_ids, first_region_ids, last_region_ids):
     '''Computes the orientation field for the hippocampus
 
     Args:
         annotation: voxel data from Allen Brain Institute (can be crossrefrenced with hierarchy)
-        hierarchy: json from Allen Brain Institute
-        region_name: the exact name in the hierarchy that the field should be computed for
+        region_ids(list int): ids of voxels in the hippocampus
+        first_region_ids(list int): ids of voxels in the hippocampus on the 'top'
+        last_region_ids(list int): ids of voxels in the hippocampus on the 'bottom'
 
     Returns:
         A 5D numpy array of shape AxBxCx3x3 where AxBxC is the shape of annotation, the first
@@ -110,17 +101,14 @@ def compute_orientation_field(annotation, hierarchy, region_name):
         dimension of size 3 contains the three i,j,k components of each vector
 
     '''
-    subhierarchy = hierarchy.collect('name', region_name, 'id')
-    region_mask = build.mask_by_region_ids(annotation.raw, subhierarchy)
+    region_mask = build.mask_by_region_ids(annotation.raw, region_ids)
+    first_mask = build.mask_by_region_ids(annotation.raw, first_region_ids)
+    last_mask = build.mask_by_region_ids(annotation.raw, last_region_ids)
+
     fwd_field = compute_main_axis_field(region_mask)
 
-    first = [name for name in hierarchy.collect('name', region_name, 'name')
-             if 'stratum oriens' in name]
+    up_field = vf.calculate_fields_by_distance_between(region_mask, first_mask, last_mask)
 
-    last = [name for name in hierarchy.collect('name', region_name, 'name')
-            if 'stratum lacunosum-moleculare' in name]
-
-    up_field = compute_depth_axis_field(annotation, hierarchy, first, last, region_mask)
     # the value of sigma is hand-picked to soften the edge errors we get on the Allen atlas
     up_field = vf.normalize(vf.gaussian_filter(up_field, sigma=2.5))
 
