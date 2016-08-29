@@ -54,7 +54,10 @@ define(['nbextensions/widgets/widgets/js/widget',
          var register = {};
 
          var CircuitView = widget.WidgetView.extend({
-
+           remove: function() {
+             this.bb.onRemove();
+             widget.WidgetView.prototype.remove.apply(this, arguments);
+           },
            render: function() {
              // TODO: find a way to deactivate properly the save state callback.
 

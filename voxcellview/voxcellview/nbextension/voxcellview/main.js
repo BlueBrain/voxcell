@@ -267,6 +267,28 @@ var BigScreen = require('bigscreen');
       this.animate();
     },
 
+    onRemove: function() {
+      function removeElemChildren(elem){
+        while (elem.lastChild) {
+          elem.removeChild(elem.lastChild);
+        }
+      };
+
+      delete this.renderer ;
+      delete this.rendererHelper;
+      delete this.cameraHelper;
+      delete this.camera ;
+      delete this.controls ;
+      removeElemChildren(this.container);
+      delete this.container ;
+      removeElemChildren(this.helperContainer);
+      delete this.helperContainer;
+      delete this.sceneHelper;
+      delete this.scene ;
+      delete this.root ;
+
+    },
+
     loadUrl: function(url, promise, shape, dtype) {
       var that = this;
       function addToScene(url, o) {
@@ -450,7 +472,6 @@ var BigScreen = require('bigscreen');
       averagePoint.add(p);
     }
     console.log('loaded: ' + count + ' points');
-
     geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.addAttribute('customColor', new THREE.BufferAttribute(colors, 3));
     geometry.addAttribute('filter', new THREE.BufferAttribute(filter, 3));
