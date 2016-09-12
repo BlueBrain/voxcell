@@ -28,18 +28,30 @@ def get_cell_color(cells, attribute, input_color_map):
     input_color_map is a callable that returns a list of 3 elements corresponding
     to r,g,b value between 0 and 1.
     '''
-    # TODO: allow for transparency in color_map
+    def add_default_opacity(array):
+        if len(array) == 3:
+            array = np.append(array, 1.0)
+        return array
+
     if input_color_map:
-        return [np.array(input_color_map(t)[:3]) for t in cells.properties[attribute]]
+        ret = [add_default_opacity(input_color_map(t)) for t in cells.properties[attribute]]
+        return ret
 
     colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
     colormap = colormap[attribute]
 
+    def normalize_rgb(array):
+        array = array.astype(float)
+        array[:3] /= 255.0
+        ret =  add_default_opacity(array)
+        return ret
+
     if isinstance(colormap, dict):
-        return [np.array(colormap[t]) / 255.0 for t in cells.properties[attribute]]
+        return [normalize_rgb(np.array(colormap[t])) for t in cells.properties[attribute]]
     else:
         # color doesn't depend on the value of the attribute
-        return [colormap] * len(cells.positions)
+        constant_color = normalize_rgb(np.array(colormap))
+        return [constant_color] * len(cells.positions)
 
 
 def serialize_points(cells, attribute, color_map):

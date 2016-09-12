@@ -3,7 +3,7 @@ var brainBuilderViewer = brainBuilderViewer || {};
 // manage the dependency manually
 var BigScreen = require('bigscreen');
 (function() {
-  var DEFAULTPARTICLESIZE = 25;
+  var DEFAULTPARTICLESIZE = 10.0;
   var NEAR = 0.1;
   var FAR = 50000;
   var HELPERSIZE = 120;
@@ -39,9 +39,75 @@ var BigScreen = require('bigscreen');
       that.scene.add(that.root);
     };
 
+    this.sort_particles = function() {
+      // sort particles depending on their distance to the camera
+      // so that order guarantee proper rendering of the opacity.
+      var curFrame = 0;
+      var frameSkipCount = 10;
+      return function() {
+        if (!that.isSortNeeded){
+          return;
+        }
+        curFrame += 1;
+        if (curFrame < frameSkipCount){
+          return;
+        }
+        curFrame = 0;
+
+        var dist = [];
+        if (that.geometry.attributes.position === undefined ||
+            that.geometry.attributes.customColor === undefined ||
+            that.geometry.attributes.alpha === undefined){
+          return;
+        }
+        var position = that.geometry.attributes.position.array;
+        var colors = that.geometry.attributes.customColor.array;
+        var alpha = that.geometry.attributes.alpha.array;
+        var posId = 0;
+        var posId3 = 0;
+        var indices = [];
+        for (; posId3 < position.length; posId++, posId3 += 3){
+          dist[posId] = that.camera.position.distanceTo(new THREE.Vector3(position[posId3],
+                                                                          position[posId3 + 1],
+                                                                          position[posId3 + 2]));
+          indices.push(posId);
+        }
+
+        indices = indices.sort(function(a, b) {
+          return dist[b] - dist[a];
+        });
+
+        var newPosition = new Float32Array(position.length);
+        var newColors = new Float32Array(colors.length);
+        var newAlpha = new Float32Array(alpha.length);
+        posId = 0;
+        posId3 = 0;
+        for (; posId3 < position.length; posId++, posId3 += 3){
+          var newPosId = indices[posId];
+          var newPosId3 = newPosId * 3;
+          newPosition[posId3] = position[newPosId3];
+          newPosition[posId3 + 1] = position[newPosId3 + 1];
+          newPosition[posId3 + 2] = position[newPosId3 + 2];
+
+          newColors[posId3] = colors[newPosId3];
+          newColors[posId3 + 1] = colors[newPosId3 + 1];
+          newColors[posId3 + 2] = colors[newPosId3 + 2];
+
+          newAlpha[posId] = alpha[newPosId];
+        }
+        that.geometry.attributes.position.array = newPosition;
+        that.geometry.attributes.customColor.array = newColors;
+        that.geometry.attributes.alpha.array = newAlpha;
+
+        that.geometry.attributes.position.needsUpdate = true;
+        that.geometry.attributes.customColor.needsUpdate = true;
+        that.geometry.attributes.alpha.needsUpdate = true;
+      };
+    }();
     this.render = function() {
       if (that.renderer !== undefined){
         that.renderer.render(that.scene, that.camera);
+        that.sort_particles();
       }
       if (that.rendererHelper !== undefined){
         that.rendererHelper.render(that.sceneHelper, that.cameraHelper);
@@ -140,10 +206,13 @@ var BigScreen = require('bigscreen');
                attribute vec3 customColor;\
                varying vec3 vColor;\
                varying float vDiscard;\
+               attribute float alpha;\
+               varying float vAlpha;\
                void main() {\
                  vColor = customColor;\
+                 vAlpha = alpha ;\
                  vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\
-                 gl_PointSize = size * ( 300.0 / length( mvPosition.xyz ) );\
+                 gl_PointSize = size/5.0 ;\
                  gl_Position = projectionMatrix * mvPosition;\
                  if (position[0] < threshold[0] || \
                      position[1] < threshold[1] || \
@@ -152,17 +221,26 @@ var BigScreen = require('bigscreen');
                  else {vDiscard=0.0;}\
                }\
                </script>');
+
       var fragmentShader = $('<script type=\'x-shader/x-fragment\' id=\'fragmentshader\'>\
                uniform vec3 color;\
                uniform sampler2D texture;\
                varying vec3 vColor;\
                varying float vDiscard;\
-               void main() {\
-                 gl_FragColor = vec4(color * vColor, 1.0);\
-                 gl_FragColor = gl_FragColor * texture2D(texture, gl_PointCoord);\
-                 if (gl_FragColor.w < 0.5 || vDiscard != 0.0){discard;}\
+               varying float vAlpha;\
+               void main() {\n\
+                 vec2 diff = (gl_PointCoord - vec2(0.5));\
+                 vec2 diff2 = diff * diff;\
+                 if( diff2.x + diff2.y > 1.0 )\
+                    {discard;}\
+                 vec4 Ct = texture2D(texture, gl_PointCoord);\
+                 vec4 Cp = vec4(vColor * color, vAlpha);\
+                 vec3 c = Cp.rgb * Ct.rgb ;\
+                 gl_FragColor = vec4(c, vAlpha);\
+                 if (gl_FragColor.a < 0.05 || vDiscard != 0.0){discard;}\
                 }\
               </script>');
+
       that.container.appendChild(vertexShader[0]);
       that.container.appendChild(fragmentShader[0]);
     };
@@ -446,7 +524,7 @@ var BigScreen = require('bigscreen');
 
   function buildPointCloud(inputData) {
     var data = new Float32Array(inputData);
-    var rowLength = 2 * 3; // point and color (3 components each)
+    var rowLength = 2 * 3 + 1; // point and color (3 components each) + opacity
     var count = data.length / rowLength;
     var averagePoint = new THREE.Vector3(0, 0, 0);
 
@@ -454,6 +532,7 @@ var BigScreen = require('bigscreen');
     var positions = new Float32Array(count * 3);
     var colors = new Float32Array(count * 3);
     var filter = new Int32Array(3);
+    var alpha = new Float32Array(count);
     for (var i = 0, i3 = 0; i < count; i ++, i3 += 3){
       var offset = i * rowLength;
       var x = data[offset];
@@ -468,6 +547,7 @@ var BigScreen = require('bigscreen');
       colors[i3 + 0] = data[offset];
       colors[i3 + 1] = data[offset + 1];
       colors[i3 + 2] = data[offset + 2];
+      alpha[i] = data[offset + 3];
       var p = new THREE.Vector3(x, y, z);
       averagePoint.add(p);
     }
@@ -475,7 +555,12 @@ var BigScreen = require('bigscreen');
     geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.addAttribute('customColor', new THREE.BufferAttribute(colors, 3));
     geometry.addAttribute('filter', new THREE.BufferAttribute(filter, 3));
+    geometry.addAttribute('alpha', new THREE.BufferAttribute(alpha, 1));
     geometry.computeBoundingBox();
+
+    var min_alpha = _.min(alpha);
+    // sort is not enable if everything is not transparent.
+    this.isSortNeeded = min_alpha < 0.99;
 
     this.cloudMaterial = buildShaderCloudMaterial(Math.exp(this.datguiSettings.size) - 1);
     this.geometry = geometry;
