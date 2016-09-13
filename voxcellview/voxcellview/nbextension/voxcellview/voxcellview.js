@@ -2,7 +2,8 @@ require.config({
   map: {
     '*': {
       'brainbuilderviewer': 'nbextensions/voxcellview/voxcellview/main',
-      'bigscreen': 'nbextensions/voxcellview/extern/bigscreen.min'
+      'bigscreen': 'nbextensions/voxcellview/extern/bigscreen.min',
+      'jupyter-js-widgets': 'nbextensions/jupyter-js-widgets/extension'
     }
   },
   // shim is for lib that do not support AMD. let's manage the dependencies for them.
@@ -23,14 +24,13 @@ require.config({
   }
 });
 
-define(['nbextensions/widgets/widgets/js/widget',
-        'nbextensions/widgets/widgets/js/manager',
+define(['jupyter-js-widgets',
         'base/js/utils',
         // TODO see if we can move to lodash
         'underscore',
         'brainbuilderviewer'
        ],
-       function(widget, manager, utils, _, brainBuilderViewer) {
+       function(widget, utils, _, brainBuilderViewer) {
 
          function loadVoxcellAsBytes(name, b64, shape, dtype, bb){
            // TODO get rid of encoding.
