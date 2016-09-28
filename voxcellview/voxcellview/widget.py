@@ -1,28 +1,29 @@
 ''' a ipython notebook extension to display voxcell data '''
 import base64
 import numpy as np
-from ipywidgets import Widget # pylint: disable=F0401
+import ipywidgets as widgets
 from traitlets import (Unicode, Int, List, Dict) # pylint: disable=F0401
 from IPython.display import display # pylint: disable=F0401
 from voxcellview import viewer # pylint: disable=F0401
 from voxcell import core
 
-
-class VoxcellWidget(Widget): # pylint: disable=R0901
+# TODO: what is that for?
+@widgets.register('voxcellview.Viewer')
+class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
     ''' display voxcell data '''
-    _view_module = Unicode('nbextensions/voxcellview/voxcellview/voxcellview', sync=True)
-    _view_name = Unicode('CircuitView', sync=True)
-    _model_module = Unicode('nbextensions/voxcellview/voxcellview/voxcellview', sync=True)
-    _model_name = Unicode('CircuitModel', sync=True)
+    _view_module = Unicode('voxcellview').tag(sync=True)
+    _view_name = Unicode('CircuitView').tag(sync=True)
+    _model_module = Unicode('voxcellview').tag(sync=True)
+    _model_name = Unicode('CircuitModel').tag(sync=True)
 
     # TODO: investigate why bytes are not passed properly.
-    #bytes_data = Bytes(b'', sync=True)
-    bytes_data = Unicode('', sync=True)
-    shape = List(Int, sync=True)
-    name = Unicode('', sync=True)
-    dtype = Unicode('', sync=True)
+    #bytes_data = Bytes(b'').tag(sync=True)
+    bytes_data = Unicode('').tag(sync=True)
+    shape = List(Int).tag(sync=True)
+    name = Unicode('').tag(sync=True)
+    dtype = Unicode('').tag(sync=True)
 
-    display_parameters = Dict({}, sync=True)
+    display_parameters = Dict({}).tag(sync=True)
 
     def _show(self, block, display_parameters=None):
         ''' show numpy binary data'''

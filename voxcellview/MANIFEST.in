@@ -1,3 +1,2 @@
-include requirements.txt
-recursive-include voxcellview/nbextension *
-recursive-include voxcellview/data *
+recursive-include voxcellview/static *.*
+recursive-include voxcellview/data *.*

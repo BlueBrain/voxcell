@@ -1,6 +1,0 @@
-{
-	"preset": "google",
-	"requireSpaceBeforeBlockStatements": null,
-	"disallowMultipleVarDecl": null,
-	"maximumLineLength": 100
-}

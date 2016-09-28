@@ -1,7 +1,13 @@
 'use strict';
 var brainBuilderViewer = brainBuilderViewer || {};
-// manage the dependency manually
-var BigScreen = require('bigscreen');
+var Detector = require('../extern/Detector.js');
+var THREE = require('../extern/three.min.js');
+// dat does not export its variable
+var dat = require('exports?dat!../extern/dat.gui.min.js');
+var BigScreen = require('../extern/bigscreen.min.js');
+// trackball requires THREE to be defined beforehand
+require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
+
 (function() {
   var DEFAULTPARTICLESIZE = 10.0;
   var NEAR = 0.1;
@@ -664,3 +670,7 @@ var BigScreen = require('bigscreen');
   }
 
 }());
+
+module.exports = {
+  'brainBuilderViewer': brainBuilderViewer
+};
