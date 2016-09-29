@@ -2,13 +2,7 @@ var widget = require('jupyter-js-widgets');
 var brainBuilderViewer = require('./brainBuilderViewer.js').brainBuilderViewer;
 var _ = require('underscore');
 
-function loadVoxcellAsBytes(name, b64, shape, dtype, bb){
-  // TODO get rid of encoding.
-  var bString = atob(b64);
-  var bytes = new Uint8Array(bString.length);
-  for (var i = 0; i < bString.length; i++){
-    bytes[i] = bString.charCodeAt(i);
-  }
+function loadVoxcellAsBytes(name, bytes, shape, dtype, bb){
   var reader = new FileReader();
   var promise = new Promise(function(resolve, reject) {
 

@@ -1,8 +1,7 @@
 ''' a ipython notebook extension to display voxcell data '''
-import base64
 import numpy as np
 import ipywidgets as widgets
-from traitlets import (Unicode, Int, List, Dict) # pylint: disable=F0401
+from traitlets import (Unicode, Int, List, Dict, Bytes) # pylint: disable=F0401
 from IPython.display import display # pylint: disable=F0401
 from voxcellview import viewer # pylint: disable=F0401
 from voxcell import core
@@ -16,9 +15,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
     _model_module = Unicode('voxcellview').tag(sync=True)
     _model_name = Unicode('CircuitModel').tag(sync=True)
 
-    # TODO: investigate why bytes are not passed properly.
-    #bytes_data = Bytes(b'').tag(sync=True)
-    bytes_data = Unicode('').tag(sync=True)
+    bytes_data = Bytes(b'').tag(sync=True)
     shape = List(Int).tag(sync=True)
     name = Unicode('').tag(sync=True)
     dtype = Unicode('').tag(sync=True)
@@ -27,7 +24,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
 
     def _show(self, block, display_parameters=None):
         ''' show numpy binary data'''
-        self.bytes_data = base64.b64encode(block.tobytes())
+        self.bytes_data = block.tobytes()
         if display_parameters is None:
             display_parameters = {}
         self.display_parameters = display_parameters
