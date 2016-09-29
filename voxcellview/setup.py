@@ -18,10 +18,33 @@ npm_path = os.pathsep.join([
                 os.environ.get('PATH', os.defpath),
 ])
 
+import pip
+from pip.req import parse_requirements
+from optparse import Option
+options = Option('--workaround')
+options.skip_requirements_regex = None
+REQ_FILE = './requirements.txt'
+# Hack for old pip versions: Versions greater than 1.x
+# have a required parameter "sessions" in parse_requierements
+if pip.__version__.startswith('1.'):
+    install_reqs = parse_requirements(REQ_FILE, options=options)
+else:
+    from pip.download import PipSession  # pylint:disable=E0611
+    options.isolated_mode = False
+    install_reqs = parse_requirements(REQ_FILE,  # pylint:disable=E1123
+                                      options=options,
+                                      session=PipSession)
+
+REQS = [str(ir.req) for ir in install_reqs]
+
+
+
+
 from distutils import log
 log.set_verbosity(log.DEBUG)
 log.info('setup.py entered')
 log.info('$PATH=%s' % os.environ['PATH'])
+
 
 LONG_DESCRIPTION = 'viewers for voxcell the brain building framework'
 
@@ -125,10 +148,7 @@ setup_args = {
             'voxcellview/static/index.js'
         ]),
     ],
-    'install_requires': [
-        'ipywidgets>=5.1.5',
-        'voxcell==1.0.1.dev0'
-    ],
+    'install_requires': REQS,
     'packages': find_packages(),
     'zip_safe': False,
     'cmdclass': {
