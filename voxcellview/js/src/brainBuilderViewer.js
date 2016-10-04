@@ -7,6 +7,7 @@ var dat = require('exports?dat!../extern/dat.gui.min.js');
 var BigScreen = require('../extern/bigscreen.min.js');
 // trackball requires THREE to be defined beforehand
 require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
+var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
 
 (function() {
   var DEFAULTPARTICLESIZE = 10.0;
@@ -28,6 +29,10 @@ require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
     // since the children folder cannot be retrieved from the root object with datgui API.
     this.datguiSettings = {};
     this.displayParameters = displayParameters;
+
+    // used for morphologies
+    this.averagePoint = new THREE.Vector3(0, 0, 0);
+    this.morphologyCount = 0;
 
     // privileged methods
     var that = this;
@@ -372,8 +377,77 @@ require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
       delete this.root ;
 
     },
+    addMorph: function(msg) {
+      function decodeb64(b64){
+        var bin = atob(b64);
+        var bytes = new Uint8Array(bin.length);
+        for (var i = 0; i < bin.length; i++){
+          bytes[i] = bin.charCodeAt(i);
+        }
+        var reader = new FileReader();
+        var promise = new Promise(function(resolve, reject) {
 
-    loadUrl: function(url, promise, shape, dtype) {
+          reader.onloadend = function() {
+            resolve(reader.result);
+          };
+        });
+        reader.readAsArrayBuffer(new Blob([bytes]));
+        return promise;
+      }
+      function convertArrayToM4(m3){
+        var M4 = new THREE.Matrix4();
+        M4.set(m3[0], m3[1], m3[2], 0,
+               m3[3], m3[4], m3[5], 0,
+               m3[6], m3[7], m3[8], 0,
+               0, 0, 0, 1);
+        return M4;
+      }
+      var that = this;
+
+      var orientation, position, morph_data;
+      morph_data = msg.data;
+      var proceed = Promise.all([
+        decodeb64(msg.orientation).then(function(data) {
+          var m3 = new Float32Array(data);
+          orientation = convertArrayToM4(m3);
+        }),
+        decodeb64(msg.position).then(function(data) {
+          var array = new Float32Array(data);
+          position = new THREE.Vector3(array[0],
+                                       array[1],
+                                       array[2]);
+        })
+      ]).then(
+        function() {
+          var placeMeshes = (function() {
+            return function(meshes) {
+              meshes.forEach(function(mesh) {
+                mesh.applyMatrix(orientation);
+                mesh.position.copy(position);
+                that.scene.add(mesh);
+              });
+              that.averagePoint.add(position);
+              that.morphologyCount += 1;
+              var center = new THREE.Vector3();
+              center.copy(that.averagePoint);
+              center.divideScalar(that.morphologyCount);
+              that.updateControls(center);
+              that.render();
+            };
+          })();
+
+          var meshes = morphologyBuilder.displayOnScene(
+            that.scene,
+            morph_data,
+            // the 3 callback below are irrelevant in that context
+            function() {},
+            function() {},
+            function() {},
+            placeMeshes);
+        }
+      );
+    },
+    loadUrl: function(url, promise, shape, dtype, morph_data) {
       var that = this;
       function addToScene(url, o) {
         function addOpacitySetting(url){
@@ -420,9 +494,6 @@ require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
         promise
             .then(buildVectorField.bind(this))
             .then(addToScene.bind(null, url));
-      } else if (url.endsWith('.placement')) {
-        //TODO  implement it.
-        //new placementViewer.PlacementViewer(scene, render, updateControls).loadPlacement(url);
       } else {
         console.warn('unknown extension: ' + url);
       }

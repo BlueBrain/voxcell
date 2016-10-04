@@ -129,17 +129,22 @@ def serialize_vector_field(field, point_count, voxel_dimensions):
     return block
 
 
-def export_positions_vectors(filename, cells, attribute):
+def export_positions_vectors(filename, cells, attribute, color_map=None):
     ''' export position along with vectors to a binary file of float 32'''
+    block = serialize_positions_vectors(cells, attribute, color_map)
+    block.tofile(filename)
+
+
+def serialize_positions_vectors(cells, attribute, color_map=None):
+    ''' serialize a position, orientation, color for all cells '''
     vectors = cells.orientations.reshape((cells.orientations.shape[0],
                                           np.prod(cells.orientations.shape[1:])))
 
-    colors = get_cell_color(cells, attribute)
+    colors = get_cell_color(cells, attribute, color_map)
 
     reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=-1),
                          (cells.positions, vectors, colors))
-
-    reduced_all.astype(np.float32).tofile(filename)
+    return reduced_all.astype(np.float32)
 
 
 def export_strings(filename, all_strings):

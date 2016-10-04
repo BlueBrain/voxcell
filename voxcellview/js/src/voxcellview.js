@@ -55,12 +55,16 @@ var CircuitView = widget.WidgetView.extend({
                          model.get('dtype'),
                          that.bb);
     });
-
-    loadVoxcellAsBytes(this.model.get('name'),
-                       this.model.get('bytes_data'),
-                       this.model.get('shape'),
-                       this.model.get('dtype'),
-                       this.bb);
+    if (this.model.get('bytes_data')){
+      loadVoxcellAsBytes(this.model.get('name'),
+                         this.model.get('bytes_data'),
+                         this.model.get('shape'),
+                         this.model.get('dtype'),
+                         this.bb);
+    }
+    this.model.on('msg:custom', function(msg) {
+      this.bb.addMorph(msg);
+    }, this);
   },
   show: function() {
     // certain actions can be performed only if the DOM node has been added to the document
