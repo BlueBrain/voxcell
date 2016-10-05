@@ -1,2 +1,3 @@
 recursive-include voxcellview/static *.*
 recursive-include voxcellview/data *.*
+include requirements.txt
