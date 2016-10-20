@@ -7,7 +7,7 @@ COVER_PACKAGES=voxcell,voxcellview,brainbuilder
 IGNORE_LINT=voxcellview|notebooks
 # documentation to build, separated by spaces
 DOC_MODULES=voxcell/doc brainbuilder/doc
-
+PYTHON_PIP_VERSION=pip==8.1.1
 ##### DO NOT MODIFY BELOW #####################
 
 ifndef CI_DIR
