@@ -11,7 +11,7 @@ import h5py
 import numpy as np
 import pandas as pd
 import nrrd
-from voxcell import math
+from voxcell import math, VoxcellError
 
 L = logging.getLogger(__name__)
 
@@ -63,13 +63,9 @@ class VoxelData(object):
     def load_nrrd(cls, nrrd_path):
         ''' read volumetric data from a nrrd file '''
         raw, option = nrrd.read(nrrd_path)
-
-        if 'spacings' in option:
-            spacings = np.array([float(v) for v in option['spacings']])
-        else:
-            #TODO assert when new data will be delivered by NeuroInf.
-            L.warning("spacings not defined in nrrd")
-            spacings = np.array([25, 25, 25])
+        if 'spacings' not in option:
+            raise VoxcellError("spacings not defined in nrrd")
+        spacings = np.array(option['spacings'], dtype=np.float32)
         return cls(raw, spacings)
 
     def save_metaio(self, mhd_path, raw_filename=None):

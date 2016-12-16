@@ -3,8 +3,8 @@ import tempfile
 from nose.tools import eq_, ok_
 
 import numpy as np
-from numpy.testing import assert_equal
-from voxcell import core
+from numpy.testing import assert_equal, assert_almost_equal, assert_raises
+from voxcell import core, VoxcellError
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -130,8 +130,12 @@ def test_load_nrrd():
     ''' test loading a test nrrd file and check basic attributes '''
     got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
     eq_(got.raw.shape, (528, 320, 456))
-    ok_(np.allclose(got.voxel_dimensions, [25, 25, 25]))
+    assert_almost_equal(got.voxel_dimensions, [42, 43, 44])
     assert_equal(got.offset, np.array([0, 0, 0]))
+
+def test_load_nrrd_fail():
+    ''' test loading a test nrrd file without 'spacings' attribute '''
+    assert_raises(VoxcellError, core.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'test_fail.nrrd'))
 
 def test_save_nrrd():
     ''' test saving a test nrrd file and check basic attributes '''
