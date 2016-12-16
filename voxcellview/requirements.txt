@@ -1,5 +1,5 @@
 ipywidgets>=5.1.5
-voxcell==1.0.1.dev2
+voxcell==1.0.1.dev3
 neurom==1.0.0
 tqdm==4.8.4
 functools32==3.2.3.post2
