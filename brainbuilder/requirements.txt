@@ -1,2 +1,2 @@
-voxcell==1.0.1.dev3
+voxcell==1.0.1
 argparse==1.2.1
