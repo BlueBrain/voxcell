@@ -126,6 +126,16 @@ def test_clip_volume():
     eq_(r.raw[0, 0], 1)
 
 
+def test_lookup():
+    raw = np.array([[11, 12], [21, 22]])
+    v = core.VoxelData(raw, (2, 3), offset=np.array([2, 2]))
+    assert_equal(v.lookup([[2, 3]]), [11])
+    assert_equal(v.lookup([[2, 10], [1, 5]], outer_value=42), [42, 42])
+    assert_equal(v.lookup([[2, 10], [1, 5], [4, 5]], outer_value=42), [42, 42, 22])
+    assert_raises(VoxcellError, v.lookup, [[1, 5]])
+    assert_raises(VoxcellError, v.lookup, [[2, 10]])
+
+
 def test_load_nrrd():
     ''' test loading a test nrrd file and check basic attributes '''
     got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))

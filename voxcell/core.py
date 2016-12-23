@@ -19,6 +19,8 @@ L = logging.getLogger(__name__)
 class VoxelData(object):
     '''wrap volumetric data and some basic metadata'''
 
+    OUT_OF_BOUNDS = -1
+
     def __init__(self, raw, voxel_dimensions, offset=None):
         '''
         Note that he units for the metadata will depend on the atlas being used.
@@ -96,23 +98,40 @@ class VoxelData(object):
                    }
         nrrd.write(nrrd_path, self.raw, options=options)
 
-    def lookup(self, positions):
+    def lookup(self, positions, outer_value=None):
         '''find the values in raw corresponding to the given positions
 
         Args:
-            positions: list of positions (x, y, z). Expected in atlas-space.
+            positions: list of positions (x, y, z).
 
         Returns:
-            Numpy array with the values of the voxels corresponding to each position
+            Numpy array with the values of the voxels corresponding to each position.
+            For positions outside of the atlas space `outer_value` is used if specified
+            (otherwise a VoxcellError would be raised).
         '''
-        positions = positions - self.offset
-        voxel_idx = self.positions_to_indices(positions)
+        voxel_idx = self.positions_to_indices(positions, outer_value is None)
+        outer_mask = np.any(voxel_idx == VoxelData.OUT_OF_BOUNDS, axis=-1)
+        if np.any(outer_mask):
+            result = np.full(voxel_idx.shape[:-1], outer_value)
+            inner_mask = np.logical_not(outer_mask)
+            result[inner_mask] = self._lookup_by_indices(voxel_idx[inner_mask])
+        else:
+            result = self._lookup_by_indices(voxel_idx)
+        return result
+
+    def _lookup_by_indices(self, voxel_idx):
+        '''values for the given voxels'''
         voxel_idx_tuple = tuple(voxel_idx.transpose())
         return self.raw[voxel_idx_tuple]
 
-    def positions_to_indices(self, positions):
+    def positions_to_indices(self, positions, strict=True):
         '''take positions, and figure out to which voxel they belong'''
-        return np.floor(positions / self.voxel_dimensions).astype(np.int)
+        result = np.floor((positions - self.offset) / self.voxel_dimensions).astype(np.int)
+        result[result < 0] = VoxelData.OUT_OF_BOUNDS
+        result[result >= self.raw.shape] = VoxelData.OUT_OF_BOUNDS
+        if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
+            raise VoxcellError("Out of bounds position")
+        return result
 
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
