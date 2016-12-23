@@ -183,7 +183,6 @@ def density_from_positions(positions, voxel_dimensions, dtype=np.uint8):
         voxels = core.VoxelData(np.zeros(dimensions, dtype=dtype),
                                 voxel_dimensions, offset=aabb_min)
 
-        positions = positions - aabb_min
         voxel_indices = voxels.positions_to_indices(positions)
 
         for x, y, z in voxel_indices:
