@@ -289,7 +289,7 @@ def test_drop_duplicate_columns_1():
 def test_drop_duplicates():
 
     sd = SpatialDistribution(
-        field=core.VoxelData(np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]), None),
+        field=core.VoxelData(np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]), (1,)),
         distributions=pd.DataFrame([[0.4, 0.2, 0.2, 0.4, 0.2],
                                     [0.6, 0.8, 0.8, 0.6, 0.8]]),
         traits=pd.DataFrame({'size': ['Large', 'Small'], 'speed': ['Fast', 'Slow']}))
@@ -306,7 +306,7 @@ def test_drop_duplicates():
 def test_get_probability_field():
 
     sd = SpatialDistribution(
-        field=core.VoxelData(np.array([0, 0, -1, 1, 1]), ()),
+        field=core.VoxelData(np.array([0, 0, -1, 1, 1]), (1,)),
         distributions=pd.DataFrame([[0.4, 0.2],
                                     [0.6, 0.8]]),
         traits=pd.DataFrame({'size': ['Large', 'Small']}))
@@ -318,7 +318,7 @@ def test_get_probability_field():
 def test_from_probability_field():
 
     sd = SpatialDistribution.from_probability_field(
-        core.VoxelData(np.array([0.4, 0.4, -1, 0.2, 0.2]), ()),
+        core.VoxelData(np.array([0.4, 0.4, -1, 0.2, 0.2]), (1,)),
         'size', 'Large', 'Small'
     )
 

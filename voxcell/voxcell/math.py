@@ -172,3 +172,8 @@ def clip(mask, aabb):
     '''
     idx = [slice(s, e + 1) for s, e in zip(*aabb)]
     return mask[idx].copy()
+
+
+def is_diagonal(matrix):
+    """ Check if the matrix is diagonal. """
+    return np.all(matrix == np.diag(matrix.diagonal()))

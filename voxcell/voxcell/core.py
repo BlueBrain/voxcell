@@ -14,6 +14,12 @@ from voxcell import math, VoxcellError
 L = logging.getLogger(__name__)
 
 
+def require_shape(a, shape):
+    """ Raise VoxcellError if `a.shape` mismatches `shape`. """
+    if a.shape != shape:
+        raise VoxcellError("Shape mismatch: expected {0}, actual {1}".format(shape, a.shape))
+
+
 class VoxelData(object):
     '''wrap volumetric data and some basic metadata'''
 
@@ -28,7 +34,19 @@ class VoxelData(object):
             voxel_dimensions(tuple of numbers): size of each voxel in space.
             offset(tuple of numbers): offset from an external atlas origin
         '''
-        self.offset = offset if offset is not None else np.zeros(len(raw.shape))
+        n_dim = len(raw.shape)
+
+        if offset is None:
+            offset = np.zeros(n_dim)
+        else:
+            offset = np.array(offset, dtype=np.float32)
+
+        voxel_dimensions = np.array(voxel_dimensions, dtype=np.float32)
+
+        require_shape(offset, (n_dim,))
+        require_shape(voxel_dimensions, (n_dim,))
+
+        self.offset = offset
         self.voxel_dimensions = voxel_dimensions
         self.raw = raw
 
@@ -36,10 +54,22 @@ class VoxelData(object):
     def load_nrrd(cls, nrrd_path):
         ''' read volumetric data from a nrrd file '''
         raw, option = nrrd.read(nrrd_path)
-        if 'spacings' not in option:
+
+        if 'space directions' in option:
+            directions = np.array(option['space directions'], dtype=np.float32)
+            if not math.is_diagonal(directions):
+                raise NotImplementedError("Only diagonal space directions supported at the moment")
+            spacings = 1.0 / directions.diagonal()
+        elif 'spacings' in option:
+            spacings = np.array(option['spacings'], dtype=np.float32)
+        else:
             raise VoxcellError("spacings not defined in nrrd")
-        spacings = np.array(option['spacings'], dtype=np.float32)
-        return cls(raw, spacings)
+
+        offset = None
+        if 'space origin' in option:
+            offset = tuple(option['space origin'])
+
+        return cls(raw, spacings, offset)
 
     def save_nrrd(self, nrrd_path):
         '''save a VoxelData to an nrrd file
@@ -81,7 +111,8 @@ class VoxelData(object):
 
     def positions_to_indices(self, positions, strict=True):
         '''take positions, and figure out to which voxel they belong'''
-        result = np.floor((positions - self.offset) / self.voxel_dimensions).astype(np.int)
+        result = np.round((positions - self.offset) / self.voxel_dimensions, 3)
+        result = np.floor(result).astype(np.int)
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
         result[result >= self.raw.shape] = VoxelData.OUT_OF_BOUNDS
         if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
