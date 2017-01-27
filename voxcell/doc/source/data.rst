@@ -8,13 +8,13 @@ The central container class in voxcell. Uses a 3-rank numpy array to represent a
 in space and some metadata to identify the volume covered by the data relative to a global atlas.
 The meaning of the value contained by each voxel will change depending on the usage.
 
-Voxcell supports loading and saving MetaIO_ files as support for basic voxel data:
+Voxcell supports loading and saving NRRD_ files as support for basic voxel data:
 
 .. code-block:: python
 
     from voxcell.core import VoxelData
-    density = VoxelData.load_metaio('/path/to/file.mhd')
-    density.save_metaio('/path/to/file.mhd')
+    density = VoxelData.load_nrrd('/path/to/file.nrrd')
+    density.save_nrrd('/path/to/file.nrrd')
 
 
 VoxelData objects are also used to hold vector fields (each voxel contains a 3-D vector)
@@ -61,7 +61,6 @@ Voxcell supports loading JSON_ files as support for hierarchy data:
 
     from voxcell.core import Hierarchy
     hierarchy = Hierarchy.load('/path/to/file.json')
-    hierarchy.save_metaio('/path/to/file.mhd')
 
 Example
 ~~~~~~~
@@ -89,7 +88,7 @@ Voxcell supports saving cell collections as :doc:`mvd3` files:
     cells.save('/path/to/file.h5')
 
 
-.. _MetaIO: http://www.itk.org/Wiki/MetaIO/Documentation
+.. _NRRD: http://teem.sourceforge.net/nrrd/format.html
 .. _JSON: http://www.json.org
 .. _AIBS: http://alleninstitute.org/
 .. _`MouseBrain API`: http://help.brain-map.org//display/mousebrain/API

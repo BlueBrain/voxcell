@@ -2,15 +2,13 @@
 
 import itertools
 import json
-import os
-from collections import OrderedDict
-from os.path import join as joinp
 import logging
 
 import h5py
 import numpy as np
 import pandas as pd
 import nrrd
+
 from voxcell import math, VoxcellError
 
 L = logging.getLogger(__name__)
@@ -35,33 +33,6 @@ class VoxelData(object):
         self.raw = raw
 
     @classmethod
-    def load_metaio(cls, mhd_path, raw_path=None):
-        '''create a VoxelData object from a MetaIO file
-
-        Args:
-            mhd_path(string): path to mhd file
-            raw_path(string): path to raw file, if None, .mhd file is read
-                and ElementDataFile is used instead
-
-        Returns:
-            VoxelData object
-        '''
-        if not mhd_path.endswith('.mhd'):
-            L.warning('mhd_path does not end in .mhd')
-
-        mhd = read_mhd(mhd_path)
-
-        if raw_path is None:
-            dirname = os.path.dirname(mhd_path)
-            raw_path = joinp(dirname, mhd['ElementDataFile'])
-
-        if not raw_path.endswith('.raw'):
-            L.warning('data_path does not end in .raw')
-
-        raw = load_raw(mhd['ElementType'], mhd['DimSize'], raw_path)
-        return cls(raw, mhd['ElementSpacing'])
-
-    @classmethod
     def load_nrrd(cls, nrrd_path):
         ''' read volumetric data from a nrrd file '''
         raw, option = nrrd.read(nrrd_path)
@@ -69,22 +40,6 @@ class VoxelData(object):
             raise VoxcellError("spacings not defined in nrrd")
         spacings = np.array(option['spacings'], dtype=np.float32)
         return cls(raw, spacings)
-
-    def save_metaio(self, mhd_path, raw_filename=None):
-        '''save a VoxelData header file and its accompanying data file
-
-        Args:
-            mhd_path(string): full path to mhd file
-            raw_filename(string): name of raw file relative to mhd file.
-                If not provided, defaults to the same as mhd_path but with the extension
-                of the file extension changed to .raw
-        '''
-        if raw_filename is None:
-            raw_filename = os.path.basename(os.path.splitext(mhd_path)[0] + '.raw')
-
-        mhd = get_mhd_info(self.raw, raw_filename, self.voxel_dimensions, self.offset)
-        save_mhd(mhd_path, mhd)
-        self.raw.transpose().tofile(joinp(os.path.dirname(mhd_path), mhd['ElementDataFile']))
 
     def save_nrrd(self, nrrd_path):
         '''save a VoxelData to an nrrd file
@@ -300,105 +255,3 @@ class CellCollection(object):
                         cells.properties[name] = data
 
         return cells
-
-
-def read_mhd(path):
-    '''read a VoxelData header file'''
-    with open(path) as mhd:
-        data = OrderedDict((k.strip(), v.strip())
-                           for k, v in (line.split('=')
-                                        for line in mhd.readlines() if line.strip()))
-
-    # types come from: http://www.itk.org/Wiki/ITK/MetaIO/Documentation
-    numerical_keys = {
-        # MetaObject Tags
-        'NDims': int,
-        # Tags Added by MetaImage
-        'DimSize': int,
-        # Associated transformations
-        'CenterOfRotation': float,
-        'ElementSpacing': float,
-        'Offset': float,
-        'TransformMatrix': float,
-    }
-
-    for k, _type in numerical_keys.iteritems():
-        if k in data and data[k] != '???':
-            data[k] = tuple(_type(v) for v in data[k].split())
-            data[k] = data[k][0] if len(data[k]) == 1 else np.array(data[k])
-
-    for k in data.keys():
-        if isinstance(data[k], basestring):
-            if data[k].lower() == 'true':
-                data[k] = True
-            elif data[k].lower() == 'false':
-                data[k] = False
-
-    return data
-
-
-def save_mhd(path, data):
-    '''save a VoxelData header file'''
-    with open(path, 'w') as mhd:
-        for k, v in data.items():
-            if isinstance(v, (list, tuple)):
-                v = ' '.join(str(x) for x in v)
-            elif isinstance(v, np.ndarray):
-                v = ' '.join(str(x) for x in v.flat)
-            mhd.write('%s = %s\n' % (k, v))
-
-
-METAIO_TO_DTYPE = {
-    'MET_UCHAR': np.uint8,
-    'MET_UINT': np.uint32,
-    'MET_FLOAT': np.float32,
-}
-DTYPE_TO_METAIO = dict((v, k) for k, v in METAIO_TO_DTYPE.items())
-
-
-def get_mhd_info(raw, element_datafile, voxel_dimensions, offset):
-    '''Build a MetaIO header dictionary with all the elements needed for an .MHD file
-
-    Args:
-        raw(numpy.ndarray): data from which to extract sizes and types
-        voxel_dimensions(numpy.ndarray): spacing of the elements
-        offset(numpy.ndarray): offset from the atlas origin
-        element_datafile(str): name of the corresponding datafile
-        offset(tuple): (x, y, z)
-    '''
-    ndims = len(raw.shape)
-    return {
-        'ObjectType': 'Image',
-        'NDims': ndims,
-        'BinaryData': True,
-        'BinaryDataByteOrderMSB': False,
-        'TransformMatrix': np.identity(ndims),
-        'Offset': np.array(offset),
-        'CenterOfRotation': np.zeros(ndims),
-        'AnatomicalOrientation': '???',
-        'DimSize': np.array(raw.shape),
-        'ElementType': DTYPE_TO_METAIO[raw.dtype.type],
-        'ElementSpacing': np.array(voxel_dimensions),
-        'ElementDataFile': element_datafile,
-    }
-
-
-def load_raw(element_type, shape, data_path):
-    '''load a meta io image
-
-    Args:
-        element_type(str): a meta io element type (MET_UCHAR, MET_FLOAT)
-        shape(tuple): the dimensions of the array
-        data_path(str): path to the raw data file
-
-    Returns:
-        numpy array of correct type
-    '''
-    dtype = METAIO_TO_DTYPE[element_type]
-    data = np.fromfile(data_path, dtype=dtype)
-
-    # matlab loading code from http://help.brain-map.org/display/mousebrain/API
-    # uses 'l' or 'ieee-le' which means little-endian ordering
-    # uses matlab's reshape which accesses in column-major order (Fortran style)
-    data = np.reshape(data, shape, order="F")
-    return data

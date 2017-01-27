@@ -27,10 +27,10 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
     '''Workflow steps replacing BlueBuilder.
 
     Args:
-        annotations_path(str path): path to .mhd file containing annotations
+        annotations_path(str path): path to .nrrd file containing annotations
         hierarchy_path(str path): path to .json file containing hierarchy mapping
             related to the annotations_path
-        atlas_volume_path(str path): path to .mhd file containing atlas volume density
+        atlas_volume_path(str path): path to .nrrd file containing atlas volume density
         region_name(str): region of the brain to build, looked up in hierarchy
         total_cell_count(int): number of cells to place
         output_path(str path): directory where output files will go
@@ -46,11 +46,11 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     L.debug('Creating brain region: "%s", cell count: %d', region_name, total_cell_count)
 
-    annotation = core.VoxelData.load_metaio(annotations_path)
+    annotation = core.VoxelData.load_nrrd(annotations_path)
 
     hierarchy = core.Hierarchy.load(hierarchy_path)
 
-    full_density = core.VoxelData.load_metaio(atlas_volume_path)
+    full_density = core.VoxelData.load_nrrd(atlas_volume_path)
 
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
@@ -106,11 +106,11 @@ def get_parser():
     parser = argparse.ArgumentParser(description='Create a brain')
 
     parser.add_argument('-a', '--annotations', required=True,
-                        help='path to annotations MHD')
+                        help='path to annotations NRRD')
     parser.add_argument('-i', '--hierarchy', required=True,
                         help='path to hierarchy json')
     parser.add_argument('-d', '--density', required=True,
-                        help='path to density MHD')
+                        help='path to density NRRD')
     parser.add_argument('-p', '--recipe', required=True,
                         help='BBP Recipe .xml')
     parser.add_argument('-n', '--neurondb', required=True,
