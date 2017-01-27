@@ -2,6 +2,7 @@ from voxcell import math
 
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
+from nose.tools import assert_true, assert_false
 
 
 def check_normalized(mat):
@@ -216,3 +217,18 @@ def test_clip():
                             [0, 0, 0]]), (np.array([1, 1]), np.array([1, 1])))
 
     assert_equal(r, np.array([[1]]))
+
+
+def test_is_diagonal_true():
+    A = np.array([
+        [2, 0],
+        [0, 3]
+    ])
+    assert_true(math.is_diagonal(A))
+
+def test_is_diagonal_false():
+    A = np.array([
+        [2, 0],
+        [1, 3]
+    ])
+    assert_false(math.is_diagonal(A))

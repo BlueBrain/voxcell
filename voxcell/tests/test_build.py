@@ -130,7 +130,7 @@ def test_cell_density_from_positions_homogeneous_negative():
 
 
 def test_build_homogeneous_density_empty():
-    assert_equal(build.homogeneous_density(np.array([], dtype=np.bool), ()).raw,
+    assert_equal(build.homogeneous_density(np.array([], dtype=np.bool), (1,)).raw,
                  np.array([]))
 
 

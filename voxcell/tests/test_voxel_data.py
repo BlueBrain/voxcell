@@ -37,11 +37,16 @@ def test_lookup():
 
 
 def test_load_nrrd():
-    ''' test loading a test nrrd file and check basic attributes '''
     got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
     eq_(got.raw.shape, (528, 320, 456))
     assert_almost_equal(got.voxel_dimensions, [42, 43, 44])
-    assert_equal(got.offset, np.array([0, 0, 0]))
+    assert_almost_equal(got.offset, [0, 0, 0])
+
+def test_load_nrrd_with_space_directions():
+    got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test_with_space_directions.nrrd'))
+    eq_(got.raw.shape, (409, 608, 286))
+    assert_almost_equal(got.voxel_dimensions, [25, 25, -25])
+    assert_almost_equal(got.offset, [-8.12492943, -7.91999865, -0.1444])
 
 def test_load_nrrd_fail():
     ''' test loading a test nrrd file without 'spacings' attribute '''
