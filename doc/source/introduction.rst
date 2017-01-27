@@ -30,7 +30,7 @@ but taking into account that type A is much more probable in Isocortex than anyw
     import pandas as pd
 
     # Use an atlas to construct a spatial distribution of types A/B in a brain
-    atlas = VoxelData.load_metaio('data/P56_Mouse_annotation.mhd')
+    atlas = VoxelData.load_nrrd('data/P56_Mouse_annotation.nrrd')
     hierarchy = Hierarchy.load('data/annotation_hierarchy.json')
 
     isocortex_mask = build.mask_by_region_names(atlas.raw, hierarchy, ['Isocortex'])
