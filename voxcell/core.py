@@ -59,7 +59,7 @@ class VoxelData(object):
             directions = np.array(option['space directions'], dtype=np.float32)
             if not math.is_diagonal(directions):
                 raise NotImplementedError("Only diagonal space directions supported at the moment")
-            spacings = 1.0 / directions.diagonal()
+            spacings = directions.diagonal()
         elif 'spacings' in option:
             spacings = np.array(option['spacings'], dtype=np.float32)
         else:

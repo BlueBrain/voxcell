@@ -45,7 +45,7 @@ def test_load_nrrd():
 def test_load_nrrd_with_space_directions():
     got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test_with_space_directions.nrrd'))
     eq_(got.raw.shape, (409, 608, 286))
-    assert_almost_equal(got.voxel_dimensions, [25, 25, -25])
+    assert_almost_equal(got.voxel_dimensions, [40, 40, -40])
     assert_almost_equal(got.offset, [-8.12492943, -7.91999865, -0.1444])
 
 def test_load_nrrd_fail():
