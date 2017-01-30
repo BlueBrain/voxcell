@@ -36,6 +36,12 @@ def test_lookup():
     assert_raises(VoxcellError, v.lookup, [[2, 10]])
 
 
+def test_lookup_vector_data():
+    raw = np.array([[[11], [12]], [[21], [22]]])
+    v = core.VoxelData(raw, (2, 2))
+    assert_equal(v.lookup([[1, 1], [3, 3]]), [[11], [22]])
+
+
 def test_load_nrrd():
     got = core.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
     eq_(got.raw.shape, (528, 320, 456))
@@ -63,3 +69,10 @@ def test_save_nrrd():
         ok_(np.allclose(vd.raw, new.raw))
         ok_(np.allclose(vd.voxel_dimensions, new.voxel_dimensions))
         ok_(np.allclose(vd.offset, new.offset))
+
+
+def test_shape_checks():
+    raw = np.zeros(shape=(2, 2))
+    assert_raises(VoxcellError, core.VoxelData, raw, voxel_dimensions=[[25], [25]])
+    assert_raises(VoxcellError, core.VoxelData, raw, voxel_dimensions=(25, 25), offset=(0,))
+    assert_raises(VoxcellError, core.VoxelData, raw, voxel_dimensions=(25, 25, 25))
