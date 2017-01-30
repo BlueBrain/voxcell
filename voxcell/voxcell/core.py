@@ -14,12 +14,6 @@ from voxcell import math, VoxcellError
 L = logging.getLogger(__name__)
 
 
-def require_shape(a, shape):
-    """ Raise VoxcellError if `a.shape` mismatches `shape`. """
-    if a.shape != shape:
-        raise VoxcellError("Shape mismatch: expected {0}, actual {1}".format(shape, a.shape))
-
-
 class VoxelData(object):
     '''wrap volumetric data and some basic metadata'''
 
@@ -34,20 +28,29 @@ class VoxelData(object):
             voxel_dimensions(tuple of numbers): size of each voxel in space.
             offset(tuple of numbers): offset from an external atlas origin
         '''
-        n_dim = len(raw.shape)
+        voxel_dimensions = np.array(voxel_dimensions, dtype=np.float32)
+        if len(voxel_dimensions.shape) > 1:
+            raise VoxcellError("voxel_dimensions should be a 1-d array (got: {0})".format(
+                len(voxel_dimensions.shape)
+            ))
+
+        self.voxel_dimensions = voxel_dimensions
+        n_dim = len(self.voxel_dimensions)
 
         if offset is None:
-            offset = np.zeros(n_dim)
+            self.offset = np.zeros(n_dim)
         else:
             offset = np.array(offset, dtype=np.float32)
+            if offset.shape != (n_dim,):
+                raise VoxcellError("'offset' shape should be: {0} (got: {1})".format(
+                    (n_dim,), offset.shape
+                ))
+            self.offset = offset
 
-        voxel_dimensions = np.array(voxel_dimensions, dtype=np.float32)
-
-        require_shape(offset, (n_dim,))
-        require_shape(voxel_dimensions, (n_dim,))
-
-        self.offset = offset
-        self.voxel_dimensions = voxel_dimensions
+        if len(raw.shape) < n_dim:
+            raise VoxcellError("'raw' should have at least {0} dimensions (got: {1})".format(
+                n_dim, len(raw.shape)
+            ))
         self.raw = raw
 
     @classmethod
@@ -113,8 +116,9 @@ class VoxelData(object):
         '''take positions, and figure out to which voxel they belong'''
         result = np.round((positions - self.offset) / self.voxel_dimensions, 3)
         result = np.floor(result).astype(np.int)
+        n_dim = len(self.voxel_dimensions)
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
-        result[result >= self.raw.shape] = VoxelData.OUT_OF_BOUNDS
+        result[result >= self.raw.shape[:n_dim]] = VoxelData.OUT_OF_BOUNDS
         if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
             raise VoxcellError("Out of bounds position")
         return result
