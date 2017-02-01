@@ -29,10 +29,10 @@
 
 import numpy as np
 import pandas as pd
-from voxcell.core import VoxelData
-
 
 import logging
+
+
 L = logging.getLogger(__name__)
 
 
@@ -232,9 +232,7 @@ class SpatialDistribution(object):
         probs = self.distributions[self.traits[attribute] == value].sum()
         probs_field = probs[self.field.raw.flatten()]
         probs_field = probs_field.fillna(-1)
-        return VoxelData(probs_field.values.reshape(self.field.raw.shape),
-                         self.field.voxel_dimensions,
-                         self.field.offset)
+        return self.field.with_data(probs_field.values.reshape(self.field.raw.shape))
 
     @classmethod
     def from_probability_field(cls, probs_field, name, positive_value, negative_value):
@@ -261,7 +259,7 @@ class SpatialDistribution(object):
 
         field = field.reshape(probs_field.raw.shape)
         field[~valid] = -1
-        field = VoxelData(field, probs_field.voxel_dimensions)
+        field = probs_field.with_data(field)
 
         distributions = pd.DataFrame([unique_probs, 1 - unique_probs])
         traits = pd.DataFrame({name: [positive_value, negative_value]})
@@ -280,8 +278,7 @@ class SpatialDistribution(object):
         for col_idx, unique_idx in enumerate(inverse):
             field[self.field.raw == col_idx] = unique_idx
 
-        return SpatialDistribution(VoxelData(field, self.field.voxel_dimensions),
-                                   dists, self.traits.copy())
+        return SpatialDistribution(self.field.with_data(field), dists, self.traits.copy())
 
 
 def _drop_duplicate_columns(dataframe, decimals=None):

@@ -124,11 +124,23 @@ class VoxelData(object):
             raise VoxcellError("Out of bounds position")
         return result
 
+    def indices_to_positions(self, indices):
+        ''' Return positions within given voxels
+
+            Use fractional indices to obtain positions within voxels
+            (for example, index (0.5, 0.5) would give the center of voxel (0, 0)).
+        '''
+        return indices * self.voxel_dimensions + self.offset
+
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
         raw = math.clip(self.raw, aabb)
         offset = aabb[0] * self.voxel_dimensions
         return VoxelData(raw, self.voxel_dimensions, self.offset + offset)
+
+    def with_data(self, raw):
+        '''return VoxelData of the same shape with different data'''
+        return VoxelData(raw, self.voxel_dimensions, self.offset)
 
 
 class Hierarchy(object):
