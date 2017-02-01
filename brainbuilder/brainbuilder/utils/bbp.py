@@ -165,7 +165,7 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
 
     raw /= np.sum(raw)
 
-    return core.VoxelData(raw, annotation.voxel_dimensions, annotation.offset)
+    return annotation.with_data(raw)
 
 
 def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map):
@@ -449,9 +449,7 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
         flat_field[flat_mask] = voxel_dist_indices + offset
         all_dists = pd.concat([all_dists, dists], axis=1)
 
-    field = core.VoxelData(flat_field.reshape(annotation.raw.shape),
-                           annotation.voxel_dimensions,
-                           annotation.offset)
+    field = annotation.with_data(flat_field.reshape(annotation.raw.shape))
 
     return tt.SpatialDistribution(field, all_dists.fillna(0.0), neurondb)
 

@@ -1,6 +1,6 @@
 '''algorithm to clip a cell density distributions'''
 import numpy as np
-from voxcell import core, build
+from voxcell import build
 
 
 def select_region(annotation_raw, density, hierarchy, region_name, inverse=False):
@@ -24,7 +24,7 @@ def select_region(annotation_raw, density, hierarchy, region_name, inverse=False
     in_region = build.mask_by_region_names(annotation_raw, hierarchy, [region_name])
     if inverse:
         in_region = np.negative(in_region)
-    return core.VoxelData(density.raw * in_region, density.voxel_dimensions, density.offset)
+    return density.with_data(density.raw * in_region)
 
 
 def select_hemisphere(density_raw, left=True):

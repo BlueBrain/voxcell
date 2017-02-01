@@ -58,9 +58,13 @@ def create_cell_positions(density, total_count):
 
     cell_voxel_indices = _cell_counts_to_cell_voxel_indices(cell_counts_per_voxel)
 
-    positions = _cell_voxel_indices_to_positions(cell_voxel_indices, density.voxel_dimensions)
+    # get random positions within voxels
+    cell_voxel_indices = (
+        cell_voxel_indices.astype(np.float32) +
+        np.random.random(np.shape(cell_voxel_indices))
+    )
 
-    return positions + density.offset
+    return density.indices_to_positions(cell_voxel_indices)
 
 
 def _cell_counts_to_cell_voxel_indices(cell_counts_per_voxel):
@@ -73,9 +77,3 @@ def _cell_counts_to_cell_voxel_indices(cell_counts_per_voxel):
     locations = np.repeat(np.array(idx).transpose(), repeats, 0)
 
     return locations
-
-
-def _cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions):
-    '''create random position in the selected voxel. Add some random jitter'''
-    jitter = np.random.random(np.shape(cell_voxel_indices))
-    return ((cell_voxel_indices + 1) - jitter) * np.array(voxel_dimensions)
