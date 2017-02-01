@@ -101,7 +101,7 @@ for l_id in layer_ids:
     layer_name = id_to_layer_name[l_id]
     voxel_raw[mask] = float(sum(density[id_to_layer_name[l_id]].values()))
 
-voxel_density = VoxelData(voxel_raw, annotation.voxel_dimensions, annotation.offset)
+voxel_density = annotation.with_data(voxel_raw)
 
 
 # In[12]:
@@ -355,7 +355,7 @@ fields = vf.combine_vector_fields([v_right, v_up, v_fwd])
 
 # In[47]:
 
-orientation_field = VoxelData(fields, annotation.voxel_dimensions, annotation.offset)
+orientation_field = annotation.with_data(fields)
 
 
 # In[48]:

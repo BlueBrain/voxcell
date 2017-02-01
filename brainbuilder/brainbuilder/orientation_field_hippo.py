@@ -1,5 +1,5 @@
 '''algorithm to compute orientation fields for Hippocampus'''
-from voxcell import core, build
+from voxcell import build
 from voxcell import vector_fields as vf
 from brainbuilder.select_region import select_hemisphere
 
@@ -116,4 +116,4 @@ def compute_orientation_field(annotation, region_ids, first_region_ids, last_reg
 
     field = vf.combine_vector_fields([right_field, up_field, fwd_field])
 
-    return core.VoxelData(field, annotation.voxel_dimensions, annotation.offset)
+    return annotation.with_data(field)
