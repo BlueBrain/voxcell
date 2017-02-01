@@ -86,42 +86,6 @@ def test_create_cell_counts_homogeneous_full():
 #    assert_equal(result, np.ones(np.shape(result)))
 
 
-def test_cell_voxel_indices_to_positions_0():
-    cell_voxel_indices = np.zeros((0, 3), dtype=np.int)
-    voxel_dimensions = (3, 3, 3)
-    result = positions._cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
-
-    eq_(np.shape(result), (0, 3))
-
-
-def test_cell_voxel_indices_to_positions_1():
-    cell_voxel_indices = np.zeros((1, 3), dtype=np.int)
-    voxel_dimensions = (0, 1, 100)
-    result = positions._cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
-
-    eq_(np.shape(result), (1, 3))
-    eq_(result[0, 0], 0)
-    assert (result[0, 1] >= 0) and (result[0, 1] <= 1)
-    assert (result[0, 2] >= 0) and (result[0, 2] <= 100)
-
-
-def test_cell_voxel_indices_to_positions_2():
-    cell_voxel_indices = np.zeros((2, 3), dtype=np.int)
-    cell_voxel_indices[1] = np.ones((1, 3))
-    voxel_dimensions = (0, 1, 100)
-    result = positions._cell_voxel_indices_to_positions(cell_voxel_indices, voxel_dimensions)
-
-    eq_(np.shape(result), (2, 3))
-
-    eq_(result[0, 0], 0)
-    assert (result[0, 1] >= 0) and (result[0, 1] <= 1)
-    assert (result[0, 2] >= 0) and (result[0, 2] <= 100)
-
-    eq_(result[1, 0], 0)
-    assert (result[1, 1] >= 1) and (result[1, 1] <= 2)
-    assert (result[1, 2] >= 100) and (result[0, 2] <= 200)
-
-
 mhd = {'voxel_dimensions': (25, 25, 25)}
 
 

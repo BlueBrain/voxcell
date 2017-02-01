@@ -76,3 +76,17 @@ def test_shape_checks():
     assert_raises(VoxcellError, core.VoxelData, raw, voxel_dimensions=[[25], [25]])
     assert_raises(VoxcellError, core.VoxelData, raw, voxel_dimensions=(25, 25), offset=(0,))
     assert_raises(VoxcellError, core.VoxelData, raw, voxel_dimensions=(25, 25, 25))
+
+
+def test_with_data():
+    original = core.VoxelData(np.array([0, 1]), voxel_dimensions=(2,), offset=(42,))
+    replaced = original.with_data(np.array([2, 3]))
+    assert_equal(replaced.raw, [2, 3])
+    assert_equal(replaced.voxel_dimensions, original.voxel_dimensions)
+    assert_equal(replaced.offset, original.offset)
+
+
+def test_indices_to_positions():
+    vd = core.VoxelData(np.array([0, 1]), voxel_dimensions=(2,), offset=(42,))
+    positions = vd.indices_to_positions(np.array([0, 0.5, 1]))
+    assert_almost_equal(positions, [42, 43, 44])
