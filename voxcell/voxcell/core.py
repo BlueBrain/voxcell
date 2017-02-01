@@ -114,7 +114,8 @@ class VoxelData(object):
 
     def positions_to_indices(self, positions, strict=True):
         '''take positions, and figure out to which voxel they belong'''
-        result = np.round((positions - self.offset) / self.voxel_dimensions, 3)
+        result = (positions - self.offset) / self.voxel_dimensions
+        result[np.abs(result) < 1e-7] = 0.  # suppress rounding errors around 0
         result = np.floor(result).astype(np.int)
         n_dim = len(self.voxel_dimensions)
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
