@@ -12,7 +12,7 @@ import ipywidgets as widgets
 from traitlets import (Unicode, Int, List, Dict, Bytes) # pylint: disable=F0401
 from IPython.display import display # pylint: disable=F0401
 from voxcellview import viewer # pylint: disable=F0401
-from voxcell import core
+
 
 # TODO: what is that for?
 @widgets.register('voxcellview.Viewer')
@@ -56,41 +56,29 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         self.name = name + '.vcf'
         self._show(block=block, display_parameters=display_parameters)
 
-    def show_volume(self, name, voxel, display_parameters=None):
-        ''' display VoxelData '''
-        if isinstance(voxel, np.ndarray):
-            if voxel.dtype == np.bool:
-                voxel = voxel * np.ones_like(voxel, dtype=np.uint8)
-            voxel = core.VoxelData(voxel, (1, 1, 1))
-
-        block = voxel.raw.transpose()
+    def show_volume(self, name, data, display_parameters=None):
+        ''' display numpy voxel data '''
+        if data.dtype == np.bool:
+            data = data * np.ones_like(data, dtype=np.uint8)
+        block = data.transpose()
         self.name = name + '.raw'
-        self.shape = voxel.raw.shape
-        self.dtype = str(voxel.raw.dtype)
+        self.shape = data.shape
+        self.dtype = str(data.dtype)
         self._show(block=block, display_parameters=display_parameters)
 
-    def show_morphologies(self, cells,
-                          attribute,
-                          loader_fct,
-                          display_probability=1.0):
+    def show_morphologies(self, cells, loader_fct):
         ''' display circuit with morphologies
         Args:
-           cells: a CellCollection
-           attribute: the attribute holding the morphology name in the cells.properties
+           cells: a pandas DataFrame with ['x', 'y', 'z', 'orientation', 'morphology'] columns
            loader_fct: a function that takes a morphology_name and returns the morphology as base64
-           display_probability: the change of a morphology to be displayed (between 0 and 1.0)
         '''
         self._show()
-
-        displayed_cells = np.nonzero(np.random.random(len(cells.positions)) < display_probability)[0]
-        for k in tqdm(displayed_cells):
-            neuron_data = loader_fct(cells.properties[attribute][k])
-            position = serialize_floats(cells.positions[k])
-            orientation = serialize_floats(cells.orientations[k])
-
-            self.send({'position': position,
-                       'orientation': orientation,
-                       'data': neuron_data})
+        for _, item in tqdm(cells.iterrows()):
+            self.send({
+                'position': serialize_floats(item[['x', 'y', 'z']].values),
+                'orientation':  serialize_floats(item['orientation'].values),
+                'data': loader_fct(item['morphology']),
+            })
 
 
 def serialize_floats(numpy_array):
