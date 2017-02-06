@@ -1,2 +1,2 @@
 """ voxcellview version """
-VERSION = '1.0.3.dev1'
+VERSION = '2.0.0.dev0'

@@ -33,7 +33,7 @@ def get_cell_color(cells, attribute, input_color_map):
         return array
 
     if input_color_map:
-        ret = [add_default_opacity(input_color_map(t)) for t in cells.properties[attribute]]
+        ret = [add_default_opacity(input_color_map(t)) for t in cells[attribute]]
         return ret
 
     colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
@@ -46,11 +46,11 @@ def get_cell_color(cells, attribute, input_color_map):
         return ret
 
     if isinstance(colormap, dict):
-        return [normalize_rgb(np.array(colormap[t])) for t in cells.properties[attribute]]
+        return [normalize_rgb(np.array(colormap[t])) for t in cells[attribute]]
     else:
         # color doesn't depend on the value of the attribute
         constant_color = normalize_rgb(np.array(colormap))
-        return [constant_color] * len(cells.positions)
+        return [constant_color] * len(cells)
 
 
 def serialize_points(cells, attribute, color_map):
@@ -62,9 +62,12 @@ def serialize_points(cells, attribute, color_map):
          etc]
         Color components are in the range [0, 1]
     '''
-    L.debug("serializing %d points", cells.positions.shape[0])
+    L.debug("serializing %d points", len(cells))
     colors = get_cell_color(cells, attribute, color_map)
-    return np.append(cells.positions, colors, axis=1).astype(np.float32)
+    return np.hstack([
+        cells[['x', 'y', 'z']],
+        colors
+    ]).astype(np.float32)
 
 
 def export_points(filename, cells, attribute):
@@ -137,14 +140,12 @@ def export_positions_vectors(filename, cells, attribute, color_map=None):
 
 def serialize_positions_vectors(cells, attribute, color_map=None):
     ''' serialize a position, orientation, color for all cells '''
-    vectors = cells.orientations.reshape((cells.orientations.shape[0],
-                                          np.prod(cells.orientations.shape[1:])))
-
     colors = get_cell_color(cells, attribute, color_map)
-
-    reduced_all = reduce(lambda v0, v1: np.append(v0, v1, axis=-1),
-                         (cells.positions, vectors, colors))
-    return reduced_all.astype(np.float32)
+    return np.hstack([
+        cells[['x', 'y', 'z']],
+        np.vstack([m.flatten() for m in cells['orientation']]),
+        colors
+    ]).astype(np.float32)
 
 
 def export_strings(filename, all_strings):
