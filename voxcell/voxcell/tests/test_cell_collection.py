@@ -3,12 +3,13 @@ import os
 import shutil
 import h5py
 from contextlib import contextmanager
-from nose.tools import eq_
+from nose.tools import eq_, assert_raises
 
-from voxcell import core
+from voxcell import core, VoxcellError
 from numpy.testing import assert_equal, assert_almost_equal
 from pandas.util.testing import assert_frame_equal
 import numpy as np
+import pandas as pd
 
 
 def euler_to_matrix(bank, attitude, heading):
@@ -209,3 +210,33 @@ def test_as_dataframe():
     # check that data is copied
     df['foo'] = ['q', 'w', 'v']
     assert_equal(cells.properties['foo'].values, ['a', 'b', 'c'])
+
+
+def test_add_properties():
+    cells = core.CellCollection()
+    properties1 = pd.DataFrame({
+        'a': [1],
+        'b': [2],
+    })
+    properties2 = pd.DataFrame({
+        'b': [3],
+        'c': [4],
+    })
+    combined = pd.DataFrame({
+        'a': [1],
+        'b': [3],
+        'c': [4],
+    })
+
+    cells.add_properties(properties1)
+    assert_frame_equal(cells.properties, properties1)
+
+    # no duplicates should appear
+    cells.add_properties(properties2)
+    assert_frame_equal(cells.properties, combined)
+
+    # no overwriting => exception should be raised if column already exists
+    assert_raises(
+        VoxcellError,
+        cells.add_properties, properties1, overwrite=False
+    )
