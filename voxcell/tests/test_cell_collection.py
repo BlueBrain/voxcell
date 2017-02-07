@@ -190,3 +190,22 @@ def test_circuit_seeds():
         cells.save('cells.h5')
         with h5py.File('cells.h5') as f:
             eq_(f['circuit']['seeds'].shape, (4,))
+
+
+def test_as_dataframe():
+    cells = core.CellCollection()
+    cells.positions = np.random.random((3, 3))
+    cells.orientations = random_orientations(3)
+    cells.properties['foo'] = np.array(['a', 'b', 'c'])
+    df = cells.as_dataframe()
+    assert_equal(sorted(df.columns), ['foo', 'orientation', 'x', 'y', 'z'])
+    assert_equal(df['x'], cells.positions[:, 0])
+    assert_equal(np.stack(df['orientation']), cells.orientations)
+    assert_equal(df['foo'].values, cells.properties['foo'].values)
+
+    # check that dataframe is indexed by GIDs
+    assert_equal(df.index.values, [1, 2, 3])
+
+    # check that data is copied
+    df['foo'] = ['q', 'w', 'v']
+    assert_equal(cells.properties['foo'].values, ['a', 'b', 'c'])
