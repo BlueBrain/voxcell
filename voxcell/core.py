@@ -202,13 +202,18 @@ class CellCollection(object):
         self.orientations = None
         self.properties = pd.DataFrame()
 
-    def add_properties(self, new_properties):
+    def add_properties(self, new_properties, overwrite=True):
         '''adds new columns to the properties DataFrame
 
         Args:
             new_properties: a pandas DataFrame object
+            overwrite: if True, overwrites columns with the same name.
+            Otherwise, a VoxcellError is raised.
         '''
-        self.properties = pd.concat([self.properties, new_properties], axis=1)
+        for name, prop in new_properties.iteritems():
+            if (not overwrite) and (name in self.properties):
+                raise VoxcellError("Column '{0}' already exists".format(name))
+            self.properties[name] = prop
 
     def remove_unassigned_cells(self):
         ''' remove cells with one or more unassigned property '''
