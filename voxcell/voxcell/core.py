@@ -217,6 +217,18 @@ class CellCollection(object):
         self.orientations = np.delete(self.orientations, idx_unassigned, 0)
         self.positions = np.delete(self.positions, idx_unassigned, 0)
 
+    def as_dataframe(self):
+        ''' return a dataframe with all cell properties '''
+        result = self.properties.copy()
+        if self.positions is not None:
+            result['x'] = self.positions[:, 0]
+            result['y'] = self.positions[:, 1]
+            result['z'] = self.positions[:, 2]
+        if self.orientations is not None:
+            result['orientation'] = [m for m in self.orientations]
+        result.index = 1 + np.arange(len(result))
+        return result
+
     def save(self, filename):
         '''save this cell collection to HDF5
 
