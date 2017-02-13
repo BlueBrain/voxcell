@@ -201,6 +201,7 @@ class CellCollection(object):
         self.positions = None
         self.orientations = None
         self.properties = pd.DataFrame()
+        self.meta = {}
 
     def add_properties(self, new_properties, overwrite=True):
         '''adds new columns to the properties DataFrame
@@ -241,6 +242,8 @@ class CellCollection(object):
             filename(str): fullpath to filename to write
         '''
         with h5py.File(filename, 'w') as f:
+            f.attrs.update(self.meta)
+
             f.create_group('cells')
             f.create_group('library')
 
@@ -289,6 +292,8 @@ class CellCollection(object):
         cells = cls()
 
         with h5py.File(filename, 'r') as f:
+            cells.meta.update(f.attrs)
+
             data = f['cells']
             if 'positions' in data:
                 cells.positions = np.array(data['positions'])
