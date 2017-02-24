@@ -1,2 +1,3 @@
 voxcell>=1.0.1
 argparse==1.2.1
+neurom>=1.0
