@@ -133,6 +133,23 @@ class VoxelData(object):
         '''
         return indices * self.voxel_dimensions + self.offset
 
+    def count(self, values):
+        ''' Number of voxels with value from the given list.
+
+            `values` could be a single value or an iterable.
+        '''
+        if isinstance(values, set):
+            # numpy.in1d expects an array-like object as second parameter
+            values = list(values)
+        return np.count_nonzero(np.in1d(self.raw, values))
+
+    def volume(self, values):
+        ''' Total volume of voxels with value from the given list.
+
+            `values` could be a single value or an iterable.
+        '''
+        return np.prod(self.voxel_dimensions) * self.count(values)
+
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
         raw = math.clip(self.raw, aabb)

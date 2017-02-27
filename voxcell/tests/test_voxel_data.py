@@ -99,3 +99,17 @@ def test_indices_to_positions():
     vd = core.VoxelData(np.array([0, 1]), voxel_dimensions=(2,), offset=(42,))
     positions = vd.indices_to_positions(np.array([0, 0.5, 1]))
     assert_almost_equal(positions, [42, 43, 44])
+
+
+def test_count():
+    vd = core.VoxelData(np.array([0, 1, 1, 2]), voxel_dimensions=(2,))
+    assert_equal(vd.count(7), 0)
+    assert_equal(vd.count(1), 2)
+    assert_equal(vd.count([0, 2]), 2)
+    assert_equal(vd.count(set([0, 2])), 2)
+
+
+def test_volume():
+    vd = core.VoxelData(np.array([[0, 1], [1, 2]]), voxel_dimensions=(2, 3))
+    assert_equal(vd.volume(1), 12)
+    assert_equal(vd.volume(13), 0)
