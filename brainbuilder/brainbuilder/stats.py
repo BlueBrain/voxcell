@@ -25,7 +25,19 @@ class MorphologyLoader(object):
         return nm.load_neuron(self._get_filepath(name))
 
 
-def count_regions_per_points(points, annotation, annotation_transform=None):
+def _affine_transform(points, translation, rotation):
+    """ Apply affine transform to `points`.
+
+        First rotate using `rotation` matrix, then translate with `translation` vector.
+    """
+    result = np.array(points)
+    if len(result) > 0:
+        result = np.dot(rotation, result.transpose()).transpose()
+        result += translation
+    return result
+
+
+def _count_regions_per_points(points, annotation, annotation_transform=None):
     """ Find the regions for given points, count number of points per region. """
     result = defaultdict(int)
     if len(points) == 0:
@@ -33,12 +45,14 @@ def count_regions_per_points(points, annotation, annotation_transform=None):
     ids = annotation.lookup(points, outer_value=0)
     for id_, count in zip(*np.unique(ids, return_counts=True)):
         if annotation_transform is not None:
-            id_ = annotation_transform.get(id_)
+            id_ = annotation_transform(id_)
         result[id_] += count
     return result
 
 
-def segment_region_histogram(cells, morphologies, annotation, annotation_transform=None):
+def segment_region_histogram(
+    cells, morphologies, annotation, annotation_transform=None, normalize=False
+):
     """
         Calculate segment count per region.
 
@@ -46,12 +60,13 @@ def segment_region_histogram(cells, morphologies, annotation, annotation_transfo
             cells: pandas DataFrame with cell properties
             morphologies: MorphologyLoader to retrieve morphology data
             annotation: VoxelData with region atlas
-            annotation_transformation: a dict to group and rename regions
+            annotation_transformation: a function to group or rename regions
+            normalize: output fractions instead of segment counts
 
         Returns:
             pandas DataFrame with number of segments per region.
             Multi-indexed by gids and branch types.
-            Columns: region ids/names (None for segments with no corresponding region)
+            Columns: region ids/names
 
             For example:
             gid | branch_type || SLM | SR | SP | SO | NaN |
@@ -70,16 +85,18 @@ def segment_region_histogram(cells, morphologies, annotation, annotation_transfo
         orientation = cell['orientation']
         for branch_type in [nm.APICAL_DENDRITE, nm.AXON, nm.BASAL_DENDRITE]:
             points = nm.get('segment_midpoints', nrn, neurite_type=branch_type)
-            if len(points) > 0:
-                points = np.array(points)
-                points = np.dot(orientation, points.transpose()).transpose()
-                points += translation
-            values = count_regions_per_points(points, annotation, annotation_transform)
+            points = _affine_transform(points, translation, orientation)
+            values = _count_regions_per_points(points, annotation, annotation_transform)
             # pylint: disable=maybe-no-member
             index.append((gid, branch_type.name))
             result.append(values)
 
     index = pd.MultiIndex.from_tuples(index, names=['gid', 'branch_type'])
-    result = pd.DataFrame(result, index=index).fillna(0).astype(int).sort_index()
+    result = pd.DataFrame(result, index=index).fillna(0).sort_index()
+
+    if normalize:
+        result = result.div(result.sum(axis=1), axis=0).astype(float)
+    else:
+        result = result.astype(int)
 
     return result
