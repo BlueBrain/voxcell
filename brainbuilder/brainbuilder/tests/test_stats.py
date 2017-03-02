@@ -14,7 +14,6 @@ def _mock_lookup(positions, outer_value=None):
 
 
 def _mock_nm_get(feature, neurites, **kwargs):
-    assert(feature == 'segment_midpoints')
     MOCK_SEGMENT_MIDPOINTS = {
         nm.APICAL_DENDRITE:
             [[0., 0., 0.]],
@@ -23,10 +22,19 @@ def _mock_nm_get(feature, neurites, **kwargs):
         nm.BASAL_DENDRITE:
             [],
     }
-    if 'neurite_type' in kwargs:
+    MOCK_SEGMENT_VOLUMES = {
+        nm.APICAL_DENDRITE:
+            [1.],
+        nm.AXON:
+            [2., 3., 4., 5.],
+        nm.BASAL_DENDRITE:
+            []
+    }
+    if feature == 'segment_midpoints':
         return MOCK_SEGMENT_MIDPOINTS[kwargs['neurite_type']]
-    else:
-        return sum(MOCK_SEGMENT_MIDPOINTS.values(), [])
+    elif feature == 'segment_volumes' or feature == 'segment_lengths':
+        return MOCK_SEGMENT_VOLUMES[kwargs['neurite_type']]
+
 
 
 class Test_segment_region_histogram(object):
@@ -117,6 +125,44 @@ class Test_segment_region_histogram(object):
                 [1., 0, 0, 0],
                 [0, 0.5, 0.25, 0.25],
                 [None, None, None, None],
+            ],
+            columns=[100, 101, 103, 105],
+            index=pd.MultiIndex.from_tuples(
+                [(42, 'apical_dendrite'), (42, 'axon'), (42, 'basal_dendrite')], names=['gid', 'branch_type']
+            )
+        )
+        pdt.assert_frame_equal(result.sort_index(axis=1), expected.sort_index(axis=1))
+
+
+    def test_by_length(self):
+        result = test_module.segment_region_histogram(
+            self.cells, self.morphologies, self.annotation, by='length'
+        )
+
+        expected = pd.DataFrame(
+            [
+                [1., 0., 0., 0.],
+                [0., 5., 4., 5.],
+                [0., 0., 0., 0.],
+            ],
+            columns=[100, 101, 103, 105],
+            index=pd.MultiIndex.from_tuples(
+                [(42, 'apical_dendrite'), (42, 'axon'), (42, 'basal_dendrite')], names=['gid', 'branch_type']
+            )
+        )
+        pdt.assert_frame_equal(result.sort_index(axis=1), expected.sort_index(axis=1))
+
+
+    def test_by_volume(self):
+        result = test_module.segment_region_histogram(
+            self.cells, self.morphologies, self.annotation, by='volume'
+        )
+
+        expected = pd.DataFrame(
+            [
+                [1., 0., 0., 0.],
+                [0., 5., 4., 5.],
+                [0., 0., 0., 0.],
             ],
             columns=[100, 101, 103, 105],
             index=pd.MultiIndex.from_tuples(
