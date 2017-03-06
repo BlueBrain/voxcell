@@ -48,6 +48,11 @@ var CircuitView = widget.WidgetView.extend({
     this.bb.init();
 
     var that = this;
+    this.model.on('change:spikes', function(model, value, options) {
+      if (value && value.length > 0) {
+        that.bb.initSpikeControls(value);
+      }
+    });
     this.model.on('change:bytes_data', function(model, value, options) {
       loadVoxcellAsBytes(model.get('name'),
                          model.get('bytes_data'),
@@ -55,7 +60,7 @@ var CircuitView = widget.WidgetView.extend({
                          model.get('dtype'),
                          that.bb);
     });
-    if (this.model.get('bytes_data')){
+    if (this.model.get('bytes_data')) {
       loadVoxcellAsBytes(this.model.get('name'),
                          this.model.get('bytes_data'),
                          this.model.get('shape'),

@@ -30,6 +30,8 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
 
     display_parameters = Dict({}).tag(sync=True)
 
+    spikes = List().tag(sync=True)
+
     def _show(self, block=None, display_parameters=None):
         ''' show numpy binary data'''
         if block is not None:
@@ -80,6 +82,23 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
                 'data': loader_fct(item['morphology']),
             })
 
+    def show_spikes(self, name, cells, spks, display_parameters=None):
+        '''
+        Display spikes
+
+        Args:
+            spks: a pandas DataFrame with ['time', 'id'] columns.
+                  It represents time and the id of the spiking cell.
+                  Can be loaded with something like the following:
+                      pd.read_csv("out.dat",
+                                  header=None,
+                                  names=['time', 'id'],
+                                  dtype={'time': np.float64, 'id': np.int32},
+                                  skiprows=1,
+                                  delim_whitespace=True)
+        '''
+        self.show_property(name, cells, '.pts', display_parameters)
+        self.spikes = [group.id.tolist() for _, group in spks.groupby('time')]
 
 def serialize_floats(numpy_array):
     ''' convert a numpy array of floats to base64 '''

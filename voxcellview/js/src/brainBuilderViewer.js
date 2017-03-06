@@ -497,6 +497,82 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
       } else {
         console.warn('unknown extension: ' + url);
       }
+    },
+    vizSpikes: undefined,
+    vizControl: undefined,
+    vizFrameControl: undefined,
+    vizTimeout: undefined,
+    isVizRunning: false,
+    vizSpeed: 200,
+    vizFrame: 0,
+    vizBackup: [],
+    vizSelectFrame: function(frameIdx) {
+      var that = this;
+      if (frameIdx < this.vizSpikes.length) {
+        var colors = this.loadedObjects['synapse_class.pts'].object.geometry.attributes.customColor;
+        this.vizFrame = frameIdx;
+        this.vizFrameControl.updateDisplay();
+
+        for (var i = 0; i < that.vizBackup.length; i += 4) {
+          colors.array[that.vizBackup[i]]     = that.vizBackup[i + 1];
+          colors.array[that.vizBackup[i] + 1] = that.vizBackup[i + 2];
+          colors.array[that.vizBackup[i] + 2] = that.vizBackup[i + 3];
+        }
+
+        that.vizBackup = [];
+
+        this.vizSpikes[frameIdx].forEach(function(idx) {
+          that.vizBackup.push(idx * 3);
+          that.vizBackup.push(colors.array[idx * 3]);
+          that.vizBackup.push(colors.array[idx * 3 + 1]);
+          that.vizBackup.push(colors.array[idx * 3 + 2]);
+
+          colors.array[idx * 3]     = 1;
+          colors.array[idx * 3 + 1] = 1;
+          colors.array[idx * 3 + 2] = 1;
+        });
+        colors.needsUpdate = true;
+        if (this.isVizRunning) {
+          this.vizTimeout = setTimeout(this.vizSelectFrame.bind(this), Math.round(this.vizSpeed), Math.round(this.vizFrame) + 1);
+        }
+      } else {
+        this.isVizRunning = false;
+        this.vizFrame = 0;
+        this.vizFrameControl.updateDisplay();
+        this.vizControl.name('start visualization').updateDisplay();
+      }
+    },
+    vizToggle: function() {
+      if (this.isVizRunning) {
+        this.vizControl.name('start visualization').updateDisplay();
+        if (this.vizTimeout) {
+          clearTimeout(this.vizTimeout);
+          this.vizTimeout = undefined;
+        }
+      } else {
+        this.vizControl.name('stop visualization').updateDisplay();
+        this.vizTimeout = setTimeout(this.vizSelectFrame.bind(this), Math.round(this.vizSpeed), Math.round(this.vizFrame));
+      }
+      this.isVizRunning = !this.isVizRunning;
+    },
+    initSpikeControls: function(spikes) {
+      var that = this,
+          vizRunning = false,
+          gui = this.datguiSettings._datgui;
+
+      this.vizSpikes = spikes;
+      var spikesFolder = gui.addFolder('spikes');
+      this.vizControl = spikesFolder.add(this, 'vizToggle').name('start visualization');
+      this.vizFrameControl = spikesFolder.add(this, 'vizFrame', 0, spikes.length - 1, 1).name('frame').onChange(function(value) {
+        if (that.vizTimeout) {
+          clearTimeout(that.vizTimeout);
+        }
+        that.isVizRunning = false;
+        that.vizTimeout = undefined;
+        that.vizControl.name('start visualization').updateDisplay();
+        setTimeout(that.vizSelectFrame.bind(that), 0, Math.round(value));
+      });
+      spikesFolder.add(this, 'vizSpeed').name('speed');
     }
   };
 
