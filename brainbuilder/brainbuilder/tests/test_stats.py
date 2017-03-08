@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pandas.util.testing as pdt
+from collections import defaultdict
 
 import neurom as nm
 
@@ -90,12 +91,13 @@ class Test_segment_region_histogram(object):
 
 
     def test_annotation_transform(self):
-        transform = lambda r: {
+        transform = {
             100: 'A',
             101: 'B',
             102: 'B',
             103: 'B',
-        }.get(r, 'undef')
+            300: 'C',
+        }
 
         result = test_module.segment_region_histogram(
             self.cells, self.morphologies, self.annotation, transform
@@ -103,11 +105,11 @@ class Test_segment_region_histogram(object):
 
         expected = pd.DataFrame(
             [
-                [1, 0, 0],
-                [0, 3, 1],
-                [0, 0, 0],
+                [1, 0, 0, 0],
+                [0, 3, 0, 1],
+                [0, 0, 0, 0],
             ],
-            columns=['A', 'B', 'undef'],
+            columns=['A', 'B', 'C', None],
             index=pd.MultiIndex.from_tuples(
                 [(42, 'apical_dendrite'), (42, 'axon'), (42, 'basal_dendrite')], names=['gid', 'branch_type']
             )

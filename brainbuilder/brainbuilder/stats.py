@@ -49,7 +49,7 @@ def _count_regions_per_points(points, annotation, annotation_transform=None, wei
         grouped = zip(ids, weights)
     for id_, w in grouped:
         if annotation_transform is not None:
-            id_ = annotation_transform(id_)
+            id_ = annotation_transform.get(id_)
         result[id_] += w
     return result
 
@@ -64,7 +64,7 @@ def segment_region_histogram(
             cells: pandas DataFrame with cell properties
             morphologies: MorphologyLoader to retrieve morphology data
             annotation: VoxelData with region atlas
-            annotation_transformation: a function to group or rename regions
+            annotation_transformation: a dictionary to group or rename regions
             normalize: output fractions instead of segment counts
             by: count number of segments (='count'), their length (='length') or volume (='volume')
 
@@ -111,6 +111,11 @@ def segment_region_histogram(
 
     index = pd.MultiIndex.from_tuples(index, names=['gid', 'branch_type'])
     result = pd.DataFrame(result, index=index).fillna(0).sort_index()
+
+    if annotation_transform is not None:
+        for name in annotation_transform.values():
+            if name not in result:
+                result[name] = 0
 
     if normalize:
         result = result.div(result.sum(axis=1), axis=0).astype(float)
