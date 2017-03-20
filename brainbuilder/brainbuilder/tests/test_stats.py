@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import pandas.util.testing as pdt
-from collections import defaultdict
 
 import neurom as nm
 
@@ -114,6 +113,11 @@ class Test_segment_region_histogram(object):
                 [(42, 'apical_dendrite'), (42, 'axon'), (42, 'basal_dendrite')], names=['gid', 'branch_type']
             )
         )
+
+        # pandas does not sort reliably index containing None
+        result.rename(columns={None: "None"}, inplace=True)
+        expected.rename(columns={None: "None"}, inplace=True)
+
         pdt.assert_frame_equal(result.sort_index(axis=1), expected.sort_index(axis=1))
 
 

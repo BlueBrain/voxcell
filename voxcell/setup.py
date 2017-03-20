@@ -3,6 +3,10 @@
 """ Distribution configuration """
 # pylint: disable=R0801,F0401,E0611
 
+import sys
+if sys.version_info < (2, 7):
+    sys.exit("Python < 2.7 is no longer supported from version 1.4.0")
+
 try:
     from setuptools import setup
 except ImportError:

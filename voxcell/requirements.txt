@@ -1,4 +1,4 @@
-h5py==2.6.0
-scipy==0.13.3
-pandas==0.17.0
-pynrrd==0.2.1
+h5py>=2.6.0
+scipy>=0.13.3
+pandas>=0.17.0
+pynrrd>=0.2.1

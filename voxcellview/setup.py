@@ -9,6 +9,9 @@ import os
 import sys
 import platform
 
+if sys.version_info < (2, 7):
+    sys.exit("Python < 2.7 is no longer supported from version 2.1.0")
+
 here = os.path.dirname(os.path.abspath(__file__))
 node_root = os.path.join(here, 'js')
 is_repo = os.path.exists(os.path.join(here, '.git'))
