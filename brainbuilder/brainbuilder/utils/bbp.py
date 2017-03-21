@@ -190,19 +190,14 @@ def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers
     return tt.SpatialDistribution(annotation, distributions, recipe)
 
 
-def load_recipe_as_spatial_distribution(recipe_filename, annotation, hierarchy, region_name):
+def load_recipe_as_spatial_distribution(recipe_filename, annotation, region_layers_map):
     '''load the bbp recipe and return a spatial voxel-based distribution
 
     Returns:
         see transform_into_spatial_distribution
     '''
-    region_layers_map = map_regions_to_layers(hierarchy, region_name)
-
     recipe = get_distribution_from_recipe(recipe_filename)
-
-    return transform_recipe_into_spatial_distribution(annotation,
-                                                      recipe,
-                                                      region_layers_map)
+    return transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map)
 
 
 def load_neurondb_v4(neurondb_filename):
@@ -465,15 +460,13 @@ def get_distance_to_pia(annotation):
 
 
 def load_neurondb_v4_as_spatial_distribution(neurondb_filename,
-                                             annotation, hierarchy, region_name,
+                                             annotation, region_layers_map,
                                              percentile):
     '''load the bbp recipe and return a spatial voxel-based distribution
 
     Returns:
         see transform_into_spatial_distribution
     '''
-    region_layers_map = map_regions_to_layers(hierarchy, region_name)
-
     neurondb = load_neurondb_v4(neurondb_filename)
 
     return transform_neurondb_into_spatial_distribution(annotation,

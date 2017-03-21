@@ -39,7 +39,12 @@ setup(
     version=__version__,
     description='code to build brains',
     install_requires=REQS,
-    packages=['brainbuilder', 'brainbuilder.utils'],
+    packages=[
+        'brainbuilder',
+        'brainbuilder.sscx',
+        'brainbuilder.hippocampus',
+        'brainbuilder.utils',
+    ],
     include_package_data=True,
     scripts=[],
 )

@@ -50,18 +50,20 @@ def main(annotations_path, hierarchy_path, atlas_volume_path,
 
     hierarchy = core.Hierarchy.load(hierarchy_path)
 
+    region_map = bbp.map_regions_to_layers(hierarchy, region_name)
+
     full_density = core.VoxelData.load_nrrd(atlas_volume_path)
 
     rotation_ranges = ((0, 0), (0, 2 * np.pi), (0, 0))
 
     # transform BBP recipies into voxel data:
     recipe_sdist = bbp.load_recipe_as_spatial_distribution(recipe_filename,
-                                                           annotation, hierarchy, region_name)
+                                                           annotation, region_map)
 
     synapse_class_sdist = recipe_sdist.reduce('synapse_class')
 
     neuron_sdist = bbp.load_neurondb_v4_as_spatial_distribution(neurondb_filename, annotation,
-                                                                hierarchy, region_name,
+                                                                region_map,
                                                                 percentile=0.92)
 
     # main circuit building workflow:
