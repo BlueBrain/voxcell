@@ -277,6 +277,15 @@ def test_build_2d_regular_convex_polygon_mask():
                                  [0, 0, 0]], dtype=np.bool))
 
 
+def test_build_2d_regular_convex_polygon_mask_from_side():
+    mask = build.regular_convex_polygon_mask_from_side(20, 6, 10)
+
+    assert_equal(mask, np.array([[0, 1, 1, 0],
+                                 [1, 1, 1, 1],
+                                 [1, 1, 1, 1],
+                                 [0, 1, 1, 0]], dtype=np.bool))
+
+
 def test_hexagon_corners():
     hexagon = build.regular_convex_polygon_mask((11, 11), 5, 6)
 

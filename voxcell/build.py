@@ -112,7 +112,8 @@ def regular_convex_polygon_mask_from_side(side_size, vertex_count, voxel_size):
     '''
     angle = 2 * np.pi / vertex_count
     radius = (side_size * np.sin((np.pi - angle) / 2.) / np.sin(angle)) / voxel_size
-    return regular_convex_polygon_mask((radius * 2, radius * 2), radius, vertex_count)
+    shape = (int(2 * radius), int(2 * radius))
+    return regular_convex_polygon_mask(shape, radius, vertex_count)
 
 
 def column_mask(pattern, length, axis):

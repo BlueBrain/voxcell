@@ -229,6 +229,30 @@ def test_assign_conditional_multiple_impossible_1():
     check_assign_conditional(preassigned, -1)
 
 
+def test_collect():
+    sdist = SpatialDistribution(
+        field=core.VoxelData(np.array([[[0]]]), (25, 25, 25)),
+        distributions=pd.DataFrame([0.75, 0.25, 0.0]),
+        traits=pd.DataFrame([
+            {'name': 'a', 'type': 'x', 'color': 0},
+            {'name': 'b', 'type': 'y', 'color': 0},
+            {'name': 'c', 'type': 'z', 'color': 1}
+        ])
+    )
+
+    positions = np.array([[1, 1, 1]])
+    preassigned = pd.DataFrame([{
+        'type': 'y'
+    }])
+
+    expected = pd.DataFrame([{
+        'color': 0
+    }])
+
+    result = sdist.collect(positions, preassigned, names=['color'])
+    assert_frame_equal(result, expected)
+
+
 def test_drop_duplicate_columns_0():
     df = pd.DataFrame([[0.4, 0.2],
                        [0.6, 0.8]])

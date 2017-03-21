@@ -129,6 +129,23 @@ class SpatialDistribution(object):
 
         return chosen
 
+    def collect(self, positions, preassigned=None, names=None):
+        '''for every cell in positions, chose trait values from a spatial distribution
+        taking into account a pre-assigned values of related properties (if specified).
+
+        Args:
+            positions: list of positions for soma centers (x, y, z).
+            preassigned: pandas.DataFrame or pandas.Series with the pre-assigned values.
+            names: names of the properties to collect. If not specified use all in traits.
+
+        Returns:
+            A pandas DataFrame with one row for each index and one column for each value of names
+        '''
+        if preassigned is None:
+            return self.collect_traits(self.assign(positions), names)
+        else:
+            return self.collect_traits(self.assign_conditional(positions, preassigned), names)
+
     def collect_traits(self, chosen, names=None):
         '''return the trait values corresponding to an array of indices
 
