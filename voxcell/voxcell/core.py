@@ -15,6 +15,11 @@ from voxcell import math, VoxcellError
 L = logging.getLogger(__name__)
 
 
+def _sub_dict(dict_, keys):
+    """ Get a dictionary for subset of keys. """
+    return {k: dict_[k] for k in keys}
+
+
 class VoxelData(object):
     '''wrap volumetric data and some basic metadata'''
 
@@ -272,6 +277,16 @@ class RegionMap(object):
         result = set([_id])
         for c in self._children[_id]:
             result.update(self.descendants(c))
+        return result
+
+    def sub(self, _id):
+        """ Return a RegionMap of region for the given id. """
+        ids = self.descendants(_id)
+        result = self.__class__()
+        # pylint: disable=protected-access
+        result._data = _sub_dict(self._data, ids)
+        result._children = _sub_dict(self._children, ids)
+        result._parent = _sub_dict(self._parent, ids)
         return result
 
 
