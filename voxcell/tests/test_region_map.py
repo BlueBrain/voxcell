@@ -83,3 +83,9 @@ def test_ids():
     eq_(rmap.ids('B'), set([2, 4]))
     eq_(rmap.ids('C'), set([3, 4]))
     eq_(rmap.ids('C', with_descendants=False), set([3]))
+
+def test_sub():
+    rmap = test_module.RegionMap.from_dict(TEST_RMAP)
+    sub = rmap.sub(3)
+    eq_(sub.ids('A'), set())
+    eq_(sub.ids('B'), set([4]))
