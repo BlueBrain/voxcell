@@ -3,7 +3,7 @@ import os
 import shutil
 import h5py
 from contextlib import contextmanager
-from nose.tools import eq_, assert_raises
+from nose.tools import eq_, assert_raises, assert_is_none, raises
 
 from voxcell import core, VoxcellError
 from numpy.testing import assert_equal, assert_almost_equal
@@ -248,3 +248,34 @@ def test_save_load_meta():
     cells.meta['foo'] = 42
     cells.meta['bar'] = "abcd"
     check_roundtrip(cells)
+
+
+@raises(VoxcellError)
+def test_from_dataframe_invalid_index():
+    df = pd.DataFrame({
+        'prop-a': ['a', 'b'],
+    })
+    core.CellCollection.from_dataframe(df)
+
+
+def test_from_dataframe_no_positions():
+    df = pd.DataFrame({
+        'prop-a': ['a', 'b'],
+    }, index=[1, 2])
+
+    cells = core.CellCollection.from_dataframe(df)
+    assert_is_none(cells.positions)
+    assert_is_none(cells.orientations)
+    assert_frame_equal(cells.properties, df.reset_index(drop=True))
+
+
+def test_to_from_dataframe():
+    cells = core.CellCollection()
+    cells.positions = np.random.random((3, 3))
+    cells.orientations = random_orientations(3)
+    cells.properties['foo'] = np.array(['a', 'b', 'c'])
+
+    cells2 = core.CellCollection.from_dataframe(cells.as_dataframe())
+    assert_almost_equal(cells.positions, cells2.positions)
+    assert_almost_equal(cells.orientations, cells2.orientations)
+    assert_frame_equal(cells.properties, cells2.properties)

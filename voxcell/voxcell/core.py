@@ -334,6 +334,20 @@ class CellCollection(object):
         result.index = 1 + np.arange(len(result))
         return result
 
+    @classmethod
+    def from_dataframe(cls, df):
+        ''' return a CellCollection object from a dataframe of cell properties '''
+        if df.index.tolist() != range(1, 1 + len(df)):
+            raise VoxcellError("Index != 1..{0} (got: {1})".format(len(df), df.index.values))
+        result = cls()
+        if 'x' in df:
+            result.positions = df[['x', 'y', 'z']].values
+        if 'orientation' in df:
+            result.orientations = np.stack(df['orientation'])
+        props = set(df.columns) - set(['x', 'y', 'z', 'orientation'])
+        result.properties = df[list(props)].reset_index(drop=True)
+        return result
+
     def save(self, filename):
         '''save this cell collection to HDF5
 
