@@ -160,8 +160,9 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
 
 def normalize(vf):
     '''normalize a vector field'''
-    lengths = np.sqrt(np.sum(np.square(vf), axis=-1))
-    return np.nan_to_num(vf / lengths[..., np.newaxis])
+    lengths = np.linalg.norm(vf, axis=-1)
+    lengths = np.where(lengths > 0, lengths, 1.0)
+    return vf / lengths[..., np.newaxis]
 
 
 def gaussian_filter(vf, sigma):

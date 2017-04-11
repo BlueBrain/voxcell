@@ -8,7 +8,7 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
 def test_load_hierarchy_0():
-    with tempfile.NamedTemporaryFile() as f:
+    with tempfile.NamedTemporaryFile('w') as f:
         f.write('{"msg": [{}]}')
         f.flush()
 

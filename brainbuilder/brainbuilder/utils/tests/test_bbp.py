@@ -146,12 +146,9 @@ def test_transform_neurondb_into_spatial_distribution():
 
     assert_frame_equal(sd.traits, neurondb)
 
-    print sd.distributions.values
-
     expected = pd.DataFrame({0: [0.5, 0.5, 0, 0],
                              1: [0.25, 0.25, 0.25, 0.25]})
 
-    print expected.values
     assert_frame_equal(sd.distributions, expected)
 
     expected_field = np.zeros_like(annotation)
@@ -174,7 +171,7 @@ def test_get_region_distributions_from_placement_hints_0():
 
     res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.0)
 
-    eq_(res.keys(), [(0,)])
+    eq_(sorted(res.keys()), [(0,)])
 
     expected = pd.DataFrame({
         0: [2., 1., 1., 1.],
@@ -202,7 +199,7 @@ def test_get_region_distributions_from_placement_hints_unknown_region():
     }
 
     res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.0)
-    eq_(res.keys(), [(0,)])
+    eq_(sorted(res.keys()), [(0,)])
     assert_frame_equal(res[(0,)], pd.DataFrame({0: [1.]}))
 
 
@@ -259,7 +256,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_1():
 
     sd = bbp.transform_neurondb_into_spatial_distribution(
         core.VoxelData(annotation, voxel_dimensions=(25,)), neurondb, region_layers_map,
-        np.array([0, 0] + range(12)),
+        np.array([0, 0] + list(range(12))),
         percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -345,7 +342,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_undiv
 
     sd = bbp.transform_neurondb_into_spatial_distribution(
         core.VoxelData(annotation, voxel_dimensions=(25,)), neurondb, region_layers_map,
-        np.array([0, 0] + range(10)),
+        np.array([0, 0] + list(range(10))),
         percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)
@@ -380,7 +377,7 @@ def test_get_region_distributions_from_placement_hints_multiple_regions():
 
     res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.0)
 
-    eq_(res.keys(), [(2,), (1,)])
+    eq_(sorted(res.keys()), [(1,), (2,)])
     assert_frame_equal(res[(1,)], pd.DataFrame({0: [2/3., 1/3.],
                                                 1: [1/3., 2/3.]}))
 
@@ -405,7 +402,7 @@ def test_get_region_distributions_from_placement_hints_percentile_selection():
 
     res = bbp.get_region_distributions_from_placement_hints(neurondb, region_layers_map, 0.5)
 
-    eq_(res.keys(), [(2,), (1,)])
+    eq_(sorted(res.keys()), [(1,), (2,)])
 
     # .5 percentile in of [3, 2, 1] includes 2,
     # so where mtype & etype are grouped (ie: (1, 1))
@@ -449,7 +446,7 @@ def test_transform_neurondb_into_spatial_distribution_with_placement_hints_multi
 
     sd = bbp.transform_neurondb_into_spatial_distribution(
         core.VoxelData(annotation, voxel_dimensions=(25,)), neurondb, region_layers_map,
-        np.array([0, 0] + range(10)),
+        np.array([0, 0] + list(range(10))),
         percentile=0.0)
 
     assert_frame_equal(sd.traits, neurondb)

@@ -42,7 +42,7 @@ def get_cell_color(cells, attribute, input_color_map):
     def normalize_rgb(array):
         array = array.astype(float)
         array[:3] /= 255.0
-        ret =  add_default_opacity(array)
+        ret = add_default_opacity(array)
         return ret
 
     if isinstance(colormap, dict):

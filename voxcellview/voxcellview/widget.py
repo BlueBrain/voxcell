@@ -1,11 +1,10 @@
 ''' a ipython notebook extension to display voxcell data '''
 import base64
-import random
 import os
 import tempfile
 import shutil
 import numpy as np
-import functools32
+import pylru
 from tqdm import tqdm
 from neurom.io import load_data
 import ipywidgets as widgets
@@ -78,7 +77,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         for _, item in tqdm(cells.iterrows()):
             self.send({
                 'position': serialize_floats(item[['x', 'y', 'z']].values),
-                'orientation':  serialize_floats(item['orientation'].values),
+                'orientation': serialize_floats(item['orientation'].values),
                 'data': loader_fct(item['morphology']),
             })
 
@@ -99,6 +98,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         '''
         self.show_property(name, cells, '.pts', display_parameters)
         self.spikes = [group.id.tolist() for _, group in spks.groupby('time')]
+
 
 def serialize_floats(numpy_array):
     ''' convert a numpy array of floats to base64 '''
@@ -123,8 +123,9 @@ class MorphologyLoader(object):
         self.loader_cache_size = loader_cache_size
         self.tmp_dir = None
         if loader_cache_size is not None:
-            self._get = (functools32.lru_cache(maxsize=loader_cache_size)
-                         (self._get_as_b64))
+            self._get = pylru.FunctionCacheManager(
+                self._get_as_b64, size=loader_cache_size
+            )
         else:
             self._get = self._get_as_b64
 

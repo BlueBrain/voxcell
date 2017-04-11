@@ -4,4 +4,4 @@ notebook<4.3 # empirically discovered version which makes current version of our
 ipython<4.2 # empirically discovered version which makes current version of our widget work
 neurom>=1.0.0
 tqdm>=4.8.4
-functools32>=3.2.3.post2
+pylru>=1.0.0

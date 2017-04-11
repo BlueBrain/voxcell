@@ -26,7 +26,7 @@ def test_split_distribution_collection_empty_1():
     attributes = ('name',)
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), ['a'])
+    eq_(sorted(res.keys()), ['a'])
     assert_frame_equal(res['a'].distributions, distributions)
     assert_frame_equal(res['a'].traits, traits)
 
@@ -37,7 +37,7 @@ def test_split_distribution_collection_empty_2():
     attributes = ('name',)
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), ['a', 'b'])
+    eq_(sorted(res.keys()), ['a', 'b'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame(index=[0]))
     assert_frame_equal(res['b'].distributions, pd.DataFrame(index=[1]))
     # {('a',): SD(NOFIELD, [], traits), ('b',): SD(NOFIELD, [], traits)}
@@ -51,7 +51,7 @@ def test_split_distribution_collection_single_0():
     # {('a',): SD(NOFIELD, [{0: 1}], traits)})
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), ['a'])
+    eq_(sorted(res.keys()), ['a'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res['a'].traits, traits)
 
@@ -63,7 +63,7 @@ def test_split_distribution_collection_single_1():
 
     # {('a',): SD(NOFIELD, [{0: 1.0}], traits), ('b',): SD(NOFIELD, [{1: 1.0}], traits)})
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), ['a', 'b'])
+    eq_(sorted(res.keys()), ['a', 'b'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res['b'].distributions, pd.DataFrame([1.], index=[1]))
 
@@ -74,7 +74,7 @@ def test_split_distribution_collection_single_2():
     attributes = ('name',)
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), ['a', 'b'])
+    eq_(sorted(res.keys()), ['a', 'b'])
     assert_frame_equal(res['a'].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res['b'].distributions, pd.DataFrame([0.5, 0.5], index=[1, 2]))
 
@@ -91,7 +91,7 @@ def test_split_distribution_collection_multiattr_0():
     #  ('b', 'y'): SD(NOFIELD, [{1: 0.5, 2: 0.5}], traits)})
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), [('a', 'x'), ('b', 'y')])
+    eq_(sorted(res.keys()), [('a', 'x'), ('b', 'y')])
     assert_frame_equal(res[('a', 'x')].distributions, pd.DataFrame([1.0]))
     assert_frame_equal(res[('b', 'y')].distributions, pd.DataFrame([0.5, 0.5], index=[1, 2]))
 
@@ -105,7 +105,7 @@ def test_split_distribution_collection_multiattr_1():
     attributes = ('name', 'type')
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
-    eq_(res.keys(), [('a', 'x'), ('b', 'y'), ('b', 'x')])
+    eq_(sorted(res.keys()), [('a', 'x'), ('b', 'x'), ('b', 'y')])
     assert_frame_equal(res[('a', 'x')].distributions, pd.DataFrame([1.]))
     assert_frame_equal(res[('b', 'x')].distributions, pd.DataFrame([1.], index=[1]))
     assert_frame_equal(res[('b', 'y')].distributions, pd.DataFrame([1.], index=[2]))
@@ -125,8 +125,6 @@ def test_reduce_distribution_collection_empty_1():
     traits = pd.DataFrame([{'name': 'a', 'type': 'x'}])
     dists = pd.DataFrame(index=traits.index)
     r = SpatialDistribution(NOFIELD, dists, traits).reduce('type')
-    print r.distributions
-    print r.traits
     assert_frame_equal(r.distributions, dists)
 
 
@@ -149,9 +147,9 @@ def test_reduce_distribution_collection_1():
 
     r = SpatialDistribution(NOFIELD, dists, traits).reduce('type')
     assert_frame_equal(r.traits,
-                       pd.DataFrame({'type': ['y', 'x']}))
+                       pd.DataFrame({'type': ['x', 'y']}))
     assert_frame_equal(r.distributions,
-                       pd.DataFrame([0.25, 0.75]))
+                       pd.DataFrame([0.75, 0.25]))
 
 
 def test_reduce_distribution_collection_2():
@@ -164,15 +162,15 @@ def test_reduce_distribution_collection_2():
 
     r = SpatialDistribution(NOFIELD, dists, traits).reduce('type')
     assert_frame_equal(r.traits,
-                       pd.DataFrame({'type': ['y', 'x']}))
+                       pd.DataFrame({'type': ['x', 'y']}))
     assert_frame_equal(r.distributions,
-                       pd.DataFrame([0.7, 0.3]))
+                       pd.DataFrame([0.3, 0.7]))
 
     r = SpatialDistribution(NOFIELD, dists, traits).reduce('name')
     assert_frame_equal(r.traits,
-                       pd.DataFrame({'name': ['a', 'c', 'b', 'd']}))
+                       pd.DataFrame({'name': ['a', 'b', 'c', 'd']}))
     assert_frame_equal(r.distributions,
-                       pd.DataFrame([0.1, 0.3, 0.2, 0.4]))
+                       pd.DataFrame([0.1, 0.2, 0.3, 0.4]))
 
 
 def check_assign_conditional(preassigned, expected):

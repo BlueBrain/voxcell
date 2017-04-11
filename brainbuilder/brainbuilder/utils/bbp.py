@@ -1,16 +1,20 @@
 '''compatibility functions with existing BBP formats'''
 import itertools
-from itertools import izip
 import logging
+from six import iteritems
+from six.moves import zip
 
 import lxml.etree
 import numpy as np
 import pandas as pd
+
 from voxcell import core
 from voxcell import math
 from voxcell import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
+
 from brainbuilder.version import VERSION
+
 
 L = logging.getLogger(__name__)
 
@@ -142,7 +146,7 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
 
     raw = np.zeros_like(annotation.raw, dtype=np.float32)
 
-    for rid, layers in region_layers_map.iteritems():
+    for rid, layers in iteritems(region_layers_map):
         assert len(layers) == 1
         if layers[0] in percentages:
             region_mask = annotation.raw == rid
@@ -320,7 +324,7 @@ def reverse_region_layers_map(region_layers_map):
     Returns:
         A dict where the keys are tuples of layer ids and the keys lists of region ids'''
     inv_map = {}
-    for k, v in region_layers_map.iteritems():
+    for k, v in iteritems(region_layers_map):
         inv_map[v] = inv_map.get(v, [])
         inv_map[v].append(k)
 
@@ -346,7 +350,7 @@ def get_region_distributions_from_placement_hints(neurondb, region_layers_map, p
     '''
 
     regions_dists = {}
-    for layer_ids, region_ids in reverse_region_layers_map(region_layers_map).iteritems():
+    for layer_ids, region_ids in iteritems(reverse_region_layers_map(region_layers_map)):
 
         mask = np.in1d(neurondb.layer, layer_ids)
         if np.any(mask):
@@ -423,8 +427,7 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
     flat_field = np.ones(shape=np.product(annotation.raw.shape), dtype=np.int) * -1
 
     all_dists = pd.DataFrame()
-
-    for region_ids, dists in region_dists.iteritems():
+    for region_ids, dists in iteritems(region_dists):
         flat_mask = np.in1d(annotation.raw, region_ids)
 
         voxel_distances = metric[flat_mask]
@@ -567,13 +570,15 @@ def save_mvd2(filepath, morphology_path, cells):
 
     def get_mvd2_neurons():
         '''return the data for all the neurons used in the circuit'''
-        data = izip(cells.properties.morphology,
-                    cells.positions,
-                    chosen_mtype,
-                    chosen_etype,
-                    cells.properties.minicolumn,
-                    cells.properties.layer,
-                    cells.properties.metype)
+        data = zip(
+            cells.properties.morphology,
+            cells.positions,
+            chosen_mtype,
+            chosen_etype,
+            cells.properties.minicolumn,
+            cells.properties.layer,
+            cells.properties.metype
+        )
 
         for morph, pos, mtype_idx, etype_idx, minicolumn, layer, metype in data:
             yield dict(name=morph, morphology=mtype_idx, electrophysiology=etype_idx,
