@@ -10,7 +10,10 @@ import numpy as np
 import pandas as pd
 import nrrd
 
-from voxcell import math, VoxcellError
+from six import iteritems, text_type
+
+from voxcell import math_utils, VoxcellError
+from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
 
 L = logging.getLogger(__name__)
 
@@ -66,7 +69,7 @@ class VoxelData(object):
 
         if 'space directions' in option:
             directions = np.array(option['space directions'], dtype=np.float32)
-            if not math.is_diagonal(directions):
+            if not math_utils.is_diagonal(directions):
                 raise NotImplementedError("Only diagonal space directions supported at the moment")
             spacings = directions.diagonal()
         elif 'spacings' in option:
@@ -158,7 +161,7 @@ class VoxelData(object):
 
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
-        raw = math.clip(self.raw, aabb)
+        raw = math_utils.clip(self.raw, aabb)
         offset = aabb[0] * self.voxel_dimensions
         return VoxelData(raw, self.voxel_dimensions, self.offset + offset)
 
@@ -178,7 +181,8 @@ class Hierarchy(object):
     @classmethod
     def load(cls, filename):
         '''load a hierarchy of annotations in json from the Allen Brain Institute'''
-        return Hierarchy(json.load(file(filename))['msg'][0])
+        with open(filename, 'r') as f:
+            return Hierarchy(json.load(f)['msg'][0])
 
     def find(self, attribute, value):
         '''get a list with all the subsections of a hierarchy that exactly match
@@ -204,7 +208,7 @@ class Hierarchy(object):
 
         if self.data:
             txt += '\n    ' + '\n    '.join('%s: %s' % (k, v)
-                                            for k, v in self.data.iteritems() if k != 'name')
+                                            for k, v in iteritems(self.data) if k != 'name')
 
         if self.children:
             children = '\n'.join(str(c) for c in self.children)
@@ -253,7 +257,7 @@ class RegionMap(object):
     def ids(self, value, attr='name', with_descendants=True):
         """ Get set of regions matching the given attribute. """
         result = set()
-        for _id, data in self._data.iteritems():
+        for _id, data in iteritems(self._data):
             if data.get(attr) == value:
                 if with_descendants:
                     result.update(self.descendants(_id))
@@ -338,7 +342,7 @@ class CellCollection(object):
     @classmethod
     def from_dataframe(cls, df):
         ''' return a CellCollection object from a dataframe of cell properties '''
-        if df.index.tolist() != range(1, 1 + len(df)):
+        if not (df.index == 1 + np.arange(len(df))).all():
             raise VoxcellError("Index != 1..{0} (got: {1})".format(len(df), df.index.values))
         result = cls()
         if 'x' in df:
@@ -366,7 +370,7 @@ class CellCollection(object):
 
             if self.orientations is not None:
                 f.create_dataset('cells/orientations',
-                                 data=math.matrices_to_quaternions(self.orientations))
+                                 data=matrices_to_quaternions(self.orientations))
 
             # TODO this should be managed by the application that requires that.
             # This is in the current MVD3 spec and this is a legacy from MVD2.
@@ -380,13 +384,12 @@ class CellCollection(object):
                 if data.dtype == np.object:
                     # numpy uses "np.object" to represent variable size strings
                     # however, h5py doesn't like this.
-                    # doing a cast to np.str changes the column to be fixed-size strings
-                    # (automatically set to the current maximum).
-                    data = data.astype(np.str)
+                    # http://docs.h5py.org/en/latest/strings.html
 
                     unique_values, indices = np.unique(data, return_inverse=True)
                     f.create_dataset('cells/properties/' + name, data=indices.astype(np.uint32))
-                    dt = h5py.special_dtype(vlen=unicode)
+
+                    dt = h5py.special_dtype(vlen=text_type)
                     f.create_dataset('library/' + name, data=unique_values, dtype=dt)
 
                 else:
@@ -414,12 +417,12 @@ class CellCollection(object):
 
             if 'orientations' in data:
                 cells.orientations = np.array(data['orientations'])
-                cells.orientations = math.quaternions_to_matrices(cells.orientations)
+                cells.orientations = quaternions_to_matrices(cells.orientations)
 
             if 'properties' in data:
                 properties = data['properties']
 
-                for name, data in properties.iteritems():
+                for name, data in iteritems(properties):
                     data = np.array(data)
 
                     if name in f['library']:

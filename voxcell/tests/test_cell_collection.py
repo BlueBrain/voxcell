@@ -76,11 +76,8 @@ def tempcwd():
     cwd = os.getcwd()
     dirname = tempfile.mkdtemp(prefix='bbtests_')
     os.chdir(dirname)
-    print 'working dir:', dirname
-
     try:
         yield dirname
-
     finally:
         os.chdir(cwd)
         shutil.rmtree(dirname)
@@ -92,7 +89,11 @@ def assert_equal_cells(c0, c1):
         eq_(c0.orientations, c1.orientations)
     else:
         assert_almost_equal(c0.orientations, c1.orientations)
-    assert_frame_equal(c0.properties.sort(axis=1), c1.properties.sort(axis=1), check_names=True)
+    assert_frame_equal(
+        c0.properties.sort_index(axis=1),
+        c1.properties.sort_index(axis=1),
+        check_names=True
+    )
     eq_(c0.meta, c1.meta)
 
 

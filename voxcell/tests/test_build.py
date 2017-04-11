@@ -71,8 +71,6 @@ def test_cell_density_from_positions_negative_2():
     expected[0, 0, 0] = 1
     expected[2, 2, 2] = 1
     expected[4, 4, 4] = 1
-    print 'result'
-    print result.raw
     assert_equal(result.raw, expected)
     assert_equal(result.offset, np.array([-1, -1, -1]))
 
@@ -96,9 +94,9 @@ def test_cell_density_from_positions_homogeneous():
 
     positions = np.zeros((np.prod(density_dimensions), 3))
     idx = 0
-    for i in xrange(density_dimensions[0]):
-        for j in xrange(density_dimensions[1]):
-            for k in xrange(density_dimensions[2]):
+    for i in range(density_dimensions[0]):
+        for j in range(density_dimensions[1]):
+            for k in range(density_dimensions[2]):
                 positions[idx] = [i, j, k]
                 idx += 1
 
@@ -115,9 +113,9 @@ def test_cell_density_from_positions_homogeneous_negative():
 
     positions = np.zeros((np.prod(density_dimensions), 3))
     idx = 0
-    for i in xrange(density_dimensions[0]):
-        for j in xrange(density_dimensions[1]):
-            for k in xrange(density_dimensions[2]):
+    for i in range(density_dimensions[0]):
+        for j in range(density_dimensions[1]):
+            for k in range(density_dimensions[2]):
                 positions[idx] = [-i, -j, -k]
                 idx += 1
 

@@ -76,8 +76,7 @@ class SpatialDistribution(object):
         unique_dists = np.unique(dist_id_per_position[valid])
         for dist_id, dist in self.distributions[unique_dists].iteritems():
             hit_count = np.count_nonzero(dist_id_per_position == dist_id)
-
-            chosen = np.random.choice(dist.keys(), hit_count, p=dist.values)
+            chosen = np.random.choice(dist.index, hit_count, p=dist.values)
             chosen_trait_indices[dist_id_per_position == dist_id] = chosen
 
         return chosen_trait_indices
@@ -223,20 +222,19 @@ class SpatialDistribution(object):
         Returns:
             An SpatialDistribution object
         '''
+        traits, distributions = [], []
+        for value, data in self.traits.groupby(attribute):
+            traits.append(value)
+            distributions.append(self.distributions.ix[data.index].sum())
 
-        sdata = dict(
-            (value, self.distributions.ix[data.index].sum())
-            for value, data in self.traits.groupby(attribute)
+        traits = pd.DataFrame(traits, columns=[attribute])
+        distributions = pd.DataFrame(
+            distributions,
+            columns=self.distributions.columns,
+            index=traits.index
         )
 
-        traits = pd.DataFrame(sdata.keys(), columns=[attribute])
-        distributions = pd.DataFrame(sdata.values(),
-                                     columns=self.distributions.columns,
-                                     index=traits.index)
-
-        return SpatialDistribution(self.field,
-                                   distributions,
-                                   traits)
+        return SpatialDistribution(self.field, distributions, traits)
 
     def get_probability_field(self, attribute, value):
         '''extract the probability of a particular attribute value from a spatial distribution

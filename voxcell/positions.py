@@ -1,5 +1,4 @@
 '''Basic algorithm to create positions for cell bodies from a density distribution'''
-from voxcell.math import unique_with_counts
 import numpy as np
 
 
@@ -24,7 +23,7 @@ def create_cell_counts(density, total_count):
 
     chosen_voxels = np.random.choice(all_voxels, size=total_count, p=probs)
 
-    unique, counts = unique_with_counts(chosen_voxels)
+    unique, counts = np.unique(chosen_voxels, return_counts=True)
 
     chosen_indexes = np.unravel_index(unique, density.shape)
 

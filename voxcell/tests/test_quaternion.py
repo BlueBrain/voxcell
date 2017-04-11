@@ -1,8 +1,7 @@
-from voxcell import math
+import voxcell.quaternion as test_module
 
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
-from nose.tools import assert_true, assert_false
 
 
 def check_normalized(mat):
@@ -10,18 +9,18 @@ def check_normalized(mat):
 
 
 def check_matrices_to_quaternions(count, matrix, quaternion):
-    quat = math.matrices_to_quaternions(np.array([matrix] * count))
+    quat = test_module.matrices_to_quaternions(np.array([matrix] * count))
     assert_almost_equal(quat, np.array([quaternion] * count), decimal=6)
     check_normalized(quat)
 
 
 def check_quaternions_to_matrices(count, matrix, quaternion):
-    m = math.quaternions_to_matrices(np.array([quaternion] * count))
+    m = test_module.quaternions_to_matrices(np.array([quaternion] * count))
     assert_almost_equal(m, np.array([matrix] * count), decimal=6)
 
 
 def test_quaternion_empty():
-    quat = math.matrices_to_quaternions(np.empty((0, 3, 3)))
+    quat = test_module.matrices_to_quaternions(np.empty((0, 3, 3)))
     assert_equal(quat, np.empty((0, 4)))
 
 
@@ -80,7 +79,7 @@ def test_quaternion_180_heading_90_attitude():
 
 
 def test_matrix_empty():
-    quat = math.quaternions_to_matrices(np.empty((0, 4)))
+    quat = test_module.quaternions_to_matrices(np.empty((0, 4)))
     assert_equal(quat, np.empty((0, 3, 3)))
 
 
@@ -205,30 +204,7 @@ def test_roundtrip_complex():
          [1, 0, 0]]],
         dtype=np.float)
 
-    quat = math.matrices_to_quaternions(series)
-    restored = math.quaternions_to_matrices(quat)
+    quat = test_module.matrices_to_quaternions(series)
+    restored = test_module.quaternions_to_matrices(quat)
     assert_almost_equal(series, restored, decimal=6)
     check_normalized(quat)
-
-
-def test_clip():
-    r = math.clip(np.array([[0, 0, 0],
-                            [0, 1, 0],
-                            [0, 0, 0]]), (np.array([1, 1]), np.array([1, 1])))
-
-    assert_equal(r, np.array([[1]]))
-
-
-def test_is_diagonal_true():
-    A = np.array([
-        [2, 0],
-        [0, 3]
-    ])
-    assert_true(math.is_diagonal(A))
-
-def test_is_diagonal_false():
-    A = np.array([
-        [2, 0],
-        [1, 3]
-    ])
-    assert_false(math.is_diagonal(A))

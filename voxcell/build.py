@@ -1,10 +1,8 @@
 '''functions to build artificial shapes'''
 
-import fractions
-
 import numpy as np
 
-from voxcell import core, math
+from voxcell import core, math_utils
 
 
 def sphere_mask(shape, radius):
@@ -178,7 +176,7 @@ def density_from_positions(positions, voxel_dimensions, dtype=np.uint8):
         return core.VoxelData(np.zeros([1] * len(voxel_dimensions), dtype=dtype), voxel_dimensions)
 
     else:
-        aabb_min, aabb_max = math.positions_minimum_aabb(positions)
+        aabb_min, aabb_max = math_utils.positions_minimum_aabb(positions)
 
         dimensions = np.floor((aabb_max - aabb_min) / voxel_dimensions).astype(np.uint)
         dimensions += np.ones_like(dimensions)
@@ -249,6 +247,6 @@ def get_voxel_side(layer_heights, min_value=5):
     rounded_heights = np.round(layer_heights)
     result = rounded_heights[0]
     for n in rounded_heights:
-        result = fractions.gcd(result, n)
+        result = math_utils.gcd(result, n)
     result = max(min_value, result)
     return result
