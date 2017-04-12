@@ -27,10 +27,10 @@
     (an inhibitory Martinotti cell).
 '''
 
+import logging
+
 import numpy as np
 import pandas as pd
-
-import logging
 
 
 L = logging.getLogger(__name__)
@@ -224,11 +224,13 @@ class SpatialDistribution(object):
             An SpatialDistribution object
         '''
 
-        distributions = dict((value, self.distributions.ix[data.index].sum())
-                             for value, data in self.traits.groupby(attribute))
+        sdata = dict(
+            (value, self.distributions.ix[data.index].sum())
+            for value, data in self.traits.groupby(attribute)
+        )
 
-        traits = pd.DataFrame(distributions.keys(), columns=[attribute])
-        distributions = pd.DataFrame(distributions.values(),
+        traits = pd.DataFrame(sdata.keys(), columns=[attribute])
+        distributions = pd.DataFrame(sdata.values(),
                                      columns=self.distributions.columns,
                                      index=traits.index)
 

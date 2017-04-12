@@ -13,12 +13,14 @@ represent space, the fourth and fifth dimensions contain a 3x3 rotation matrix.
 Note that although 3D is our main target, most of these functions should behave correctly for lower
 and higher dimensionality levels.
 '''
+
+import logging
+
 import numpy as np
 from scipy.ndimage import morphology
 import scipy.ndimage
 
 
-import logging
 L = logging.getLogger(__name__)
 
 

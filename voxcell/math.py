@@ -1,7 +1,8 @@
 '''helper mathematical functions'''
 
-import numpy as np
 import fractions
+
+import numpy as np
 from scipy.stats import itemfreq  # pylint: disable=E0611
 
 
