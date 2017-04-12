@@ -1,11 +1,8 @@
 #!/usr/bin/env python
-# pylint: disable=R0801
+# pylint: skip-file
 """ Distribution configuration """
-# pylint: disable=R0801,F0401,E0611
 
 import sys
-if sys.version_info < (2, 7):
-    sys.exit("Python < 2.7 is no longer supported from version 0.1.0")
 
 try:
     from setuptools import setup
@@ -17,6 +14,10 @@ from pip.req import parse_requirements
 from optparse import Option
 
 from brainbuilder import __version__
+
+
+if sys.version_info < (2, 7):
+    sys.exit("Python < 2.7 is no longer supported from version 0.1.0")
 
 options = Option('--workaround')
 options.skip_requirements_regex = None

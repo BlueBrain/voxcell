@@ -1,7 +1,9 @@
 '''functions to build artificial shapes'''
 
-import numpy as np
 import fractions
+
+import numpy as np
+
 from voxcell import core, math
 
 

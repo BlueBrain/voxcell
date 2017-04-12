@@ -87,9 +87,10 @@ class VoxelData(object):
             nrrd_path(string): full path to nrrd file
         '''
         #from: http://teem.sourceforge.net/nrrd/format.html#space
-        options = {'spacings': self.voxel_dimensions,
-                   'space origin': self.offset,
-                   }
+        options = {
+            'spacings': self.voxel_dimensions,
+            'space origin': self.offset,
+        }
         nrrd.write(nrrd_path, self.raw, options=options)
 
     def lookup(self, positions, outer_value=None):

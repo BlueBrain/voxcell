@@ -1,10 +1,11 @@
 '''algorithm to assign me-types to a group of cells'''
 import itertools
+import logging
 
 import numpy as np
 import pandas as pd
 
-import logging
+
 L = logging.getLogger(__name__)
 
 
