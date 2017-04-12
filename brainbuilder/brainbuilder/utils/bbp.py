@@ -1,10 +1,9 @@
 '''compatibility functions with existing BBP formats'''
 import itertools
-import xml.etree.ElementTree
-from collections import defaultdict
 from itertools import izip
 import logging
 
+import lxml.etree
 import numpy as np
 import pandas as pd
 from voxcell import core
@@ -53,16 +52,8 @@ def map_regions_to_layers(hierarchy, region_name):
 
 def _parse_recipe(recipe_filename):
     '''parse a BBP recipe and return the corresponding etree'''
-    # This is rather hacky but lets us avoid a dependency on lxml (which requires libxml)
-    # the only reason to use lxml is because of the recipe uses the SYSTEM ELEMENT feature
-    # that embeds one xml into another xml file, which is not supported on the standard xml
-    # package
-    # However, this is only used to embed the connectivy recipe into the rest of the recipe and
-    # brain builder doesn't care about connectivity rules
-    # This will skip unknown entities (normal dict would raise KeyError instead)
-    parser = xml.etree.ElementTree.XMLParser()
-    parser.entity = defaultdict(lambda: '')
-    return xml.etree.ElementTree.parse(recipe_filename, parser=parser)
+    parser = lxml.etree.XMLParser(resolve_entities=False)
+    return lxml.etree.parse(recipe_filename, parser=parser)
 
 
 def get_lattice_vectors(recipe_filename):
