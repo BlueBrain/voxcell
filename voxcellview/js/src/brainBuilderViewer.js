@@ -33,7 +33,6 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
     // used for morphologies
     this.averagePoint = new THREE.Vector3(0, 0, 0);
     this.morphologyCount = 0;
-
     // privileged methods
     var that = this;
 
@@ -270,6 +269,77 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
       that.cameraHelper.up = that.camera.up;
       that.updateAxisHelper();
     };
+
+    this.onDocumentMouseMove = function( event ) {
+      event.preventDefault();
+      var containerWidth = that.container.clientWidth;
+      var containerHeight = that.container.clientHeight;
+      if (BigScreen.enabled && BigScreen.element !== null) { // displaying in full screen
+        var mousePosition = new THREE.Vector2(
+          (event.clientX/containerWidth) * 2-1,
+          - (event.clientY/containerHeight) * 2+1
+        );
+      } else {
+        var mousePosition = new THREE.Vector2(
+          (event.offsetX/containerWidth) * 2-1,
+          - (event.offsetY/containerHeight) * 2+1
+        );
+      }
+
+      this.updateLabel = function(point, gid){
+        if (that.label === undefined){
+          var div = $('<div id="gidContainer" class="position-label"></div>');
+          that.label = $('<span></span');
+          var css = $(`<style> .position-label {
+            position:absolute; bottom:20px; left:20px; background-color:white;
+            padding:5px; border-radius:5px; font-family:monospace;
+          } </style>`);
+          div.append(that.label);
+          div.append(css);
+          that.container.appendChild($(div)[0]);
+        }
+        var text = '';
+        ['x', 'y', 'z'].forEach(function(s) {
+          text = text + ' ' + s + ': ' + point[s].toFixed(4).toString();
+        });
+        if(gid) {
+          text += ' GID: ' + gid;
+        }
+        that.label.text(text);
+      };
+
+      that.raycaster.setFromCamera(mousePosition, that.camera);
+      var intersects = that.raycaster.intersectObjects(that.scene.children, true); // the flag to search recursive in 3D objects
+      if (intersects && intersects.length > 0) {
+        var geometry = intersects[0].object.geometry;
+        if(geometry.attributes) { // show_points
+          var rawIndex = intersects[0].index;
+          var rawPoints = intersects[0].object.geometry.attributes.position.array;
+          var realGid = (rawIndex * 3);
+          var coordinates = {
+            'x': rawPoints[realGid],
+            'y': rawPoints[realGid + 1],
+            'z': rawPoints[realGid + 2]
+          };
+          this.updateLabel(coordinates, rawIndex + 1);
+        }
+        else if(geometry.vertices) { //works with show_volume
+          var coordinates = new THREE.Vector3();
+          coordinates.copy(geometry.vertices[intersects[0].index]);
+          this.updateLabel(coordinates);
+        }
+      } else {
+        that.removeGIDLabel();
+      }
+    }
+
+    this.removeGIDLabel = function() {
+      var gidLabel = that.container.querySelector('#gidContainer');
+      if(gidLabel) {
+        gidLabel.remove();
+        that.label = undefined;
+      }
+    }
   };
 
   brainBuilderViewer.Viewer.constructor = brainBuilderViewer.Viewer;
@@ -294,6 +364,8 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
       var settings = this.datguiSettings;
       settings.opacity = {};
       settings.opacity._datgui = settings._datgui.addFolder('opacity');
+      settings.showGID = false;
+      var gidSelected = settings._datgui.add(settings, 'showGID');
       var paramParticleSize = parseFloat(this.displayParameters.particle_size);
       settings.size =  paramParticleSize || Math.log(DEFAULTPARTICLESIZE + 1);
 
@@ -314,9 +386,20 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
 
       settings._datgui.close();
 
+      gidSelected.onChange(function(value, e) {
+        if(value) { // start tracking the pointer
+          that.raycaster = new THREE.Raycaster();
+          that.container.addEventListener('mousemove', that.onDocumentMouseMove);
+        } else {
+          that.removeGIDLabel();
+          that.container.removeEventListener('mousemove', that.onDocumentMouseMove);
+        }
+      });
+
       sizeGui.onChange(function(value) {
         that.particleSizeChange(Math.exp(value) - 1);
       });
+
     },
 
     onShow: function() {
