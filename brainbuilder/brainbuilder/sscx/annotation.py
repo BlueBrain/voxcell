@@ -21,7 +21,7 @@ def build_column_atlas(recipe_filename):
     # We want our atlas to contain a bit of space tagged as "outside the brain".
     # This will later be used to compute "distance to pia" for placement hints.
     layer_thickness_microns[0] = 15  # PIA
-    layer_ids, heights_microns = zip(*sorted(layer_thickness_microns.items(), lambda l, _: -l[0]))
+    layer_ids, heights_microns = zip(*sorted(layer_thickness_microns.items(), reverse=True))
     voxel_y = vb.get_voxel_side(heights_microns)
 
     heights = np.round(np.array(heights_microns) / voxel_y).astype(np.uint)

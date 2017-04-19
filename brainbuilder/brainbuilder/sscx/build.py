@@ -6,6 +6,7 @@ import os
 import argparse
 import logging
 
+import numpy as np
 import pandas as pd
 
 from voxcell.core import CellCollection
@@ -29,7 +30,7 @@ def build_cell_collection(cell_count, annotation, density, recipe_sdist, neuron_
 
     L.debug("Assigning layers...")
     cells.add_properties(
-        pd.DataFrame({'layer': map(str, annotation.lookup(cells.positions))})
+        pd.DataFrame({'layer': annotation.lookup(cells.positions).astype(np.str)})
     )
 
     L.debug("Assigning mtype / etype / synapse_class / mClass...")

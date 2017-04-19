@@ -8,8 +8,7 @@ import lxml.etree
 import numpy as np
 import pandas as pd
 
-from voxcell import core
-from voxcell import math
+from voxcell import core, math_utils
 from voxcell import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
 
@@ -291,7 +290,7 @@ def get_placement_hints_table(morphs):
         A DataFrame array that contains the placement hint scores for the given morphologies.
         This table has one row for each morphology and one column for each region subdivision
     '''
-    subdivision_count = math.lcmm(morphs.placement_hints.map(len).as_matrix())
+    subdivision_count = math_utils.lcmm(morphs.placement_hints.map(len).as_matrix())
 
     region_dist_table = pd.DataFrame(dtype=np.float,
                                      index=morphs.index,

@@ -5,6 +5,8 @@ import logging
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
+from six import iteritems
+
 from voxcell import math
 
 
@@ -212,7 +214,7 @@ def collect_placement_hints(neurondb):
 def check_bad_bins(hints, column):
     '''confirm that any cell missing a morphology belongs to a group for which there are
     sections of the layer with a placement hint score of zero'''
-    with_bad_bins = [k for k, v in hints.iteritems() if np.any(v == 0)]
+    with_bad_bins = [k for k, v in iteritems(hints) if np.any(v == 0)]
 
     no_morph = column.properties.morphology.isnull()
     for k in column.properties[no_morph][['layer', 'mtype', 'etype']].drop_duplicates().values:
@@ -225,11 +227,11 @@ def report_placement_hints(hints):
     '''plot placement hints for groups of morphologies and
     warn about groups with bins of zero score'''
     classification = {}
-    for k, summed in hints.iteritems():
+    for k, summed in iteritems(hints):
         classification.setdefault(k[0], {}).setdefault(len(summed), []).append((k, summed))
 
-    for lid, by_ph_length in classification.iteritems():
-        for phlength, data in by_ph_length.iteritems():
+    for lid, by_ph_length in iteritems(classification):
+        for phlength, data in iteritems(by_ph_length):
             plt.figure(figsize=(15, 3))
             plt.title('Placement Hints')
             plt.xlabel('layer height bin number')
