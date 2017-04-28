@@ -42,5 +42,7 @@ setup(
     install_requires=REQS,
     packages=['voxcell'],
     include_package_data=True,
-    scripts=[],
+    scripts=[
+        'apps/merge-mvd3'
+    ],
 )
