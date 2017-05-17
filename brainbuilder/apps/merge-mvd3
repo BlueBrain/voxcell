@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from voxcell.core import CellCollection
+from voxcell import CellCollection
 
 
 def run(filepaths, output_path):

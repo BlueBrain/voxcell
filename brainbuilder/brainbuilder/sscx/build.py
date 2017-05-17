@@ -9,11 +9,10 @@ import logging
 import numpy as np
 import pandas as pd
 
-from voxcell.core import CellCollection
+from voxcell import CellCollection
 from voxcell.positions import create_cell_positions
 
 from brainbuilder.utils import bbp
-
 from brainbuilder.sscx.annotation import build_column_atlas
 
 

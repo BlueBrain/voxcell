@@ -1,5 +1,8 @@
-voxcell>=1.0.1
-argparse>=1.2.1
-neurom>=1.0
+h5py>=2.6
+numpy>=1.9
+scipy>=0.13
+pandas>=0.17
 lxml>=3.7
 six>=1.0
+
+voxcell>=1.5

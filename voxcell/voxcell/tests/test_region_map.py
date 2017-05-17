@@ -1,8 +1,8 @@
 import os
 from nose.tools import eq_, raises
 
-from voxcell import VoxcellError
-import voxcell.core as test_module
+from voxcell.exceptions import VoxcellError
+import voxcell.hierarchy as test_module
 
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')

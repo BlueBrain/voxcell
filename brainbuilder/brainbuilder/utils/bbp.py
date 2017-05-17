@@ -8,7 +8,7 @@ import lxml.etree
 import numpy as np
 import pandas as pd
 
-from voxcell import core, math_utils
+from voxcell import CellCollection, math_utils
 from voxcell import traits as tt
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
 
@@ -527,7 +527,7 @@ def load_mvd2(filepath):
     '''loads an mvd2 as a CellCollection'''
     data = parse_mvd2(filepath)
 
-    cells = core.CellCollection()
+    cells = CellCollection()
 
     cells.positions = np.array([[c['x'], c['y'], c['z']] for c in data['Neurons Loaded']])
 

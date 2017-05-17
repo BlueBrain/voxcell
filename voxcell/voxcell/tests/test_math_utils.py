@@ -1,8 +1,8 @@
-import voxcell.math_utils as test_module
-
 import numpy as np
 from numpy.testing import assert_equal
 from nose.tools import assert_true, assert_false
+
+import voxcell.math_utils as test_module
 
 
 def test_clip():

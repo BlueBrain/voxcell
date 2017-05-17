@@ -9,11 +9,10 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import imp
 import pip
 from pip.req import parse_requirements
 from optparse import Option
-
-from brainbuilder import __version__
 
 
 if sys.version_info < (2, 7):
@@ -35,9 +34,11 @@ else:
 
 REQS = [str(ir.req) for ir in install_reqs]
 
+VERSION = imp.load_source("brainbuilder.version", "brainbuilder/version.py").VERSION
+
 setup(
     name='brainbuilder',
-    version=__version__,
+    version=VERSION,
     description='code to build brains',
     install_requires=REQS,
     packages=[
@@ -49,5 +50,6 @@ setup(
     include_package_data=True,
     scripts=[
         'apps/generate-ncs',
+        'apps/merge-mvd3',
     ],
 )

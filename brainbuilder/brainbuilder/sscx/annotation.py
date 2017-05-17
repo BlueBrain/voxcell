@@ -1,7 +1,7 @@
 """ Build atlas for SSCX column based on BBP recipe. """
 
 import voxcell.build as vb
-from voxcell.core import VoxelData, Hierarchy
+from voxcell import VoxelData, Hierarchy
 
 from brainbuilder.utils import bbp
 

@@ -2,7 +2,8 @@
 
 import numpy as np
 
-from voxcell import core, math_utils
+from voxcell import math_utils
+from voxcell.voxel_data import VoxelData
 
 
 def sphere_mask(shape, radius):
@@ -173,7 +174,7 @@ def tiled_pattern(pattern, tiling):
 def density_from_positions(positions, voxel_dimensions, dtype=np.uint8):
     '''calculate density from the positions'''
     if positions.shape[0] == 0:
-        return core.VoxelData(np.zeros([1] * len(voxel_dimensions), dtype=dtype), voxel_dimensions)
+        return VoxelData(np.zeros([1] * len(voxel_dimensions), dtype=dtype), voxel_dimensions)
 
     else:
         aabb_min, aabb_max = math_utils.positions_minimum_aabb(positions)
@@ -181,8 +182,7 @@ def density_from_positions(positions, voxel_dimensions, dtype=np.uint8):
         dimensions = np.floor((aabb_max - aabb_min) / voxel_dimensions).astype(np.uint)
         dimensions += np.ones_like(dimensions)
 
-        voxels = core.VoxelData(np.zeros(dimensions, dtype=dtype),
-                                voxel_dimensions, offset=aabb_min)
+        voxels = VoxelData(np.zeros(dimensions, dtype=dtype), voxel_dimensions, offset=aabb_min)
 
         voxel_indices = voxels.positions_to_indices(positions)
 
@@ -197,7 +197,7 @@ def homogeneous_density(mask, voxel_dimensions, offset=None, value=255):
     '''build an artificial homogeneous density'''
     raw = np.zeros(mask.shape, dtype=np.uint8)
     raw[mask] = value
-    return core.VoxelData(raw, voxel_dimensions=voxel_dimensions, offset=offset)
+    return VoxelData(raw, voxel_dimensions=voxel_dimensions, offset=offset)
 
 
 def layered_annotation(shape, heights, layer_ids):

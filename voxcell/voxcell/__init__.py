@@ -1,7 +1,8 @@
-""" brainbuilder """
+""" voxcell """
+
 from voxcell.version import VERSION as __version__
 
-
-class VoxcellError(Exception):
-    """ Base class for voxcell exceptions. """
-    pass
+from voxcell.cell_collection import CellCollection
+from voxcell.exceptions import VoxcellError
+from voxcell.hierarchy import RegionMap, Hierarchy
+from voxcell.voxel_data import VoxelData
