@@ -1,11 +1,12 @@
 from nose.tools import eq_
 
-from voxcell import core
-from voxcell.traits import SpatialDistribution, _drop_duplicate_columns
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_equal
 from pandas.util.testing import assert_frame_equal
+
+from voxcell.traits import SpatialDistribution, _drop_duplicate_columns
+from voxcell.voxel_data import VoxelData
 
 
 NOFIELD = np.array([])
@@ -174,7 +175,7 @@ def test_reduce_distribution_collection_2():
 
 
 def check_assign_conditional(preassigned, expected):
-    sdist = SpatialDistribution(field=core.VoxelData(np.array([[[0]]]), (25, 25, 25)),
+    sdist = SpatialDistribution(field=VoxelData(np.array([[[0]]]), (25, 25, 25)),
                                 distributions=pd.DataFrame([0.75, 0.25, 0.0]),
                                 traits=pd.DataFrame([{'name': 'a', 'type': 'x', 'color': 0},
                                                      {'name': 'b', 'type': 'y', 'color': 0},
@@ -229,7 +230,7 @@ def test_assign_conditional_multiple_impossible_1():
 
 def test_collect():
     sdist = SpatialDistribution(
-        field=core.VoxelData(np.array([[[0]]]), (25, 25, 25)),
+        field=VoxelData(np.array([[[0]]]), (25, 25, 25)),
         distributions=pd.DataFrame([0.75, 0.25, 0.0]),
         traits=pd.DataFrame([
             {'name': 'a', 'type': 'x', 'color': 0},
@@ -311,7 +312,7 @@ def test_drop_duplicate_columns_1():
 def test_drop_duplicates():
 
     sd = SpatialDistribution(
-        field=core.VoxelData(np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]), (1,)),
+        field=VoxelData(np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4]), (1,)),
         distributions=pd.DataFrame([[0.4, 0.2, 0.2, 0.4, 0.2],
                                     [0.6, 0.8, 0.8, 0.6, 0.8]]),
         traits=pd.DataFrame({'size': ['Large', 'Small'], 'speed': ['Fast', 'Slow']}))
@@ -328,7 +329,7 @@ def test_drop_duplicates():
 def test_get_probability_field():
 
     sd = SpatialDistribution(
-        field=core.VoxelData(np.array([0, 0, -1, 1, 1]), (1,)),
+        field=VoxelData(np.array([0, 0, -1, 1, 1]), (1,)),
         distributions=pd.DataFrame([[0.4, 0.2],
                                     [0.6, 0.8]]),
         traits=pd.DataFrame({'size': ['Large', 'Small']}))
@@ -340,7 +341,7 @@ def test_get_probability_field():
 def test_from_probability_field():
 
     sd = SpatialDistribution.from_probability_field(
-        core.VoxelData(np.array([0.4, 0.4, -1, 0.2, 0.2]), (1,)),
+        VoxelData(np.array([0.4, 0.4, -1, 0.2, 0.2]), (1,)),
         'size', 'Large', 'Small'
     )
 

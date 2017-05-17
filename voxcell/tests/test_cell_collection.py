@@ -5,7 +5,9 @@ import h5py
 from contextlib import contextmanager
 from nose.tools import eq_, assert_raises, assert_is_none, raises
 
-from voxcell import core, VoxcellError
+import voxcell.cell_collection as test_module
+from voxcell import VoxcellError
+
 from numpy.testing import assert_equal, assert_almost_equal
 from pandas.util.testing import assert_frame_equal
 import numpy as np
@@ -100,38 +102,38 @@ def assert_equal_cells(c0, c1):
 def check_roundtrip(original):
     with tempcwd():
         original.save('cells.h5')
-        restored = core.CellCollection.load('cells.h5')
+        restored = test_module.CellCollection.load('cells.h5')
         assert_equal_cells(original, restored)
         return restored
 
 
 def test_roundtrip_empty():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_single():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75]
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_multiple():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75, 0]
     cells.properties['z-factor'] = [0, 0.75, 0.5, 0.25]
     check_roundtrip(cells)
 
 
 def test_roundtrip_properties_text_single():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'pretty']
     restored = check_roundtrip(cells)
     restored.properties['y-type'].to_frame()
 
 
 def test_roundtrip_properties_text_multiple():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'ugly', 'pretty']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha']
     restored = check_roundtrip(cells)
@@ -140,19 +142,19 @@ def test_roundtrip_properties_text_multiple():
 
 
 def test_roundtrip_positions():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.positions = np.random.random((10, 3))
     check_roundtrip(cells)
 
 
 def test_roundtrip_orientations():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.orientations = random_orientations(10)
     check_roundtrip(cells)
 
 
 def test_roundtrip_complex():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     n = 10
 
     cells.positions = np.random.random((n, 3))
@@ -171,7 +173,7 @@ def test_roundtrip_complex():
 
 def test_remove_unassigned():
     ''' test that cells with unassigned properties are removed '''
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     n = 5
 
     cells.positions = np.random.random((n, 3))
@@ -187,7 +189,7 @@ def test_remove_unassigned():
 
 def test_circuit_seeds():
     ''' test that 4 seeds are generated in the MVD3 during save '''
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.properties['foo'] = ['a', 'b', 'c']
     with tempcwd():
         cells.save('cells.h5')
@@ -196,7 +198,7 @@ def test_circuit_seeds():
 
 
 def test_as_dataframe():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
@@ -215,7 +217,7 @@ def test_as_dataframe():
 
 
 def test_add_properties():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     properties1 = pd.DataFrame({
         'a': [1],
         'b': [2],
@@ -245,7 +247,7 @@ def test_add_properties():
 
 
 def test_save_load_meta():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.meta['foo'] = 42
     cells.meta['bar'] = "abcd"
     check_roundtrip(cells)
@@ -256,7 +258,7 @@ def test_from_dataframe_invalid_index():
     df = pd.DataFrame({
         'prop-a': ['a', 'b'],
     })
-    core.CellCollection.from_dataframe(df)
+    test_module.CellCollection.from_dataframe(df)
 
 
 def test_from_dataframe_no_positions():
@@ -264,19 +266,19 @@ def test_from_dataframe_no_positions():
         'prop-a': ['a', 'b'],
     }, index=[1, 2])
 
-    cells = core.CellCollection.from_dataframe(df)
+    cells = test_module.CellCollection.from_dataframe(df)
     assert_is_none(cells.positions)
     assert_is_none(cells.orientations)
     assert_frame_equal(cells.properties, df.reset_index(drop=True))
 
 
 def test_to_from_dataframe():
-    cells = core.CellCollection()
+    cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
 
-    cells2 = core.CellCollection.from_dataframe(cells.as_dataframe())
+    cells2 = test_module.CellCollection.from_dataframe(cells.as_dataframe())
     assert_almost_equal(cells.positions, cells2.positions)
     assert_almost_equal(cells.orientations, cells2.orientations)
     assert_frame_equal(cells.properties, cells2.properties)

@@ -3,7 +3,7 @@ from nose.tools import eq_
 from numpy.testing import assert_equal
 
 from voxcell import positions
-from voxcell import core
+from voxcell.voxel_data import VoxelData
 
 
 def test_cell_counts_to_cell_voxel_indices_0():
@@ -93,7 +93,7 @@ def test_create_cell_positions_0():
     raw = np.ones((3, 3, 3))
     total_cell_count = 0
 
-    result = positions.create_cell_positions(core.VoxelData(raw, **mhd), total_cell_count)
+    result = positions.create_cell_positions(VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
@@ -103,7 +103,7 @@ def test_create_cell_positions_1():
     raw = np.ones((3, 3, 3))
     total_cell_count = 1
 
-    result = positions.create_cell_positions(core.VoxelData(raw, **mhd), total_cell_count)
+    result = positions.create_cell_positions(VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))
@@ -113,7 +113,7 @@ def test_create_cell_positions_full():
     raw = np.ones((3, 3, 3))
     total_cell_count = 3 * 3 * 3
 
-    result = positions.create_cell_positions(core.VoxelData(raw, **mhd), total_cell_count)
+    result = positions.create_cell_positions(VoxelData(raw, **mhd), total_cell_count)
 
     eq_(np.shape(result), (total_cell_count, 3))
     assert np.all((result >= 0) & (result <= 3 * 25))

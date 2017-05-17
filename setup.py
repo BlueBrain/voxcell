@@ -9,12 +9,10 @@ try:
 except ImportError:
     from distutils.core import setup
 
+import imp
 import pip
 from pip.req import parse_requirements
 from optparse import Option
-
-from voxcell import __version__
-
 
 if sys.version_info < (2, 7):
     sys.exit("Python < 2.7 is no longer supported from version 1.4.0")
@@ -35,14 +33,13 @@ else:
 
 REQS = [str(ir.req) for ir in install_reqs]
 
+VERSION = imp.load_source("voxcell.version", "voxcell/version.py").VERSION
+
 setup(
     name='voxcell',
-    version=__version__,
+    version=VERSION,
     description='code to build collections of cells',
     install_requires=REQS,
     packages=['voxcell'],
     include_package_data=True,
-    scripts=[
-        'apps/merge-mvd3'
-    ],
 )
