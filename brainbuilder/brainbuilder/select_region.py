@@ -23,7 +23,7 @@ def select_region(annotation_raw, density, hierarchy, region_name, inverse=False
     '''
     in_region = build.mask_by_region_names(annotation_raw, hierarchy, [region_name])
     if inverse:
-        in_region = np.negative(in_region)
+        in_region = np.invert(in_region)
     return density.with_data(density.raw * in_region)
 
 
@@ -37,5 +37,5 @@ def select_hemisphere(density_raw, left=True):
     in_region = np.ones_like(density_raw, dtype=np.bool)
     in_region[:, :, in_region.shape[2] / 2:] = False
     if not left:
-        in_region = np.negative(in_region)
+        in_region = np.invert(in_region)
     return density_raw * in_region
