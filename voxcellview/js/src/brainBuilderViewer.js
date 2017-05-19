@@ -3,7 +3,7 @@ var brainBuilderViewer = brainBuilderViewer || {};
 var Detector = require('../extern/Detector.js');
 var THREE = require('../extern/three.min.js');
 // dat does not export its variable
-var dat = require('exports?dat!../extern/dat.gui.min.js');
+var dat = require('../extern/dat.gui.min.js');
 var BigScreen = require('../extern/bigscreen.min.js');
 // trackball requires THREE to be defined beforehand
 require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
