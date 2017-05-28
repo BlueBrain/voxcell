@@ -39,7 +39,7 @@ def test_load_recipe_as_layer_distributions_complex():
         os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml'))
 
     eq_(list(layer_dists.keys()),
-        ['layer', 'mtype', 'etype', 'mClass', 'synapse_class', 'percentage'])
+        ['layer', 'mtype', 'etype', 'morph_class', 'synapse_class', 'percentage'])
 
     eq_(len(layer_dists.values), 9)
 
@@ -545,7 +545,7 @@ def test_load_mvd2():
 
     eq_(set(cells.properties.columns),
         set(['etype', 'morphology', 'mtype', 'synapse_class', 'morph_class',
-             'layer', 'minicolumn', 'metype']))
+             'layer', 'minicolumn', 'me_combo']))
 
     eq_(list(cells.properties.synapse_class.unique()),
         ['INH', 'EXC'])
@@ -558,6 +558,12 @@ def test_load_mvd2():
 
     eq_(list(cells.properties.synapse_class),
         ['INH', 'EXC', 'INH', 'EXC', 'INH'])
+
+    eq_(list(cells.properties.layer),
+        ['1', '2', '4', '5', '6'])
+
+    eq_(cells.properties.me_combo[0],
+        'cNAC187_L1_DLAC_1_sm080904a3_-_Scale_x1.000_y1.050_z1.000')
 
 
 def test_roundtrip_mvd2():

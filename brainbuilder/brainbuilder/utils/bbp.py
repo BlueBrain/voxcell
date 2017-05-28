@@ -96,7 +96,7 @@ def get_distribution_from_recipe(recipe_filename):
 
     Returns:
         A DataFrame with one row for each possibility and columns:
-            layer, mtype, etype, mClass, sClass, percentage
+            layer, mtype, etype, morph_class, synapse_class, percentage
     '''
     recipe_tree = _parse_recipe(recipe_filename)
 
@@ -126,7 +126,7 @@ def get_distribution_from_recipe(recipe_filename):
 
     return pd.DataFrame(read_records(), columns=['layer',
                                                  'mtype', 'etype',
-                                                 'mClass', 'synapse_class',
+                                                 'morph_class', 'synapse_class',
                                                  'percentage'])
 
 
@@ -134,8 +134,7 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
     '''take a BBP builder recipe and return the probability distributions for each type
 
     Returns:
-        A DataFrame with one row for each posibility and columns:
-            layer, mtype, etype, mClass, sClass, percentage
+        VoxelData with cell density
     '''
     recipe_tree = _parse_recipe(recipe_filename)
 
@@ -168,7 +167,7 @@ def transform_recipe_into_spatial_distribution(annotation, recipe, region_layers
 
     Returns:
         A SpatialDistribution object where the properties of the traits_collection are:
-        mtype, etype, mClass, sClass
+        mtype, etype, morph_class, synapse_class
     '''
     distributions = pd.DataFrame(data=0.0,
                                  index=recipe.index,
@@ -480,8 +479,8 @@ def parse_mvd2(filepath):
         'Neurons Loaded': (
             ('morphology', str),
             ('database', int), ('hyperColumn', int), ('miniColumn', int),
-            ('layer', str), ('mtype', int), ('etype', int),
-            ('x', float), ('y', float), ('z', float), ('r', float), ('metype', str)
+            ('layer', int), ('mtype', int), ('etype', int),
+            ('x', float), ('y', float), ('z', float), ('r', float), ('me_combo', str)
         ),
         'MicroBox Data': (
             ('size_x', float), ('size_y', float), ('size_z', float),
@@ -543,9 +542,9 @@ def load_mvd2(filepath):
         'mtype': [data['MorphTypes'][c['mtype']]['name'] for c in data['Neurons Loaded']],
         'etype': [data['ElectroTypes'][c['etype']]['name'] for c in data['Neurons Loaded']],
         'morphology': [c['morphology'] for c in data['Neurons Loaded']],
-        'layer': [c['layer'] for c in data['Neurons Loaded']],
+        'layer': [str(1 + c['layer']) for c in data['Neurons Loaded']],
         'minicolumn': [c['miniColumn'] for c in data['Neurons Loaded']],
-        'metype': [c['metype'] for c in data['Neurons Loaded']],
+        'me_combo': [c['me_combo'] for c in data['Neurons Loaded']],
     })
 
     cells.add_properties(props)
@@ -557,8 +556,9 @@ def save_mvd2(filepath, morphology_path, cells):
 
     Rotations are lost in the process.
     Cells are expected to have the properties:
-    morphology, mtype, etype, minicolumn, layer, morph_class and synapse_class
+    morphology, mtype, etype, minicolumn, layer, me_combo, morph_class and synapse_class
     '''
+    L.warning("save_mvd2: rotations would be lost!")
 
     electro_types, chosen_etype = np.unique(cells.properties.etype, return_inverse=True)
 
@@ -580,13 +580,13 @@ def save_mvd2(filepath, morphology_path, cells):
             chosen_etype,
             cells.properties.minicolumn,
             cells.properties.layer,
-            cells.properties.metype
+            cells.properties.me_combo,
         )
 
-        for morph, pos, mtype_idx, etype_idx, minicolumn, layer, metype in data:
-            yield dict(name=morph, morphology=mtype_idx, electrophysiology=etype_idx,
+        for morph, pos, mtype_idx, etype_idx, minicolumn, layer, me_combo in data:
+            yield dict(name=morph, mtype_idx=mtype_idx, etype_idx=etype_idx,
                        rotation=0.0, x=pos[0], y=pos[1], z=pos[2],
-                       minicolumn=minicolumn, layer=layer, metype=metype)
+                       minicolumn=minicolumn, layer=int(layer) - 1, me_combo=me_combo)
 
     with open(filepath, 'w') as fd:
         fd.write("Application:'BrainBuilder {version}'\n"
@@ -594,8 +594,8 @@ def save_mvd2(filepath, morphology_path, cells):
                  "/unknown/\n".format(version=VERSION, morphology_path=morphology_path))
 
         fd.write('Neurons Loaded\n')
-        line = ('{name} {database} {hyperColumn} {minicolumn} {layer} {morphology} '
-                '{electrophysiology} {x} {y} {z} {rotation} {metype}\n')
+        line = ('{name} {database} {hyperColumn} {minicolumn} {layer} {mtype_idx} '
+                '{etype_idx} {x} {y} {z} {rotation} {me_combo}\n')
         fd.writelines(line.format(database=0, hyperColumn=0, **c) for c in get_mvd2_neurons())
 
         # skipping sections:

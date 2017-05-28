@@ -33,12 +33,12 @@ def build_cell_collection(cell_count, annotation, density, recipe_sdist, neuron_
         pd.DataFrame({'layer': annotation.lookup(cells.positions).astype(np.str)})
     )
 
-    L.debug("Assigning mtype / etype / synapse_class / mClass...")
+    L.debug("Assigning mtype / etype / synapse_class / morph_class...")
     cells.add_properties(
         recipe_sdist.collect(
             positions=cells.positions,
             preassigned=cells.properties[['layer']],
-            names=['mtype', 'etype', 'synapse_class', 'mClass']
+            names=['mtype', 'etype', 'synapse_class', 'morph_class']
         )
     )
 
