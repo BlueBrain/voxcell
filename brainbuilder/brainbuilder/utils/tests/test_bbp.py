@@ -106,8 +106,16 @@ def test_transform_into_spatial_distribution():
 
 
 def test_load_neurondb_v4():
-    morphs = bbp.load_neurondb_v4(os.path.join(DATA_PATH, 'neuronDBv4.dat'))
-    eq_(len(morphs), 6)
+    actual = bbp.load_neurondb_v4(os.path.join(DATA_PATH, 'neuronDBv4.dat'))
+    expected = pd.DataFrame({
+        'morphology': ["morph-a", "morph-b"],
+        'layer': ["1", "2"],
+        'mtype': ["L1_DAC", "L23_PC"],
+        'etype': ["bNAC", "dNAC"],
+        'me_combo': ["me-combo-a", "me-combo-b"],
+        'placement_hints': [[1.0, 1.0], [1.0, 1.0, 0.0]],
+    })
+    assert_frame_equal(expected.sort_index(axis=1), actual.sort_index(axis=1))
 
 
 def test_transform_neurondb_into_spatial_distribution_empty():

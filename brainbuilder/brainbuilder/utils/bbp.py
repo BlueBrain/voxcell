@@ -208,14 +208,17 @@ def load_neurondb_v4(neurondb_filename):
             if not line.strip():
                 continue
             fields = line.split()
-            morphology, layer, mtype, etype, _ = fields[:5]
-            placement_hints = list(float(h) for h in fields[5:])
-            # skipping metype because it's just a combination of the mtype and etype values
-            yield [morphology, layer, mtype, etype, placement_hints]
+            yield {
+                'morphology': fields[0],
+                'layer': fields[1],
+                'mtype': fields[2],
+                'etype': fields[3],
+                'me_combo': fields[4],
+                'placement_hints': [float(x) for x in fields[5:]],
+            }
 
     with open(neurondb_filename) as f:
-        return pd.DataFrame(read_records(f.readlines()),
-                            columns=['morphology', 'layer', 'mtype', 'etype', 'placement_hints'])
+        return pd.DataFrame(read_records(f.readlines()))
 
 
 def get_morphologies_by_layer(neurondb):
@@ -403,7 +406,8 @@ def transform_neurondb_into_spatial_distribution(annotation, neurondb, region_la
 
     Args:
         annotation: voxel data from Allen Brain Institute to identify regions of space.
-        neurondb(dataframe): columns 'morphology', 'layer', 'mtype', 'etype', 'placement_hints'
+        neurondb(dataframe):
+            columns 'morphology', 'layer', 'mtype', 'etype', 'me_combo', 'placement_hints'
         region_layers_map: dict that contains the relationship between regions (referenced by
             the annotation) and layers (referenced by the neurondb). The keys are region ids
             and the values are tuples of layer ids.
