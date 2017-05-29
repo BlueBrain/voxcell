@@ -676,6 +676,7 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
     return function(inputData) {
       var DTYPE_TYPE_MAP = {
         'uint8': Uint8Array,
+        'uint16': Uint16Array,
         'uint32': Uint32Array,
         'float32': Float32Array
       };

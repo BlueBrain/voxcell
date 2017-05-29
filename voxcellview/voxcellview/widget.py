@@ -9,7 +9,7 @@ from tqdm import tqdm
 from neurom.io import load_data
 import ipywidgets as widgets
 from traitlets import (Unicode, Int, List, Dict, Bytes) # pylint: disable=F0401
-from IPython.display import display # pylint: disable=F0401
+from IPython.display import display, HTML # pylint: disable=F0401
 from voxcellview import viewer # pylint: disable=F0401
 
 
@@ -30,6 +30,9 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
     display_parameters = Dict({}).tag(sync=True)
 
     spikes = List().tag(sync=True)
+
+    # supported d-types of the JS client BrainBuilderViewer -> buildRaw -> DTYPE_TYPE_MAP
+    SUPPORTED_DTYPES = ['uint8', 'uint16', 'uint32', 'float32']
 
     def _show(self, block=None, display_parameters=None):
         ''' show numpy binary data'''
@@ -61,10 +64,14 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         ''' display numpy voxel data '''
         if data.dtype == np.bool:
             data = data * np.ones_like(data, dtype=np.uint8)
-        block = data.transpose()
         self.name = name + '.raw'
         self.shape = data.shape
         self.dtype = str(data.dtype)
+
+        if self.dtype not in self.SUPPORTED_DTYPES:
+            return display(HTML('<div style="color:red">D-Type %s is not supported' % self.dtype))
+
+        block = data.transpose()
         self._show(block=block, display_parameters=display_parameters)
 
     def show_morphologies(self, cells, loader_fct):
@@ -98,7 +105,6 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         '''
         self.show_property(name, cells, '.pts', display_parameters)
         self.spikes = [group.id.tolist() for _, group in spks.groupby('time')]
-
 
 def serialize_floats(numpy_array):
     ''' convert a numpy array of floats to base64 '''
