@@ -5,4 +5,4 @@ pandas>=0.17
 lxml>=3.7
 six>=1.0
 
-voxcell>=1.5
+voxcell>=1.6,<2.0
