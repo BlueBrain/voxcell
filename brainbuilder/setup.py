@@ -47,5 +47,7 @@ setup(
         'brainbuilder.utils',
     ],
     include_package_data=True,
-    scripts=[],
+    scripts=[
+        'apps/generate-ncs',
+    ],
 )
