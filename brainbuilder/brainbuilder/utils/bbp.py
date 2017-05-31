@@ -556,9 +556,18 @@ def save_mvd2(filepath, morphology_path, cells):
 
     Rotations are lost in the process.
     Cells are expected to have the properties:
-    morphology, mtype, etype, minicolumn, layer, me_combo, morph_class and synapse_class
+    'morphology', 'mtype', 'etype', 'morph_class', 'synapse_class', 'me_combo';
+    and, optionally, 'hypercolumn', 'minicolumn', 'layer'.
     '''
     L.warning("save_mvd2: rotations would be lost!")
+
+    optional = {}
+    for prop in ('hypercolumn', 'minicolumn', 'layer'):
+        if prop in cells.properties:
+            optional[prop] = cells.properties[prop]
+        else:
+            L.warning("save_mvd2: %s not specified, zero will be used", prop)
+            optional[prop] = np.zeros(len(cells.properties), dtype=np.int)
 
     electro_types, chosen_etype = np.unique(cells.properties.etype, return_inverse=True)
 
@@ -578,14 +587,15 @@ def save_mvd2(filepath, morphology_path, cells):
             cells.positions,
             chosen_mtype,
             chosen_etype,
-            cells.properties.minicolumn,
-            cells.properties.layer,
+            optional['hypercolumn'],
+            optional['minicolumn'],
+            optional['layer'],
             cells.properties.me_combo,
         )
 
-        for morph, pos, mtype_idx, etype_idx, minicolumn, layer, me_combo in data:
+        for morph, pos, mtype_idx, etype_idx, hypercolumn, minicolumn, layer, me_combo in data:
             yield dict(name=morph, mtype_idx=mtype_idx, etype_idx=etype_idx,
-                       rotation=0.0, x=pos[0], y=pos[1], z=pos[2],
+                       rotation=np.nan, x=pos[0], y=pos[1], z=pos[2], hypercolumn=hypercolumn,
                        minicolumn=minicolumn, layer=int(layer) - 1, me_combo=me_combo)
 
     with open(filepath, 'w') as fd:
@@ -594,9 +604,9 @@ def save_mvd2(filepath, morphology_path, cells):
                  "/unknown/\n".format(version=VERSION, morphology_path=morphology_path))
 
         fd.write('Neurons Loaded\n')
-        line = ('{name} {database} {hyperColumn} {minicolumn} {layer} {mtype_idx} '
+        line = ('{name} {database} {hypercolumn} {minicolumn} {layer} {mtype_idx} '
                 '{etype_idx} {x} {y} {z} {rotation} {me_combo}\n')
-        fd.writelines(line.format(database=0, hyperColumn=0, **c) for c in get_mvd2_neurons())
+        fd.writelines(line.format(database=0, **c) for c in get_mvd2_neurons())
 
         # skipping sections:
         # MicroBox Data
