@@ -44,12 +44,26 @@ else:
 
 REQS = [str(ir.req) for ir in install_reqs]
 
-
 log.set_verbosity(log.DEBUG)
 log.info('setup.py entered')
 log.info('$PATH=%s' % os.environ['PATH'])
 
 LONG_DESCRIPTION = 'viewers for voxcell the brain building framework'
+
+
+def enable_extensions():
+    # installs and enable nb_extensions
+    extensions = ['widgetsnbextension', 'voxcellview']
+    try:
+        import notebook
+        from notebook.nbextensions import enable_nbextension_python, install_nbextension_python
+        for ext in extensions:
+            log.info('Installing ' + ext + ' extension')
+            install_nbextension_python(ext, logger=log)
+            enable_nbextension_python(ext)
+        log.info('nb_extensions installed successfully')
+    except (ImportError, OSError) as e:
+        log.error('Failed to install or enable extension: ' + str(e))
 
 
 def js_prerelease(command, strict=False):
@@ -141,6 +155,7 @@ class NPM(Command):
 
         # update package data in case this created new files
         update_package_data(self.distribution)
+        enable_extensions()
 
 
 setup_args = {
