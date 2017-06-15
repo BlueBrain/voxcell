@@ -1,56 +1,43 @@
 '''functions to export the results of brain building to an external viewer'''
 
-import os
-import json
-from collections import defaultdict
-import numpy as np
+import colorsys
 import logging
+import os
+
+import numpy as np
+
 L = logging.getLogger(__name__)
 
 
 DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'data')
+RGB = slice(3)
 
 
-def load_traits_colormap(filepath):
-    '''a map of colors grouped by attributes (mtype,etype,sclass,etc) connecting every
-    value of the attribute to a color'''
-    with open(filepath) as f:
-        colormap = json.load(f)
+def get_cell_color(cells, attribute, input_color_map=None):
+    '''compute an array with colors for each cell depending on a given attribute
 
-    # TODO pick up the "default" key if defined in the colormap.json
-    return defaultdict(lambda: defaultdict(lambda: np.random.randint(256, size=3)),
-                       colormap)
+    Args:
+        cells(indexable): cells
+        attribute(str): attribute of cell collection
+        input_color_map(callable) that returns a list of 3 elements corresponding
+        to RGB value between 0 and 1.
 
-
-def get_cell_color(cells, attribute, input_color_map):
-    '''compute an array with colors for each cell depending on a given attribute.
-    input_color_map is a callable that returns a list of 3 elements corresponding
-    to r,g,b value between 0 and 1.
+    Returns:
+        np.array of RGBA values between 0 and 1
     '''
-    def add_default_opacity(array):
-        if len(array) == 3:
-            array = np.append(array, 1.0)
-        return array
+    ret = np.ones((len(cells), 4), dtype=np.float32)
 
-    if input_color_map:
-        ret = [add_default_opacity(input_color_map(t)) for t in cells[attribute]]
-        return ret
-
-    colormap = load_traits_colormap(os.path.join(DATA_FOLDER, 'colormap.json'))
-    colormap = colormap[attribute]
-
-    def normalize_rgb(array):
-        array = array.astype(float)
-        array[:3] /= 255.0
-        ret = add_default_opacity(array)
-        return ret
-
-    if isinstance(colormap, dict):
-        return [normalize_rgb(np.array(colormap[t])) for t in cells[attribute]]
+    if input_color_map is not None:
+        assert callable(input_color_map), 'input_color_map must be a callable'
+        for i, attr_value in enumerate(cells[attribute]):
+            ret[i, RGB] = input_color_map(attr_value)
     else:
-        # color doesn't depend on the value of the attribute
-        constant_color = normalize_rgb(np.array(colormap))
-        return [constant_color] * len(cells)
+        unique_attrs, indices = np.unique(cells[attribute], return_inverse=True)
+        colors = np.array([colorsys.hsv_to_rgb(i, 1, 1)
+                           for i in np.linspace(0, 1, len(unique_attrs), endpoint=False)])
+        ret[:, RGB] = colors[indices, :]
+
+    return ret
 
 
 def serialize_points(cells, attribute, color_map):
@@ -70,9 +57,9 @@ def serialize_points(cells, attribute, color_map):
     ]).astype(np.float32)
 
 
-def export_points(filename, cells, attribute):
+def export_points(filename, cells, attribute, color_map=None):
     '''save a collection of cells to binary to a format that can be loaded by the JS viewer'''
-    block = serialize_points(cells, attribute)
+    block = serialize_points(cells, attribute, color_map)
     block.tofile(filename)
 
 
@@ -115,7 +102,8 @@ def sample_vector_field(field, point_count, voxel_dimensions):
     vectors = field[idx]
     vectors = vectors / np.sqrt(np.square(vectors).sum(axis=1))[:, np.newaxis]
 
-    positions = np.array(idx).transpose() * voxel_dimensions
+    positions = np.array(idx).transpose()  # pylint: disable=no-member
+    positions *= voxel_dimensions
     return positions, vectors
 
 

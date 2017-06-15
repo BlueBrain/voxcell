@@ -4,7 +4,7 @@ TEST_MODULES=voxcell/voxcell brainbuilder/brainbuilder
 INSTALL_MODULES=voxcell voxcellview brainbuilder
 #packages to cover
 COVER_PACKAGES=voxcell,voxcellview,brainbuilder
-IGNORE_LINT=voxcellview|notebooks
+IGNORE_LINT=voxcellview/js|notebooks
 # documentation to build, separated by spaces
 DOC_MODULES=voxcell/doc brainbuilder/doc
 
