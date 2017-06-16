@@ -190,6 +190,26 @@ class VoxelData(object):
         else:
             return VoxelData(raw, self.voxel_dimensions, offset)
 
+    def filter(self, predicate, inplace=False):
+        """ Set values for voxel positions not satisfying `predicate` to zero.
+
+            Args:
+                predicate: (x_1,..,x_k) -> bool
+                inplace(bool): modify data inplace
+
+            Returns:
+                None if `inplace` is True, new VoxelData otherwise
+        """
+        ijk = np.stack(np.mgrid[[slice(0, d) for d in self.shape]], axis=-1)
+        xyz = self.indices_to_positions(0.5 + ijk)
+        mask = np.apply_along_axis(predicate, -1, xyz)
+        if inplace:
+            self.raw[np.invert(mask)] = 0
+        else:
+            raw = np.zeros_like(self.raw)
+            raw[mask] = self.raw[mask]
+            return VoxelData(raw, self.voxel_dimensions, self.offset)
+
     def with_data(self, raw):
         '''return VoxelData of the same shape with different data'''
         return VoxelData(raw, self.voxel_dimensions, self.offset)
