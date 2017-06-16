@@ -157,3 +157,20 @@ def test_volume():
     vd = test_module.VoxelData(np.array([[0, 1], [1, 2]]), voxel_dimensions=(2, 3))
     assert_equal(vd.volume(1), 12)
     assert_equal(vd.volume(13), 0)
+
+
+def test_filter():
+    raw = np.array([[11, 12], [21, 22]])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
+    filtered = original.filter(lambda p: p[0] > 12 and p[1] > 26)
+    assert_equal(original.raw, raw)
+    assert_equal(filtered.raw, [[0, 0], [0, 22]])
+    assert_equal(filtered.raw, [[0, 0], [0, 22]])
+    assert_equal(filtered.offset, original.offset)
+    assert_equal(filtered.voxel_dimensions, original.voxel_dimensions)
+
+
+def test_filter_inplace():
+    original = test_module.VoxelData(np.array([[11, 12], [21, 22]]), (2, 6), offset=(10, 20))
+    original.filter(lambda p: p[0] > 12 and p[1] > 26, inplace=True)
+    assert_equal(original.raw, [[0, 0], [0, 22]])
