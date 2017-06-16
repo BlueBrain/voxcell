@@ -3,7 +3,7 @@
 import numpy as np
 import nrrd
 
-from voxcell import math_utils
+from voxcell import math_utils, deprecate
 from voxcell.exceptions import VoxcellError
 
 
@@ -28,23 +28,32 @@ class VoxelData(object):
             ))
 
         self.voxel_dimensions = voxel_dimensions
-        n_dim = len(self.voxel_dimensions)
 
         if offset is None:
-            self.offset = np.zeros(n_dim)
+            self.offset = np.zeros(self.ndim)
         else:
             offset = np.array(offset, dtype=np.float32)
-            if offset.shape != (n_dim,):
+            if offset.shape != (self.ndim,):
                 raise VoxcellError("'offset' shape should be: {0} (got: {1})".format(
-                    (n_dim,), offset.shape
+                    (self.ndim,), offset.shape
                 ))
             self.offset = offset
 
-        if len(raw.shape) < n_dim:
+        if len(raw.shape) < self.ndim:
             raise VoxcellError("'raw' should have at least {0} dimensions (got: {1})".format(
-                n_dim, len(raw.shape)
+                self.ndim, len(raw.shape)
             ))
         self.raw = raw
+
+    @property
+    def ndim(self):
+        """ Number of dimensions. """
+        return len(self.voxel_dimensions)
+
+    @property
+    def shape(self):
+        """ Number of voxels in each dimension. """
+        return self.raw.shape[:self.ndim]
 
     @classmethod
     def load_nrrd(cls, nrrd_path):
@@ -111,9 +120,8 @@ class VoxelData(object):
         result = (positions - self.offset) / self.voxel_dimensions
         result[np.abs(result) < 1e-7] = 0.  # suppress rounding errors around 0
         result = np.floor(result).astype(np.int)
-        n_dim = len(self.voxel_dimensions)
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
-        result[result >= self.raw.shape[:n_dim]] = VoxelData.OUT_OF_BOUNDS
+        result[result >= self.shape] = VoxelData.OUT_OF_BOUNDS
         if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
             raise VoxcellError("Out of bounds position")
         return result
@@ -145,9 +153,42 @@ class VoxelData(object):
 
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
+        deprecate.fail("Deprecated. Please use VoxelData.clip() instead.")
         raw = math_utils.clip(self.raw, aabb)
         offset = aabb[0] * self.voxel_dimensions
         return VoxelData(raw, self.voxel_dimensions, self.offset + offset)
+
+    def clip(self, bbox, inplace=False):
+        """ Clip to axis-aligned bounding box.
+
+            Args:
+                bbox: bounding box in real-world coordinates
+                inplace(bool): modify data inplace
+
+            Returns:
+                None if `inplace` is True, new VoxelData otherwise
+        """
+        bbox = np.array(bbox)
+        if bbox.shape != (2, self.ndim):
+            raise VoxcellError("Invalid bbox shape: {}".format(bbox.shape))
+
+        indices = ((bbox - self.offset) / self.voxel_dimensions).astype(np.int)
+
+        # ensure clipped volume is inside bbox
+        indices = np.clip(indices, np.full(self.ndim, -1), self.shape)
+        indices[0] += 1
+        indices[1] -= 1
+        if np.any(indices[0] > indices[1]):
+            raise VoxcellError("Empty slice")
+
+        raw = math_utils.clip(self.raw, indices)
+        offset = self.indices_to_positions(indices[0])
+
+        if inplace:
+            self.raw = raw
+            self.offset = offset
+        else:
+            return VoxelData(raw, self.voxel_dimensions, offset)
 
     def with_data(self, raw):
         '''return VoxelData of the same shape with different data'''
