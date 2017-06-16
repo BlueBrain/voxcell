@@ -12,21 +12,62 @@ from voxcell.exceptions import VoxcellError
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def test_clip_volume():
-    raw = np.array([[0, 0, 0],
-                    [0, 1, 0],
-                    [0, 0, 0]])
+def test_clip():
+    raw = np.array([
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
+    clipped = original.clip(bbox=((11, 25), (15, 33)))
 
-    aabb = (np.array([1, 1]), np.array([1, 1]))
-
-    v = test_module.VoxelData(raw, (1, 1))
-    r = v.clipped(aabb)
-
-    assert_equal(r.raw, np.array([[1]]))
+    assert_equal(clipped.raw, [[1]])
+    assert_equal(clipped.voxel_dimensions, original.voxel_dimensions)
+    assert_equal(clipped.offset, (12, 26))
 
     # check that they are independent
     raw[1, 1] = 2
-    eq_(r.raw[0, 0], 1)
+    assert_equal(clipped.raw, [[1]])
+
+
+def test_clip_inplace():
+    raw = np.array([
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
+    original.clip(bbox=((11, 25), (15, 33)), inplace=True)
+
+    assert_equal(original.raw, [[1]])
+    assert_equal(original.offset, (12, 26))
+
+
+def test_clip_empty():
+    raw = np.array([
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
+    assert_raises(
+        VoxcellError,
+        original.clip,
+        bbox=((10, 10), (10, 10))
+    )
+
+
+def test_clip_out_of_bounds():
+    raw = np.array([
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0]
+    ])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
+    clipped = original.clip(bbox=((-1000, -1000), (1000, 1000)))
+    assert_equal(clipped.raw, original.raw)
+    assert_equal(clipped.voxel_dimensions, original.voxel_dimensions)
+    assert_equal(clipped.offset, original.offset)
 
 
 def test_lookup():
