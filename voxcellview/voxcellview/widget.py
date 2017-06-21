@@ -32,7 +32,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
     spikes = List().tag(sync=True)
 
     # supported d-types of the JS client BrainBuilderViewer -> buildRaw -> DTYPE_TYPE_MAP
-    SUPPORTED_DTYPES = ['uint8', 'uint16', 'uint32', 'float32']
+    SUPPORTED_DTYPES = ('uint8', 'uint16', 'uint32', 'float32', )
 
     def _show(self, block=None, display_parameters=None):
         ''' show numpy binary data'''
@@ -84,7 +84,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         for _, item in tqdm(cells.iterrows()):
             self.send({
                 'position': serialize_floats(item[['x', 'y', 'z']].values),
-                'orientation': serialize_floats(item['orientation'].values),
+                'orientation': serialize_floats(item['orientation']),
                 'data': loader_fct(item['morphology']),
             })
 

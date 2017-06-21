@@ -167,7 +167,6 @@ def test_roundtrip_complex():
         'C240300C1_-_Scale_x1.000_y0.975_z1.000_-_Clone_55',
         'dend-Fluo15_right_axon-Fluo2_right_-_Clone_37'
     ], n)
-
     check_roundtrip(cells)
 
 
