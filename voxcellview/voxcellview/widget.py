@@ -134,7 +134,7 @@ class MorphologyLoader(object):
                 self._get_as_b64, size=loader_cache_size
             )
         else:
-            self._get = self._get_as_b64
+            self._get = self._get_as_b64  # pylint: disable=redefined-variable-type
 
     def __enter__(self):
         if self.document_client:
