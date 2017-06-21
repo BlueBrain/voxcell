@@ -1,13 +1,19 @@
+'''setup.py'''
 from __future__ import print_function
-from setuptools import setup, find_packages, Command
-from setuptools.command.sdist import sdist
-from setuptools.command.build_py import build_py
-from setuptools.command.egg_info import egg_info
-from voxcellview.version import VERSION as __version__
-from subprocess import check_call
+
 import os
 import sys
-import platform
+
+from optparse import Option
+import pip
+from pip.req import parse_requirements
+
+from distutils import log
+from setuptools import setup, find_packages, Command
+from setuptools.command import (sdist, build_py, egg_info)
+from subprocess import check_call
+from voxcellview.version import VERSION as __version__
+
 
 if sys.version_info < (2, 7):
     sys.exit("Python < 2.7 is no longer supported from version 2.1.0")
@@ -18,12 +24,9 @@ is_repo = os.path.exists(os.path.join(here, '.git'))
 
 npm_path = os.pathsep.join([
     os.path.join(node_root, 'node_modules', '.bin'),
-                os.environ.get('PATH', os.defpath),
+    os.environ.get('PATH', os.defpath),
 ])
 
-import pip
-from pip.req import parse_requirements
-from optparse import Option
 options = Option('--workaround')
 options.skip_requirements_regex = None
 REQ_FILE = './requirements.txt'
@@ -41,15 +44,12 @@ else:
 REQS = [str(ir.req) for ir in install_reqs]
 
 
-
-
-from distutils import log
 log.set_verbosity(log.DEBUG)
 log.info('setup.py entered')
 log.info('$PATH=%s' % os.environ['PATH'])
 
-
 LONG_DESCRIPTION = 'viewers for voxcell the brain building framework'
+
 
 def js_prerelease(command, strict=False):
     """decorator for building minified js/css prior to another command"""
@@ -77,48 +77,51 @@ def js_prerelease(command, strict=False):
             update_package_data(self.distribution)
     return DecoratedCommand
 
+
 def update_package_data(distribution):
     """update package_data to catch changes during setup"""
-    build_py = distribution.get_command_obj('build_py')
+    build_py_ = distribution.get_command_obj('build_py')
     # distribution.package_data = find_package_data()
     # re-init build_py options which load package_data
-    build_py.finalize_options()
+    build_py_.finalize_options()
 
 
 class NPM(Command):
+    '''build NPM package'''
     description = 'install package.json dependencies using npm'
-
     user_options = []
-
     node_modules = os.path.join(node_root, 'node_modules')
-
     targets = [
         os.path.join(here, 'voxcellview', 'static', 'extension.js'),
         os.path.join(here, 'voxcellview', 'static', 'index.js')
     ]
 
     def initialize_options(self):
+        '''initialize_options'''
         pass
 
     def finalize_options(self):
+        '''finalize_options'''
         pass
 
-    def has_npm(self):
+    def has_npm(self):  # pylint: disable=no-self-use
+        '''has_npm'''
         try:
             check_call(['npm', '--version'])
             return True
-        except:
+        except:  # pylint: disable=bare-except
             return False
 
     def should_run_npm_install(self):
-        package_json = os.path.join(node_root, 'package.json')
-        node_modules_exists = os.path.exists(self.node_modules)
+        '''should_run_npm_install'''
         return self.has_npm()
 
     def run(self):
+        '''run'''
         has_npm = self.has_npm()
         if not has_npm:
-            log.error("`npm` unavailable.  If you're running this command using sudo, make sure `npm` is available to sudo")
+            log.error("`npm` unavailable.  If you're running this command using "
+                      "sudo, make sure `npm` is available to sudo")
 
         env = os.environ.copy()
         env['PATH'] = npm_path
@@ -155,9 +158,9 @@ setup_args = {
     'packages': find_packages(),
     'zip_safe': False,
     'cmdclass': {
-        'build_py': js_prerelease(build_py),
-        'egg_info': js_prerelease(egg_info),
-        'sdist': js_prerelease(sdist, strict=True),
+        'build_py': js_prerelease(build_py.build_py),
+        'egg_info': js_prerelease(egg_info.egg_info),
+        'sdist': js_prerelease(sdist.sdist, strict=True),
         'jsdeps': NPM,
     },
 

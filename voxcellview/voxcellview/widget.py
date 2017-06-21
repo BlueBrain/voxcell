@@ -106,6 +106,7 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         self.show_property(name, cells, '.pts', display_parameters)
         self.spikes = [group.id.tolist() for _, group in spks.groupby('time')]
 
+
 def serialize_floats(numpy_array):
     ''' convert a numpy array of floats to base64 '''
     f_array = numpy_array.astype(np.float32)
