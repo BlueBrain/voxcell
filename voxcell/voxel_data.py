@@ -84,7 +84,8 @@ class VoxelData(object):
         '''
         #from: http://teem.sourceforge.net/nrrd/format.html#space
         options = {
-            'spacings': self.voxel_dimensions,
+            'space dimension': self.ndim,
+            'space directions': np.diag(self.voxel_dimensions),
             'space origin': self.offset,
         }
         nrrd.write(nrrd_path, self.raw, options=options)
