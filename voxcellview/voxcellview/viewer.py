@@ -2,14 +2,10 @@
 
 import colorsys
 import logging
-import os
 
 import numpy as np
 
 L = logging.getLogger(__name__)
-
-
-DATA_FOLDER = os.path.join(os.path.dirname(__file__), 'data')
 RGB = slice(3)
 
 
@@ -18,23 +14,34 @@ def get_cell_color(cells, attribute, input_color_map=None):
 
     Args:
         cells(indexable): cells
-        attribute(str): attribute of cell collection
+        attribute(str): attribute of cell collection, 'position' is a special attribute
+        which shows a point cloud
         input_color_map(callable) that returns a list of 3 elements corresponding
-        to RGB value between 0 and 1.
+        to RGB value between 0 and 1, when called with 'position', an array of x/y/z
+        is passed, otherwise the value of a attribute row is passed
 
     Returns:
         np.array of RGBA values between 0 and 1
     '''
-    ret = np.ones((len(cells), 4), dtype=np.float32)
+    if attribute == 'position':
+        if input_color_map is None:
+            def constant_white(_):
+                '''always returns white'''
+                return [1, 1, 1]
+            input_color_map = constant_white
+        values = cells[['x', 'y', 'z']].values
+    else:
+        values = cells[attribute]
 
+    ret = np.ones((len(cells), 4), dtype=np.float32)
     if input_color_map is not None:
         assert callable(input_color_map), 'input_color_map must be a callable'
-        for i, attr_value in enumerate(cells[attribute]):
-            ret[i, RGB] = input_color_map(attr_value)
+        for i, value in enumerate(values):
+            ret[i, RGB] = input_color_map(value)
     else:
-        unique_attrs, indices = np.unique(cells[attribute], return_inverse=True)
+        unique_values, indices = np.unique(values, return_inverse=True)
         colors = np.array([colorsys.hsv_to_rgb(i, 1, 1)
-                           for i in np.linspace(0, 1, len(unique_attrs), endpoint=False)])
+                           for i in np.linspace(0, 1, len(unique_values), endpoint=False)])
         ret[:, RGB] = colors[indices, :]
 
     return ret

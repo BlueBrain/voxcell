@@ -43,9 +43,9 @@ class VoxcellWidget(widgets.DOMWidget): # pylint: disable=R0901
         self.display_parameters = display_parameters
         display(self)
 
-    def show_points(self, name, cells, display_parameters=None):
+    def show_points(self, _, cells, display_parameters=None):
         ''' display a bunch of positions '''
-        self.show_property(name, cells, '.pts', display_parameters)
+        self.show_property('position', cells, '.pts', display_parameters)
 
     # TODO: remove the remaining extension switch in js code
     def show_property(self, name, cells, extension='.pts', display_parameters=None, color_map=None):
