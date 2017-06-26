@@ -4,7 +4,7 @@ var Detector = require('../extern/Detector.js');
 var THREE = require('../extern/three.min.js');
 // dat does not export its variable
 var dat = require('../extern/dat.gui.min.js');
-var BigScreen = require('../extern/bigscreen.min.js');
+var ScreenFull = require('../extern/screenfull.min.js');
 // trackball requires THREE to be defined beforehand
 require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
 var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
@@ -274,7 +274,7 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
       event.preventDefault();
       var containerWidth = that.container.clientWidth;
       var containerHeight = that.container.clientHeight;
-      if (BigScreen.enabled && BigScreen.element !== null) { // displaying in full screen
+      if (ScreenFull.enabled && ScreenFull.element !== null) { // displaying in full screen
         var mousePosition = new THREE.Vector2(
           (event.clientX/containerWidth) * 2-1,
           - (event.clientY/containerHeight) * 2+1
@@ -373,11 +373,17 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
           settings, 'size', 0.0, Math.log(5000.0)).step(0.01);
 
       var that = this;
-      if (BigScreen.enabled) {
+      if (ScreenFull.enabled) {
         settings._datgui.add(
                     {
                       fullscreen: function() {
-                        BigScreen.toggle(that.container, that.onResize, that.onResize);
+                        ScreenFull.toggle(that.container);
+                        ScreenFull.onchange(function () {
+                          that.onResize();
+                        });
+                        ScreenFull.onerror(function(event) {
+                          console.error('Failed to enable fullscreen', event);
+                        });
                       }
                     },
                     'fullscreen'
