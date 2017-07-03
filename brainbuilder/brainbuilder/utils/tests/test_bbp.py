@@ -2,6 +2,11 @@ import os
 import tempfile
 import shutil
 
+try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO
+
 from nose.tools import eq_, raises
 
 import numpy as np
@@ -606,3 +611,61 @@ def test_get_layer_thickness():
 def test_get_total_neurons():
     total_neurons = bbp.get_total_neurons(BUILDER_RECIPE_LATTICE)
     eq_(2195, total_neurons)
+
+
+def test_gid2str():
+    actual = bbp.gid2str(42)
+    eq_(actual, "a42")
+
+
+def test_write_target():
+    out = StringIO()
+    bbp.write_target(out, "test", gids=[1, 2], include_targets=["A", "B"])
+    actual = out.getvalue()
+    expected = "\n".join([
+        "",
+        "Target Cell test",
+        "{",
+        "  a1 a2",
+        "  A B",
+        "}",
+        ""
+    ])
+    eq_(actual, expected)
+
+
+def test_write_property_targets():
+    cells = pd.DataFrame({
+            'prop-a': ['A', 'B', 'A'],
+            'prop-b': ['X', 'X', 'Y']
+        },
+        index=[1, 2, 3]
+    )
+    out = StringIO()
+    bbp.write_property_targets(out, cells, 'prop-a')
+    bbp.write_property_targets(out, cells, 'prop-b', mapping=lambda x: "z" + x)
+    actual = out.getvalue()
+    expected = "\n".join([
+        "",
+        "Target Cell A",
+        "{",
+        "  a1 a3",
+        "}",
+        "",
+        "Target Cell B",
+        "{",
+        "  a2",
+        "}",
+        "",
+        "Target Cell zX",
+        "{",
+        "  a1 a2",
+        "}",
+        "",
+        "Target Cell zY",
+        "{",
+        "  a3",
+        "}",
+        ""
+    ])
+    eq_(actual, expected)

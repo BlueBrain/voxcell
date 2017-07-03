@@ -618,3 +618,30 @@ def save_mvd2(filepath, morphology_path, cells):
 
         fd.write('ElectroTypes\n')
         fd.writelines('%s\n' % e for e in electro_types)
+
+
+def gid2str(gid):
+    """ 42 -> 'a42' """
+    return "a%d" % gid
+
+
+def write_target(f, name, gids=None, include_targets=None):
+    """ Append contents to .target file. """
+    f.write("\nTarget Cell %s\n{\n" % name)
+    if gids is not None:
+        f.write("  ")
+        f.write(" ".join(map(gid2str, gids)))
+        f.write("\n")
+    if include_targets is not None:
+        f.write("  ")
+        f.write(" ".join(include_targets))
+        f.write("\n")
+    f.write("}\n")
+
+
+def write_property_targets(f, cells, prop, mapping=None):
+    """ Append targets based on 'prop' cell property to .target file. """
+    for value, gids in sorted(iteritems(cells.groupby(prop).groups)):
+        if mapping is not None:
+            value = mapping(value)
+        write_target(f, value, gids=gids)
