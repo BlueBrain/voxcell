@@ -11,7 +11,7 @@ from nose.tools import eq_, raises
 
 import numpy as np
 import pandas as pd
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_almost_equal
 from pandas.util.testing import assert_frame_equal
 
 from voxcell import Hierarchy, VoxelData
@@ -550,9 +550,16 @@ def test_load_mvd2():
 
     eq_(cells.orientations.shape, (5, 3, 3))
 
+    assert_almost_equal(
+        cells.orientations[0],
+        [[ 0.5639686,  0.       , -0.8257962],
+         [ 0.       ,  1.       ,  0.       ],
+         [ 0.8257962,  0.       ,  0.5639686]],
+    )
+
     eq_(set(cells.properties.columns),
         set(['etype', 'morphology', 'mtype', 'synapse_class', 'morph_class',
-             'layer', 'minicolumn', 'me_combo']))
+             'layer', 'hypercolumn', 'minicolumn', 'me_combo']))
 
     eq_(list(cells.properties.synapse_class.unique()),
         ['INH', 'EXC'])

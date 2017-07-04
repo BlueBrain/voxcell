@@ -531,7 +531,7 @@ def load_mvd2(filepath):
 
     cells.positions = np.array([[c['x'], c['y'], c['z']] for c in data['Neurons Loaded']])
 
-    angles = np.array([c['r'] for c in data['Neurons Loaded']])
+    angles = np.array([c['r'] for c in data['Neurons Loaded']]) * np.pi / 180
     cells.orientations = np.array([[[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
                                    for cos, sin in zip(np.cos(angles), np.sin(angles))])
 
@@ -543,6 +543,7 @@ def load_mvd2(filepath):
         'etype': [data['ElectroTypes'][c['etype']]['name'] for c in data['Neurons Loaded']],
         'morphology': [c['morphology'] for c in data['Neurons Loaded']],
         'layer': [str(1 + c['layer']) for c in data['Neurons Loaded']],
+        'hypercolumn': [c['hyperColumn'] for c in data['Neurons Loaded']],
         'minicolumn': [c['miniColumn'] for c in data['Neurons Loaded']],
         'me_combo': [c['me_combo'] for c in data['Neurons Loaded']],
     })
