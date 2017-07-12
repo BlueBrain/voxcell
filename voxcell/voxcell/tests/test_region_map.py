@@ -29,9 +29,9 @@ TEST_RMAP = {
 }
 
 
-def test_from_json():
+def test_load_json():
     filepath = os.path.join(DATA_PATH, 'region_map.json')
-    rmap = test_module.RegionMap.from_json(filepath)
+    rmap = test_module.RegionMap.load_json(filepath)
     eq_(rmap.get(567), {
         "atlas_id": 70,
         "ontology_id": 1,

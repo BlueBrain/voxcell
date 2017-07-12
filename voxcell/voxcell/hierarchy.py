@@ -6,6 +6,7 @@ import itertools
 
 from six import iteritems
 
+from voxcell import deprecate
 from voxcell.exceptions import VoxcellError
 
 
@@ -93,10 +94,16 @@ class RegionMap(object):
         return result
 
     @classmethod
-    def from_json(cls, filepath):
+    def load_json(cls, filepath):
         """ Construct RegionMap from JSON file. """
         with open(filepath, 'r') as f:
             return cls.from_dict(json.load(f))
+
+    @classmethod
+    def from_json(cls, filepath):
+        """ Deprecated. """
+        deprecate.warn("Method has been renamed. Please use load_json() instead.")
+        return cls.load_json(filepath)
 
     def ids(self, value, attr='name', with_descendants=True):
         """ Get set of regions matching the given attribute. """
