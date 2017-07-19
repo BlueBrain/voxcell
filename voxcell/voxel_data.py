@@ -5,6 +5,7 @@ import nrrd
 
 from voxcell import math_utils, deprecate
 from voxcell.exceptions import VoxcellError
+from voxcell.quaternion import quaternions_to_matrices
 
 
 class VoxelData(object):
@@ -54,6 +55,11 @@ class VoxelData(object):
     def shape(self):
         """ Number of voxels in each dimension. """
         return self.raw.shape[:self.ndim]
+
+    @property
+    def payload_shape(self):
+        """ Shape of the data stored per voxel. """
+        return self.raw.shape[self.ndim:]
 
     @classmethod
     def load_nrrd(cls, nrrd_path):
@@ -214,3 +220,26 @@ class VoxelData(object):
     def with_data(self, raw):
         '''return VoxelData of the same shape with different data'''
         return VoxelData(raw, self.voxel_dimensions, self.offset)
+
+
+class OrientationField(VoxelData):
+    """ Volumetric data with rotation per voxel. """
+
+    def __init__(self, *args, **kwargs):
+        super(OrientationField, self).__init__(*args, **kwargs)
+        if self.payload_shape != (4,):
+            raise VoxcellError("Volumetric data should store (x, y, z, w) tuple per voxel")
+
+    # pylint: disable=arguments-differ
+    def lookup(self, positions):
+        """
+        Orientations corresponding to the given positions.
+
+        Args:
+            positions: list of positions (x, y, z).
+
+        Returns:
+            Numpy array with the rotation matrices corresponding to each position.
+        """
+        result = super(OrientationField, self).lookup(positions, outer_value=None)
+        return quaternions_to_matrices(result)

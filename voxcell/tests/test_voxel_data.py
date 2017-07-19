@@ -1,8 +1,10 @@
 import os
 import tempfile
+import nose.tools as nt
 from nose.tools import eq_, ok_
 
 import numpy as np
+import numpy.testing as npt
 from numpy.testing import assert_equal, assert_almost_equal, assert_raises
 
 import voxcell.voxel_data as test_module
@@ -174,3 +176,21 @@ def test_filter_inplace():
     original = test_module.VoxelData(np.array([[11, 12], [21, 22]]), (2, 6), offset=(10, 20))
     original.filter(lambda p: p[0] > 12 and p[1] > 26, inplace=True)
     assert_equal(original.raw, [[0, 0], [0, 22]])
+
+
+def test_orientation_field():
+    field = test_module.OrientationField(np.array([[0., 0., 0., 1.]]), voxel_dimensions=(2,))
+    npt.assert_almost_equal(
+        field.lookup([1.]),
+        [np.identity(3)]
+    )
+
+def test_orientation_field_raises():
+    nt.assert_raises(
+        VoxcellError,
+        test_module.OrientationField, np.zeros(4), voxel_dimensions=(1,)
+    )
+    nt.assert_raises(
+        VoxcellError,
+        test_module.OrientationField, np.zeros((3, 3)), voxel_dimensions=(1,)
+    )
