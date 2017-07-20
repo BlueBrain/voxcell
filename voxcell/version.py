@@ -1,2 +1,2 @@
 """voxcell version"""
-VERSION = '1.7.0.dev0'
+VERSION = '1.7.0'
