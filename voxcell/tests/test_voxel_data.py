@@ -185,6 +185,13 @@ def test_orientation_field():
         [np.identity(3)]
     )
 
+def test_orientation_field_compact():
+    field = test_module.OrientationField(np.array([[0, 0, 0, 127]], dtype=np.int8), voxel_dimensions=(2,))
+    npt.assert_almost_equal(
+        field.lookup([1.]),
+        [np.identity(3)]
+    )
+
 def test_orientation_field_raises():
     nt.assert_raises(
         VoxcellError,
