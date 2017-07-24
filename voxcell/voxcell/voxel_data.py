@@ -227,6 +227,8 @@ class OrientationField(VoxelData):
 
     def __init__(self, *args, **kwargs):
         super(OrientationField, self).__init__(*args, **kwargs)
+        if self.raw.dtype not in (np.int8, np.float32, np.float64):
+            raise VoxcellError("Invalid volumetric data dtype: %s" % self.raw.dtype)
         if self.payload_shape != (4,):
             raise VoxcellError("Volumetric data should store (x, y, z, w) tuple per voxel")
 
@@ -242,4 +244,6 @@ class OrientationField(VoxelData):
             Numpy array with the rotation matrices corresponding to each position.
         """
         result = super(OrientationField, self).lookup(positions, outer_value=None)
+        if result.dtype == np.int8:
+            result = result / 127.0
         return quaternions_to_matrices(result)
