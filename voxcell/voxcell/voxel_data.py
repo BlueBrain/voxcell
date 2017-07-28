@@ -156,7 +156,7 @@ class VoxelData(object):
 
             `values` could be a single value or an iterable.
         '''
-        return np.prod(self.voxel_dimensions) * self.count(values)
+        return abs(np.prod(self.voxel_dimensions)) * self.count(values)
 
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
