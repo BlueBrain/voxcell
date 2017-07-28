@@ -156,7 +156,7 @@ def test_count():
 
 
 def test_volume():
-    vd = test_module.VoxelData(np.array([[0, 1], [1, 2]]), voxel_dimensions=(2, 3))
+    vd = test_module.VoxelData(np.array([[0, 1], [1, 2]]), voxel_dimensions=(2, -3))
     assert_equal(vd.volume(1), 12)
     assert_equal(vd.volume(13), 0)
 
