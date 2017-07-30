@@ -193,6 +193,78 @@ def load_recipe_as_spatial_distribution(recipe_filename, annotation, region_laye
     return transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map)
 
 
+def load_recipe_cell_density(recipe_filename, atlas, region_map):
+    """
+    Take BBP cell recipe and return VoxelData with cell densities.
+
+    TODO: link to recipe spec.
+
+    Returns:
+        VoxelData with cell densities (expected cell count per voxel).
+    """
+    recipe_tree = _parse_recipe(recipe_filename)
+
+    result = np.zeros_like(atlas.raw, dtype=np.float32)
+    voxel_mm3 = atlas.voxel_volume / 1e9  # voxel volume is in um^3
+
+    for layer in recipe_tree.iterfind('/Layer'):
+        layer_mask = np.isin(atlas.raw, region_map[layer.attrib['name']])
+        if np.any(layer_mask):
+            voxel_density = float(layer.attrib['density']) * voxel_mm3
+            result[layer_mask] = voxel_density
+        else:
+            L.warning('No voxels tagged for layer %s', layer)
+
+    return atlas.with_data(result)
+
+
+def load_recipe_cell_traits(recipe_filename, atlas, region_map):
+    """
+    Take BBP cell recipe and return SpatialDistribution with cell traits.
+
+    TODO: link to recipe spec.
+
+    Returns:
+        SpatialDistribution where the properties of the traits_collection are:
+            layer, mtype, etype, morph_class, synapse_class
+    """
+    def _parse_type(elem):
+        etype_attr = elem.attrib
+        mtype_attr = elem.getparent().attrib
+        layer_attr = elem.getparent().getparent().attrib
+        return {
+            'layer': layer_attr['name'],
+            'mtype': mtype_attr['name'],
+            'etype': etype_attr['name'],
+            'morph_class': mtype_attr['mClass'],
+            'synapse_class': mtype_attr['sClass'],
+            'percentage': (
+                (float(mtype_attr['percentage']) / 100.0) *
+                (float(etype_attr['percentage']) / 100.0)
+            ),
+        }
+
+    recipe_tree = _parse_recipe(recipe_filename)
+
+    cell_traits = pd.DataFrame([
+        _parse_type(elem) for elem in recipe_tree.iterfind('/Layer/StructuralType/ElectroType')
+    ])
+    percentage = cell_traits.pop('percentage')
+
+    distributions = pd.DataFrame(
+        data=0.0,
+        index=cell_traits.index,
+        columns=np.unique(atlas.raw)
+    )
+
+    for layer, region_ids in iteritems(region_map):
+        data = percentage[cell_traits.layer == layer]
+        for region_id in region_ids:
+            distributions.loc[data.index, region_id] = data.values
+
+    return tt.SpatialDistribution(atlas, distributions, cell_traits)
+
+
 def load_neurondb_v4(neurondb_filename):
     '''load a neurondb v4 file
 

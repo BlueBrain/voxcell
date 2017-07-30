@@ -22,6 +22,8 @@ from brainbuilder.utils import bbp
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 BUILDER_RECIPE = os.path.join(DATA_PATH, 'builderRecipeAllPathways.xml')
 BUILDER_RECIPE_LATTICE = os.path.join(DATA_PATH, 'builderRecipeAllPathways_with_lattice.xml')
+CELL_RECIPE = os.path.join(DATA_PATH, 'cellRecipe.xml')
+
 
 def test_map_regions_to_layers_unknown_area():
     h = Hierarchy({"id": 997, "name": "mybrain", "children": []})
@@ -110,6 +112,37 @@ def test_transform_into_spatial_distribution():
     expected_field = np.ones(shape=(3, 3, 3))
     expected_field[1, 1, 1] = 2
     assert_equal(sdist.field.raw, expected_field)
+
+
+def test_load_recipe_cell_density():
+    atlas = VoxelData(np.array([[[1, 2, 11, 999]]]), voxel_dimensions=(100, 100, 100))
+    region_map = {'1': (1, 11), '2': (2,), '999': (999,)}
+    actual = bbp.load_recipe_cell_density(CELL_RECIPE, atlas, region_map)
+    assert_almost_equal(actual.raw, [[[0.01, 0.02, 0.01, 0.]]])
+
+
+def test_load_recipe_cell_traits():
+    atlas = VoxelData(np.array([[[1, 2, 11, 999]]]), voxel_dimensions=(100, 100, 100))
+    region_map = {'1': (1, 11), '2': (2,), '999': (999,)}
+    actual = bbp.load_recipe_cell_traits(CELL_RECIPE, atlas, region_map)
+    assert_frame_equal(
+        actual.distributions,
+        pd.DataFrame([
+            [0.5, 0.0, 0.5, np.nan],
+            [0.3, 0.0, 0.3, np.nan],
+            [0.2, 0.0, 0.2, np.nan],
+            [0.0, 1.0, 0.0, np.nan],
+        ], columns=[1, 2, 11, 999])
+    )
+    assert_frame_equal(
+        actual.traits.sort_index(axis=1),
+        pd.DataFrame([
+            ['1', 'mtype-A', 'etype-A1', 'INT', 'INH'],
+            ['1', 'mtype-A', 'etype-A2', 'INT', 'INH'],
+            ['1', 'mtype-B', 'etype-B1', 'PYR', 'EXC'],
+            ['2', 'mtype-C', 'etype-C1', 'INT', 'INH'],
+        ], columns=['layer', 'mtype', 'etype', 'morph_class', 'synapse_class']).sort_index(axis=1)
+    )
 
 
 def test_load_neurondb_v4():

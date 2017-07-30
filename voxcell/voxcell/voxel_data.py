@@ -47,6 +47,11 @@ class VoxelData(object):
         self.raw = raw
 
     @property
+    def voxel_volume(self):
+        """ Voxel volume. """
+        return abs(np.product(self.voxel_dimensions))
+
+    @property
     def ndim(self):
         """ Number of dimensions. """
         return len(self.voxel_dimensions)
@@ -156,7 +161,7 @@ class VoxelData(object):
 
             `values` could be a single value or an iterable.
         '''
-        return abs(np.prod(self.voxel_dimensions)) * self.count(values)
+        return self.count(values) * self.voxel_volume
 
     def clipped(self, aabb):
         '''return a copy of this data after clipping it to an axis-aligned bounding box'''
