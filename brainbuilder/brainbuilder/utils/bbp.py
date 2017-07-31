@@ -131,10 +131,10 @@ def get_distribution_from_recipe(recipe_filename):
 
 
 def load_recipe_density(recipe_filename, annotation, region_layers_map):
-    '''take a BBP builder recipe and return the probability distributions for each type
+    '''take a BBP builder recipe and return cell density VoxelData.
 
     Returns:
-        VoxelData with cell density
+        VoxelData with cell density (expected cell count per voxel).
     '''
     recipe_tree = _parse_recipe(recipe_filename)
 
@@ -156,7 +156,8 @@ def load_recipe_density(recipe_filename, annotation, region_layers_map):
         else:
             L.warning('No percentage found in recipe for layer %s', layers[0])
 
-    raw /= np.sum(raw)
+    total_neurons = int(recipe_tree.find('NeuronTypes').attrib['totalNeurons'])
+    raw *= total_neurons
 
     return annotation.with_data(raw)
 

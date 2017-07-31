@@ -1,5 +1,6 @@
 '''Basic algorithm to create positions for cell bodies from a density distribution'''
 import numpy as np
+from voxcell import deprecate
 
 
 def create_cell_counts(density, total_count):
@@ -49,7 +50,7 @@ def create_cell_positions(density, total_count):
         positions: numpy.array of shape (total_cell_count, 3) where each row represents
             a cell and the columns represent (x, y, z).
     '''
-
+    deprecate.warn("Deprecated. Please use 'brainbuilder.cell_positions' module instead.")
     cell_counts_per_voxel = create_cell_counts(density.raw, total_count)
 
     assert np.sum(cell_counts_per_voxel) == total_count, \

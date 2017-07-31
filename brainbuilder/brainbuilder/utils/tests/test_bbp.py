@@ -60,7 +60,7 @@ def test_load_recipe_density_0():
         VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: "1", 2: "2"})
 
-    assert_equal(density.raw, np.array([0.1, 0.9], dtype=np.float32))
+    assert_almost_equal(density.raw, 31346 * np.array([0.1, 0.9], dtype=np.float32))
 
 @raises(AssertionError)
 def test_load_recipe_density_unknown_layer_0():
@@ -70,7 +70,7 @@ def test_load_recipe_density_unknown_layer_0():
         VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: "1", 2: "2", 999: "888"})
 
-    assert_equal(density.raw, np.array([0.1, 0.9, 0.], dtype=np.float32))
+    assert_almost_equal(density.raw, 31346 * np.array([0.1, 0.9, 0.], dtype=np.float32))
 
 
 def test_load_recipe_density_no_voxels():
@@ -80,7 +80,7 @@ def test_load_recipe_density_no_voxels():
         VoxelData(annotation_raw, voxel_dimensions=(25,)),
         {1: "1", 2: "2"})
 
-    assert_equal(density.raw, np.array([0.5, 0.5], dtype=np.float32))
+    assert_almost_equal(density.raw, 31346 * np.array([0.05, 0.05], dtype=np.float32))
 
 
 def test_transform_into_spatial_distribution():
