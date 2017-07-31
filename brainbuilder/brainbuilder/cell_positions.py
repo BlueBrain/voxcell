@@ -22,7 +22,7 @@ def create_cell_positions(density):
     voxel_ijk = np.nonzero(density.raw > 0)
     voxel_count = len(voxel_ijk[0])
 
-    probs = 1.0 * density.raw[voxel_ijk] / cell_count
+    probs = 1.0 * density.raw[voxel_ijk] / np.sum(density.raw)
     chosen = np.random.choice(np.arange(voxel_count), cell_count, replace=True, p=probs)
     chosen_idx = np.stack(voxel_ijk).transpose()[chosen]
 
