@@ -104,13 +104,14 @@ def test_load_nrrd_scalar_payload():
 
 def test_load_nrrd_vector_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
-    eq_(actual.raw.shape, (3, 1, 2))
+    eq_(actual.raw.shape, (1, 2, 3))
+    assert_almost_equal(actual.raw, [[[11, 12, 13], [21, 22, 23]]])
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
 
 def test_load_nrrd_with_space_directions():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'space_directions.nrrd'))
-    eq_(actual.raw.shape, (3, 1, 2))
+    eq_(actual.raw.shape, (1, 2, 3))
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
 

@@ -8,6 +8,17 @@ from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import quaternions_to_matrices
 
 
+def _pivot_axes(a, k):
+    """
+    Move `k` first dimensions of `a` to the end, preserving their order.
+
+    I.e., _pivot_axes(A x B x C x D x E, 2) -> C x D x E x A x B
+    """
+    n = len(a.shape)
+    assert 0 <= k <= n
+    return np.moveaxis(a, np.arange(k), np.arange(n - k, n))
+
+
 class VoxelData(object):
     '''wrap volumetric data and some basic metadata'''
 
@@ -69,21 +80,24 @@ class VoxelData(object):
     @classmethod
     def load_nrrd(cls, nrrd_path):
         ''' read volumetric data from a nrrd file '''
-        raw, option = nrrd.read(nrrd_path)
+        data, options = nrrd.read(nrrd_path)
 
-        if 'space directions' in option:
-            directions = np.array(option['space directions'], dtype=np.float32)
+        if 'space directions' in options:
+            directions = np.array(options['space directions'], dtype=np.float32)
             if not math_utils.is_diagonal(directions):
                 raise NotImplementedError("Only diagonal space directions supported at the moment")
             spacings = directions.diagonal()
-        elif 'spacings' in option:
-            spacings = np.array(option['spacings'], dtype=np.float32)
+        elif 'spacings' in options:
+            spacings = np.array(options['spacings'], dtype=np.float32)
         else:
             raise VoxcellError("spacings not defined in nrrd")
 
         offset = None
-        if 'space origin' in option:
-            offset = tuple(option['space origin'])
+        if 'space origin' in options:
+            offset = np.array(options['space origin'], dtype=np.float32)
+
+        # In NRRD 'payload' axes go first, move them to the end
+        raw = _pivot_axes(data, len(data.shape) - len(spacings))
 
         return cls(raw, spacings, offset)
 
@@ -99,7 +113,9 @@ class VoxelData(object):
             'space directions': np.diag(self.voxel_dimensions),
             'space origin': self.offset,
         }
-        nrrd.write(nrrd_path, self.raw, options=options)
+        # In NRRD 'payload' axes should go first, move them to the beginning
+        nrrd_data = _pivot_axes(self.raw, self.ndim)
+        nrrd.write(nrrd_path, nrrd_data, options=options)
 
     def lookup(self, positions, outer_value=None):
         '''find the values in raw corresponding to the given positions
