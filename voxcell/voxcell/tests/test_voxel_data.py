@@ -96,26 +96,33 @@ def test_positions_to_indices():
     assert_equal(v.positions_to_indices([9.9999999]), [0])
     assert_equal(v.positions_to_indices([19.9999999]), [0])
 
+def test_load_nrrd_scalar_payload():
+    actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'scalar.nrrd'))
+    eq_(actual.raw.shape, (1, 2))
+    assert_almost_equal(actual.voxel_dimensions, [10, 20])
+    assert_almost_equal(actual.offset, [100, 200])
 
-def test_load_nrrd():
-    got = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
-    eq_(got.raw.shape, (528, 320, 456))
-    assert_almost_equal(got.voxel_dimensions, [42, 43, 44])
-    assert_almost_equal(got.offset, [0, 0, 0])
+def test_load_nrrd_vector_payload():
+    actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
+    eq_(actual.raw.shape, (3, 1, 2))
+    assert_almost_equal(actual.voxel_dimensions, [10, 20])
+    assert_almost_equal(actual.offset, [100, 200])
 
 def test_load_nrrd_with_space_directions():
-    got = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test_with_space_directions.nrrd'))
-    eq_(got.raw.shape, (409, 608, 286))
-    assert_almost_equal(got.voxel_dimensions, [40, 40, -40])
-    assert_almost_equal(got.offset, [-8.12492943, -7.91999865, -0.1444])
+    actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'space_directions.nrrd'))
+    eq_(actual.raw.shape, (3, 1, 2))
+    assert_almost_equal(actual.voxel_dimensions, [10, 20])
+    assert_almost_equal(actual.offset, [100, 200])
 
 def test_load_nrrd_fail():
-    ''' test loading a test nrrd file without 'spacings' attribute '''
-    assert_raises(VoxcellError, test_module.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'test_fail.nrrd'))
+    # no spacing information
+    assert_raises(VoxcellError, test_module.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'no_spacings_fail.nrrd'))
+    # space directions is non-diagonal
+    assert_raises(NotImplementedError, test_module.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'space_directions_fail.nrrd'))
 
 def test_save_nrrd():
     ''' test saving a test nrrd file and check basic attributes '''
-    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'test.nrrd'))
+    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
     with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
         vd.save_nrrd(f.name)
         f.flush()
