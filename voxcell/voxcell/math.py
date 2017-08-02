@@ -6,4 +6,4 @@ from voxcell.quaternion import *
 
 from voxcell import deprecate
 
-deprecate.warn("Deprecated, please use voxcell.math_utils instead")
+deprecate.fail("Deprecated, please use voxcell.math_utils instead")

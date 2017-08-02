@@ -7,7 +7,7 @@ from voxcell.hierarchy import RegionMap, Hierarchy
 from voxcell.voxel_data import VoxelData
 
 
-deprecate.warn("""
+deprecate.fail("""
     voxcell.core is deprecated.
     Please change your imports as following:
         from voxcell.core import X -> from voxcell import X
