@@ -30,6 +30,16 @@ def get_cell_color(cells, attribute, input_color_map=None):
                 return [1, 1, 1]
             input_color_map = constant_white
         values = cells[['x', 'y', 'z']].values
+    elif attribute == 'synapse_class':
+        if input_color_map is None:
+            def synapse_defaults(synapse_type):
+                '''blue color for inhibitory and red for excitatory'''
+                return {
+                    'INH': [0, 0, 1],
+                    'EXC': [1, 0, 0]
+                }.get(synapse_type, [1, 1, 1])
+            input_color_map = synapse_defaults
+        values = cells[attribute]
     else:
         values = cells[attribute]
 
