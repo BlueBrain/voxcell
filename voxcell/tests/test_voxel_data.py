@@ -187,14 +187,14 @@ def test_filter_inplace():
 
 
 def test_orientation_field():
-    field = test_module.OrientationField(np.array([[0., 0., 0., 1.]]), voxel_dimensions=(2,))
+    field = test_module.OrientationField(np.array([[1., 0., 0., 0.]]), voxel_dimensions=(2,))
     npt.assert_almost_equal(
         field.lookup([1.]),
         [np.identity(3)]
     )
 
 def test_orientation_field_compact():
-    field = test_module.OrientationField(np.array([[0, 0, 0, 127]], dtype=np.int8), voxel_dimensions=(2,))
+    field = test_module.OrientationField(np.array([[127, 0, 0, 0]], dtype=np.int8), voxel_dimensions=(2,))
     npt.assert_almost_equal(
         field.lookup([1.]),
         [np.identity(3)]
