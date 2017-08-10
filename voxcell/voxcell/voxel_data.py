@@ -244,8 +244,12 @@ class VoxelData(object):
 
 
 class OrientationField(VoxelData):
-    """ Volumetric data with rotation per voxel. """
+    """
+    Volumetric data with rotation per voxel.
 
+    See also:
+        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field
+    """
     def __init__(self, *args, **kwargs):
         super(OrientationField, self).__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.float32, np.float64):
@@ -265,6 +269,12 @@ class OrientationField(VoxelData):
             Numpy array with the rotation matrices corresponding to each position.
         """
         result = super(OrientationField, self).lookup(positions, outer_value=None)
+
+        # normalize int8 data
         if result.dtype == np.int8:
             result = result / 127.0
+
+        # change quaternion component order: (w, x, y, z) -> (x, y, z, w)
+        result = np.roll(result, -1, axis=-1)
+
         return quaternions_to_matrices(result)
