@@ -186,11 +186,12 @@ class VoxelData(object):
         offset = aabb[0] * self.voxel_dimensions
         return VoxelData(raw, self.voxel_dimensions, self.offset + offset)
 
-    def clip(self, bbox, inplace=False):
-        """ Clip to axis-aligned bounding box.
+    def clip(self, bbox, na_value=0, inplace=False):
+        """ Assign `na_value` to voxels outside of axis-aligned bounding box.
 
             Args:
                 bbox: bounding box in real-world coordinates
+                na_value: value to use for voxels outside of bbox
                 inplace(bool): modify data inplace
 
             Returns:
@@ -200,23 +201,25 @@ class VoxelData(object):
         if bbox.shape != (2, self.ndim):
             raise VoxcellError("Invalid bbox shape: {}".format(bbox.shape))
 
-        indices = ((bbox - self.offset) / self.voxel_dimensions).astype(np.int)
+        aabb = ((bbox - self.offset) / self.voxel_dimensions).astype(np.int)
 
         # ensure clipped volume is inside bbox
-        indices = np.clip(indices, np.full(self.ndim, -1), self.shape)
-        indices[0] += 1
-        indices[1] -= 1
-        if np.any(indices[0] > indices[1]):
+        aa, bb = np.clip(aabb, np.full(self.ndim, -1), self.shape)
+        aa += 1
+        bb -= 1
+        if np.any(aa > bb):
             raise VoxcellError("Empty slice")
 
-        raw = math_utils.clip(self.raw, indices)
-        offset = self.indices_to_positions(indices[0])
+        indices = [range(a, b + 1) for a, b in zip(aa, bb)]
 
         if inplace:
-            self.raw = raw
-            self.offset = offset
+            mask = np.full_like(self.raw, False, dtype=bool)
+            mask[indices] = True
+            self.raw[np.logical_not(mask)] = na_value
         else:
-            return VoxelData(raw, self.voxel_dimensions, offset)
+            raw = np.full_like(self.raw, na_value)
+            raw[indices] = self.raw[indices]
+            return VoxelData(raw, self.voxel_dimensions, self.offset)
 
     def filter(self, predicate, inplace=False):
         """ Set values for voxel positions not satisfying `predicate` to zero.
@@ -237,6 +240,29 @@ class VoxelData(object):
             raw = np.zeros_like(self.raw)
             raw[mask] = self.raw[mask]
             return VoxelData(raw, self.voxel_dimensions, self.offset)
+
+    def compact(self, na_values=(0,), inplace=False):
+        """
+        Reduce size of raw data by clipping N/A values.
+
+        Args:
+            na_values(tuple): values to clip
+            inplace(bool): modify data inplace
+
+        Returns:
+            None if `inplace` is True, new VoxelData otherwise
+        """
+        mask = np.logical_not(np.isin(self.raw, na_values))
+        aabb = math_utils.minimum_aabb(mask)
+
+        raw = math_utils.clip(self.raw, aabb)
+        offset = self.indices_to_positions(aabb[0])
+
+        if inplace:
+            self.raw = raw
+            self.offset = offset
+        else:
+            return VoxelData(raw, self.voxel_dimensions, offset)
 
     def with_data(self, raw):
         '''return VoxelData of the same shape with different data'''
