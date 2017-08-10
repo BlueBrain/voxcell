@@ -10,9 +10,9 @@ import numpy as np
 import pandas as pd
 
 from voxcell import CellCollection
-from voxcell.positions import create_cell_positions
 
 from brainbuilder.utils import bbp
+from brainbuilder.cell_positions import create_cell_positions
 from brainbuilder.sscx.annotation import build_column_atlas
 
 
@@ -25,7 +25,7 @@ def build_cell_collection(cell_count, annotation, density, recipe_sdist, neuron_
     cells = CellCollection()
 
     L.debug("Assigning %d cell positions...", cell_count)
-    cells.positions = create_cell_positions(density, cell_count)
+    cells.positions = create_cell_positions(density)
 
     L.debug("Assigning layers...")
     cells.add_properties(

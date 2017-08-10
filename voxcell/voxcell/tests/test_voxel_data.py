@@ -14,64 +14,6 @@ from voxcell.exceptions import VoxcellError
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def test_clip():
-    raw = np.array([
-        [0, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ])
-    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
-    clipped = original.clip(bbox=((11, 25), (15, 33)))
-
-    assert_equal(clipped.raw, [[1]])
-    assert_equal(clipped.voxel_dimensions, original.voxel_dimensions)
-    assert_equal(clipped.offset, (12, 26))
-
-    # check that they are independent
-    raw[1, 1] = 2
-    assert_equal(clipped.raw, [[1]])
-
-
-def test_clip_inplace():
-    raw = np.array([
-        [0, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ])
-    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
-    original.clip(bbox=((11, 25), (15, 33)), inplace=True)
-
-    assert_equal(original.raw, [[1]])
-    assert_equal(original.offset, (12, 26))
-
-
-def test_clip_empty():
-    raw = np.array([
-        [0, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ])
-    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
-    assert_raises(
-        VoxcellError,
-        original.clip,
-        bbox=((10, 10), (10, 10))
-    )
-
-
-def test_clip_out_of_bounds():
-    raw = np.array([
-        [0, 0, 0],
-        [0, 1, 0],
-        [0, 0, 0]
-    ])
-    original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
-    clipped = original.clip(bbox=((-1000, -1000), (1000, 1000)))
-    assert_equal(clipped.raw, original.raw)
-    assert_equal(clipped.voxel_dimensions, original.voxel_dimensions)
-    assert_equal(clipped.offset, original.offset)
-
-
 def test_lookup():
     raw = np.array([[11, 12], [21, 22]])
     v = test_module.VoxelData(raw, (2, 3), offset=np.array([2, 2]))
@@ -169,6 +111,40 @@ def test_volume():
     assert_equal(vd.volume(13), 0)
 
 
+def test_clip():
+    raw = np.array([1, 2, 3])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
+    clipped = original.clip(bbox=((11,), (15,)), na_value=-1)
+    assert_equal(original.raw, raw)
+    assert_equal(clipped.raw, [-1, 2, -1])
+    assert_equal(clipped.voxel_dimensions, original.voxel_dimensions)
+    assert_equal(clipped.offset, original.offset)
+
+
+def test_clip_inplace():
+    raw = np.array([1, 2, 3])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
+    original.clip(bbox=((11,), (15,)), na_value=-1, inplace=True)
+    assert_equal(original.raw, [-1, 2, -1])
+
+
+def test_clip_empty():
+    raw = np.array([1, 2, 3])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
+    assert_raises(
+        VoxcellError,
+        original.clip,
+        bbox=((10,), (10,))
+    )
+
+
+def test_clip_out_of_bounds():
+    raw = np.array([1, 2, 3])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
+    clipped = original.clip(bbox=((-1000,), (1000,)))
+    assert_equal(clipped.raw, original.raw)
+
+
 def test_filter():
     raw = np.array([[11, 12], [21, 22]])
     original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
@@ -184,6 +160,25 @@ def test_filter_inplace():
     original = test_module.VoxelData(np.array([[11, 12], [21, 22]]), (2, 6), offset=(10, 20))
     original.filter(lambda p: p[0] > 12 and p[1] > 26, inplace=True)
     assert_equal(original.raw, [[0, 0], [0, 22]])
+
+
+def test_compact():
+    raw = np.array([0, 42, -1])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
+    compact = original.compact(na_values=(0, -1))
+    assert_equal(original.raw, raw)
+    assert_equal(original.offset, 10)
+    assert_equal(compact.raw, raw[1:2])
+    assert_equal(compact.voxel_dimensions, original.voxel_dimensions)
+    assert_equal(compact.offset, 12)
+
+
+def test_compact_inplace():
+    raw = np.array([0, 42, -1])
+    original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
+    original.compact(na_values=(0, -1), inplace=True)
+    assert_equal(original.raw, raw[1:2])
+    assert_equal(original.offset, 12)
 
 
 def test_orientation_field():

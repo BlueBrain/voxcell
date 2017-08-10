@@ -1,8 +1,8 @@
-h5py>=2.6
+h5py>=2.3
 numpy>=1.9
 scipy>=0.13
-pandas>=0.17
-lxml>=3.7
+pandas>=0.16
+lxml>=3.3
 six>=1.0
 
-voxcell>=1.7.2,<2.0
+voxcell>=2.0,<3.0
