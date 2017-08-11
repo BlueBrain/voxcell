@@ -3,20 +3,20 @@
 import numpy as np
 
 
-def create_cell_positions(density):
+def create_cell_positions(density, density_factor=1.0):
     ''' Given cell density volumetric data, create cell positions.
 
     Cell count is calculated as the sum of cell density values.
 
     Args:
-        density: VoxelData object representing cell density.
-            Each voxel contains expected number of cells appearing in this voxel.
+        density(VoxelData): cell density; expected number of cells appearing in each voxel
+        density_factor(float): reduce / increase density proportionally for all voxels
 
     Returns:
         positions: numpy.array of shape (cell_count, 3) where each row represents
             a cell and the columns correspond to (x, y, z).
     '''
-    cell_count = int(np.round(np.sum(density.raw)))
+    cell_count = int(np.round(density_factor * np.sum(density.raw)))
     assert cell_count > 0
 
     voxel_ijk = np.nonzero(density.raw > 0)
