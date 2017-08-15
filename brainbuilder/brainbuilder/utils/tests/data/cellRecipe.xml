@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 
 <CellRecipe>
-  <Layer name="1" density="10">
+  <Region name="1" density="10">
     <StructuralType name="mtype-A" percentage="80" mClass="INT" sClass="INH">
       <ElectroType name="etype-A1" percentage="62.5"/>
       <ElectroType name="etype-A2" percentage="37.5"/>
@@ -9,10 +9,10 @@
     <StructuralType name="mtype-B" percentage="20" mClass="PYR" sClass="EXC">
       <ElectroType name="etype-B1" percentage="100"/>
     </StructuralType>
-  </Layer>
-  <Layer name="2" density="20">
+  </Region>
+  <Region name="2" density="20">
     <StructuralType name="mtype-C" percentage="100" mClass="INT" sClass="INH">
       <ElectroType name="etype-C1" percentage="100"/>
     </StructuralType>
-  </Layer>
+  </Region>
 </CellRecipe>

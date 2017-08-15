@@ -141,7 +141,7 @@ def test_load_recipe_cell_traits():
             ['1', 'mtype-A', 'etype-A2', 'INT', 'INH'],
             ['1', 'mtype-B', 'etype-B1', 'PYR', 'EXC'],
             ['2', 'mtype-C', 'etype-C1', 'INT', 'INH'],
-        ], columns=['layer', 'mtype', 'etype', 'morph_class', 'synapse_class']).sort_index(axis=1)
+        ], columns=['region', 'mtype', 'etype', 'morph_class', 'synapse_class']).sort_index(axis=1)
     )
 
 

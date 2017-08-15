@@ -208,13 +208,13 @@ def load_recipe_cell_density(recipe_filename, atlas, region_map):
     result = np.zeros_like(atlas.raw, dtype=np.float32)
     voxel_mm3 = atlas.voxel_volume / 1e9  # voxel volume is in um^3
 
-    for layer in recipe_tree.iterfind('/Layer'):
-        layer_mask = np.isin(atlas.raw, region_map[layer.attrib['name']])
-        if np.any(layer_mask):
-            voxel_density = float(layer.attrib['density']) * voxel_mm3
-            result[layer_mask] = voxel_density
+    for region in recipe_tree.iterfind('/Region'):
+        mask = np.isin(atlas.raw, region_map[region.attrib['name']])
+        if np.any(mask):
+            voxel_density = float(region.attrib['density']) * voxel_mm3
+            result[mask] = voxel_density
         else:
-            L.warning('No voxels tagged for layer %s', layer)
+            L.warning('No voxels tagged for region %s', region)
 
     return atlas.with_data(result)
 
@@ -227,14 +227,14 @@ def load_recipe_cell_traits(recipe_filename, atlas, region_map):
 
     Returns:
         SpatialDistribution where the properties of the traits_collection are:
-            layer, mtype, etype, morph_class, synapse_class
+            region, mtype, etype, morph_class, synapse_class
     """
     def _parse_type(elem):
         etype_attr = elem.attrib
         mtype_attr = elem.getparent().attrib
-        layer_attr = elem.getparent().getparent().attrib
+        region_attr = elem.getparent().getparent().attrib
         return {
-            'layer': layer_attr['name'],
+            'region': region_attr['name'],
             'mtype': mtype_attr['name'],
             'etype': etype_attr['name'],
             'morph_class': mtype_attr['mClass'],
@@ -248,7 +248,7 @@ def load_recipe_cell_traits(recipe_filename, atlas, region_map):
     recipe_tree = _parse_recipe(recipe_filename)
 
     cell_traits = pd.DataFrame([
-        _parse_type(elem) for elem in recipe_tree.iterfind('/Layer/StructuralType/ElectroType')
+        _parse_type(elem) for elem in recipe_tree.iterfind('/Region/StructuralType/ElectroType')
     ])
     percentage = cell_traits.pop('percentage')
 
@@ -258,8 +258,8 @@ def load_recipe_cell_traits(recipe_filename, atlas, region_map):
         columns=np.unique(atlas.raw)
     )
 
-    for layer, region_ids in iteritems(region_map):
-        data = percentage[cell_traits.layer == layer]
+    for region, region_ids in iteritems(region_map):
+        data = percentage[cell_traits.region == region]
         for region_id in region_ids:
             distributions.loc[data.index, region_id] = data.values
 
