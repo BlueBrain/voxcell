@@ -21,6 +21,7 @@ class CellCollection(object):
         self.orientations = None
         self.properties = pd.DataFrame()
         self.meta = {}
+        self.seeds = None
 
     def add_properties(self, new_properties, overwrite=True):
         '''adds new columns to the properties DataFrame
@@ -89,9 +90,8 @@ class CellCollection(object):
 
             # TODO this should be managed by the application that requires that.
             # This is in the current MVD3 spec and this is a legacy from MVD2.
-            # This is not used in load
-            f.create_dataset('circuit/seeds',
-                             data=np.random.random_sample((4,)).astype(np.float64))
+            if self.seeds is not None:
+                f.create_dataset('circuit/seeds', data=self.seeds)
 
             for name, series in self.properties.iteritems():
                 data = series.values
@@ -125,6 +125,9 @@ class CellCollection(object):
 
         with h5py.File(filename, 'r') as f:
             cells.meta.update(f.attrs)
+
+            if 'circuit/seeds' in f:
+                cells.seeds = np.array(f['circuit/seeds'])
 
             data = f['cells']
             if 'positions' in data:
