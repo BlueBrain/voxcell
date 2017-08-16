@@ -97,6 +97,7 @@ def assert_equal_cells(c0, c1):
         check_names=True
     )
     eq_(c0.meta, c1.meta)
+    assert_equal(c0.seeds, c1.seeds)
 
 
 def check_roundtrip(original):
@@ -187,13 +188,9 @@ def test_remove_unassigned():
 
 
 def test_circuit_seeds():
-    ''' test that 4 seeds are generated in the MVD3 during save '''
     cells = test_module.CellCollection()
-    cells.properties['foo'] = ['a', 'b', 'c']
-    with tempcwd():
-        cells.save('cells.h5')
-        with h5py.File('cells.h5') as f:
-            eq_(f['circuit']['seeds'].shape, (4,))
+    cells.seeds = (1, 2, 3, 4)
+    check_roundtrip(cells)
 
 
 def test_as_dataframe():
