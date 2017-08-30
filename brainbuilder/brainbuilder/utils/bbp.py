@@ -206,13 +206,11 @@ def load_recipe_cell_density(recipe_filename, atlas, region_map):
     recipe_tree = _parse_recipe(recipe_filename)
 
     result = np.zeros_like(atlas.raw, dtype=np.float32)
-    voxel_mm3 = atlas.voxel_volume / 1e9  # voxel volume is in um^3
 
     for region in recipe_tree.iterfind('/Region'):
         mask = np.isin(atlas.raw, region_map[region.attrib['name']])
         if np.any(mask):
-            voxel_density = float(region.attrib['density']) * voxel_mm3
-            result[mask] = voxel_density
+            result[mask] = float(region.attrib['density'])
         else:
             L.warning('No voxels tagged for region %s', region)
 

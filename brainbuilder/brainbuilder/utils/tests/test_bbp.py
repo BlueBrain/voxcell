@@ -118,7 +118,7 @@ def test_load_recipe_cell_density():
     atlas = VoxelData(np.array([[[1, 2, 11, 999]]]), voxel_dimensions=(100, 100, 100))
     region_map = {'1': (1, 11), '2': (2,), '999': (999,)}
     actual = bbp.load_recipe_cell_density(CELL_RECIPE, atlas, region_map)
-    assert_almost_equal(actual.raw, [[[0.01, 0.02, 0.01, 0.]]])
+    assert_almost_equal(actual.raw, [[[10, 20, 10, 0]]])
 
 
 def test_load_recipe_cell_traits():
