@@ -228,6 +228,16 @@ def test_assign_conditional_multiple_impossible_1():
     check_assign_conditional(preassigned, -1)
 
 
+def test_assign_atlas_int8():
+    prob = np.zeros(1000)
+    prob[999] = 1.0
+    sdist = SpatialDistribution(
+        field=VoxelData(np.array([1], dtype=np.int8), (25,)),
+        distributions=pd.DataFrame({1: prob}),
+        traits=None
+    )
+    assert_equal(sdist.assign([[0]]), 999)
+
 def test_collect():
     sdist = SpatialDistribution(
         field=VoxelData(np.array([[[0]]]), (25, 25, 25)),
