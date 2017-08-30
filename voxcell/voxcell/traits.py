@@ -71,7 +71,7 @@ class SpatialDistribution(object):
         if np.count_nonzero(~valid):
             L.warning('missing distribution for %d positions', np.count_nonzero(~valid))
 
-        chosen_trait_indices = np.ones_like(dist_id_per_position) * -1
+        chosen_trait_indices = np.ones_like(dist_id_per_position, dtype=np.int32) * -1
 
         unique_dists = np.unique(dist_id_per_position[valid])
         for dist_id, dist in self.distributions[unique_dists].iteritems():
