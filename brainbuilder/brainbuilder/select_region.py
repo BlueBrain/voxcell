@@ -35,7 +35,7 @@ def select_hemisphere(density_raw, left=True):
         left: if True select the left hemisphere (default), otherwise select the right one.
     '''
     in_region = np.ones_like(density_raw, dtype=np.bool)
-    in_region[:, :, in_region.shape[2] / 2:] = False
+    in_region[:, :, in_region.shape[2] // 2:] = False
     if not left:
         in_region = np.invert(in_region)
     return density_raw * in_region
