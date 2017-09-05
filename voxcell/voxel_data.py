@@ -82,13 +82,29 @@ class VoxelData(object):
         ''' read volumetric data from a nrrd file '''
         data, options = nrrd.read(nrrd_path)
 
+        # According to http://teem.sourceforge.net/nrrd/format.html#spacedirections,
+        # 'space directions' could use 'none' for "payload" axes.
+        # As we need space directions only for "space" axes, we rely on either
+        # 'space dimension' or 'space' header to slice them out.
+        # NB: only a subset of possible 'space' values is supported at the moment.
+        if 'space dimension' in options:
+            ndim = options['space dimension']
+        elif 'space' in options:
+            ndim = {
+                'right-anterior-superior': 3, 'RAS': 3,
+                'left-anterior-superior': 3, 'LAS': 3,
+                'left-posterior-superior': 3, 'LPS': 3,
+            }[options['space']]
+        else:
+            ndim = 0  # use all 'space directions'
+
         if 'space directions' in options:
-            directions = np.array(options['space directions'], dtype=np.float32)
+            directions = np.array(options['space directions'][-ndim:], dtype=np.float32)
             if not math_utils.is_diagonal(directions):
                 raise NotImplementedError("Only diagonal space directions supported at the moment")
             spacings = directions.diagonal()
         elif 'spacings' in options:
-            spacings = np.array(options['spacings'], dtype=np.float32)
+            spacings = np.array(options['spacings'][-ndim:], dtype=np.float32)
         else:
             raise VoxcellError("spacings not defined in nrrd")
 
