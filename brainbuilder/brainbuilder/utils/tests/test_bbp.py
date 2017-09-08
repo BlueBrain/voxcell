@@ -622,14 +622,9 @@ def test_roundtrip_mvd2():
         filename = os.path.join(cwd, 'exported.mvd2')
         bbp.save_mvd2(filename, '/here', original)
         restored = bbp.load_mvd2(filename)
-
-        # orientations are lost in the process
-        assert_equal(restored.orientations[:, 0, 0], np.nan)
-        assert_equal(restored.orientations[:, 2, 2], np.nan)
-
-        assert_equal(original.positions, restored.positions)
+        assert_almost_equal(original.orientations, restored.orientations)
+        assert_almost_equal(original.positions, restored.positions)
         assert_frame_equal(original.properties, restored.properties)
-
     finally:
         shutil.rmtree(cwd)
 

@@ -594,6 +594,30 @@ def parse_mvd2(filepath):
     return result
 
 
+def _angles_to_matrices(phi):
+    """ Convert rotation angles around Y to 3x3 rotation matrices. """
+    cos, sin = np.cos(phi), np.sin(phi)
+    zero, one = np.zeros_like(phi), np.ones_like(phi)
+    return np.rollaxis(np.array([
+        [cos, zero, sin],
+        [zero, one, zero],
+        [-sin, zero, cos]
+    ]), -1)
+
+
+def _matrices_to_angles(matrices):
+    """
+    Convert 3x3 rotation matrices to rotation angles around Y.
+
+    Use NaN if rotation could not be represented as a single rotation angle.
+    """
+    phi = np.arccos(matrices[:, 0, 0]) * np.sign(matrices[:, 0, 2])
+    mat = _angles_to_matrices(phi)
+    valid = np.all(np.isclose(mat, matrices), axis=(1, 2))
+    phi[~valid] = np.nan
+    return phi
+
+
 def load_mvd2(filepath):
     '''loads an mvd2 as a CellCollection'''
     data = parse_mvd2(filepath)
@@ -603,8 +627,7 @@ def load_mvd2(filepath):
     cells.positions = np.array([[c['x'], c['y'], c['z']] for c in data['Neurons Loaded']])
 
     angles = np.array([c['r'] for c in data['Neurons Loaded']]) * np.pi / 180
-    cells.orientations = np.array([[[cos, 0, sin], [0, 1, 0], [-sin, 0, cos]]
-                                   for cos, sin in zip(np.cos(angles), np.sin(angles))])
+    cells.orientations = _angles_to_matrices(angles)
 
     props = pd.DataFrame({
         'synapse_class': [data['MorphTypes'][c['mtype']]['sclass']
@@ -626,12 +649,15 @@ def load_mvd2(filepath):
 def save_mvd2(filepath, morphology_path, cells):
     '''saves a CellCollection as mvd2
 
-    Rotations are lost in the process.
+    Rotations might be lost in the process.
     Cells are expected to have the properties:
     'morphology', 'mtype', 'etype', 'morph_class', 'synapse_class', 'me_combo';
     and, optionally, 'hypercolumn', 'minicolumn', 'layer'.
     '''
-    L.warning("save_mvd2: rotations would be lost!")
+    # pylint: disable=too-many-locals
+    rotations = 180 * _matrices_to_angles(cells.orientations) / np.pi
+    if np.count_nonzero(np.isnan(rotations)):
+        L.warning("save_mvd2: some rotations would be lost!")
 
     optional = {}
     for prop in ('hypercolumn', 'minicolumn', 'layer'):
@@ -657,6 +683,7 @@ def save_mvd2(filepath, morphology_path, cells):
         data = zip(
             cells.properties.morphology,
             cells.positions,
+            rotations,
             chosen_mtype,
             chosen_etype,
             optional['hypercolumn'],
@@ -665,9 +692,9 @@ def save_mvd2(filepath, morphology_path, cells):
             cells.properties.me_combo,
         )
 
-        for morph, pos, mtype_idx, etype_idx, hypercolumn, minicolumn, layer, me_combo in data:
+        for morph, pos, phi, mtype_idx, etype_idx, hypercolumn, minicolumn, layer, me_combo in data:
             yield dict(name=morph, mtype_idx=mtype_idx, etype_idx=etype_idx,
-                       rotation=np.nan, x=pos[0], y=pos[1], z=pos[2], hypercolumn=hypercolumn,
+                       rotation=phi, x=pos[0], y=pos[1], z=pos[2], hypercolumn=hypercolumn,
                        minicolumn=minicolumn, layer=int(layer) - 1, me_combo=me_combo)
 
     with open(filepath, 'w') as fd:
