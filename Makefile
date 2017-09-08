@@ -7,6 +7,7 @@ COVER_PACKAGES=voxcell,voxcellview,brainbuilder
 IGNORE_LINT=voxcellview/js|notebooks
 # documentation to build, separated by spaces
 DOC_MODULES=voxcell/doc brainbuilder/doc
+DOC_REPO=--doc-repo ssh://bbpcode.epfl.ch/infra/jekylltest
 
 PYTHON_PIP_VERSION=pip==9.0.1
 
