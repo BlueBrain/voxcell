@@ -33,5 +33,5 @@ def apply_random_rotation(A, axis):
     Returns:
         (N, 3, 3) array of mutated rotation matrices
     """
-    angles = np.pi * np.random.random(A.shape[0])
+    angles = 2 * np.pi * np.random.random(A.shape[0])
     return apply_rotation(A, angles, axis)
