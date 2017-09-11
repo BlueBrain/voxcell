@@ -8,8 +8,9 @@ import lxml.etree
 import numpy as np
 import pandas as pd
 
-from voxcell import CellCollection, math_utils
+from voxcell import CellCollection
 from voxcell import traits as tt
+from voxcell.math_utils import lcmm, angles_to_matrices
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
 
 from brainbuilder.version import VERSION
@@ -363,7 +364,7 @@ def get_placement_hints_table(morphs):
         A DataFrame array that contains the placement hint scores for the given morphologies.
         This table has one row for each morphology and one column for each region subdivision
     '''
-    subdivision_count = math_utils.lcmm(morphs.placement_hints.map(len).as_matrix())
+    subdivision_count = lcmm(morphs.placement_hints.map(len).as_matrix())
 
     region_dist_table = pd.DataFrame(dtype=np.float,
                                      index=morphs.index,
@@ -594,17 +595,6 @@ def parse_mvd2(filepath):
     return result
 
 
-def _angles_to_matrices(phi):
-    """ Convert rotation angles around Y to 3x3 rotation matrices. """
-    cos, sin = np.cos(phi), np.sin(phi)
-    zero, one = np.zeros_like(phi), np.ones_like(phi)
-    return np.rollaxis(np.array([
-        [cos, zero, sin],
-        [zero, one, zero],
-        [-sin, zero, cos]
-    ]), -1)
-
-
 def _matrices_to_angles(matrices):
     """
     Convert 3x3 rotation matrices to rotation angles around Y.
@@ -612,7 +602,7 @@ def _matrices_to_angles(matrices):
     Use NaN if rotation could not be represented as a single rotation angle.
     """
     phi = np.arccos(matrices[:, 0, 0]) * np.sign(matrices[:, 0, 2])
-    mat = _angles_to_matrices(phi)
+    mat = angles_to_matrices(phi, axis='y')
     valid = np.all(np.isclose(mat, matrices), axis=(1, 2))
     phi[~valid] = np.nan
     return phi
@@ -627,7 +617,7 @@ def load_mvd2(filepath):
     cells.positions = np.array([[c['x'], c['y'], c['z']] for c in data['Neurons Loaded']])
 
     angles = np.array([c['r'] for c in data['Neurons Loaded']]) * np.pi / 180
-    cells.orientations = _angles_to_matrices(angles)
+    cells.orientations = angles_to_matrices(angles, axis='y')
 
     props = pd.DataFrame({
         'synapse_class': [data['MorphTypes'][c['mtype']]['sclass']

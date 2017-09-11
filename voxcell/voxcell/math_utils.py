@@ -60,3 +60,32 @@ def clip(mask, aabb):
 def is_diagonal(matrix):
     """ Check if the matrix is diagonal. """
     return np.all(matrix == np.diag(matrix.diagonal()))
+
+
+def angles_to_matrices(angles, axis):
+    """
+    Convert rotation angles around `axis` to 3x3 rotation matrices.
+
+    Args:
+        angles: (N,) array of rotation angles (radian)
+        axis: one of ('x', 'y', 'z')
+
+    Returns:
+        (N, 3, 3) array of rotation matrices.
+    """
+    i, j, k = {
+        'x': (1, 2, 0),
+        'y': (0, 2, 1),
+        'z': (0, 1, 2),
+    }[axis]
+
+    cos, sin = np.cos(angles), np.sin(angles)
+
+    result = np.zeros((len(angles), 3, 3))
+    result[:, i, i] = cos
+    result[:, i, j] = sin
+    result[:, j, i] = -sin
+    result[:, j, j] = cos
+    result[:, k, k] = 1.0
+
+    return result
