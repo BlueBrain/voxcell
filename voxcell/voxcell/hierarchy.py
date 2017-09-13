@@ -26,8 +26,15 @@ class Hierarchy(object):
     @classmethod
     def load(cls, filename):
         '''load a hierarchy of annotations in json from the Allen Brain Institute'''
+        deprecate.warn("Deprecated. Please use load_json() instead.")
         with open(filename, 'r') as f:
             return Hierarchy(json.load(f)['msg'][0])
+
+    @classmethod
+    def load_json(cls, filepath):
+        """ Construct Hierarchy from VoxelBrain region hierarchy JSON. """
+        with open(filepath, 'r') as f:
+            return cls(json.load(f))
 
     def find(self, attribute, value):
         '''get a list with all the subsections of a hierarchy that exactly match
