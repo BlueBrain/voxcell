@@ -7,19 +7,8 @@ import voxcell.hierarchy as test_module
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 
-def test_load_hierarchy_0():
-    with tempfile.NamedTemporaryFile('w') as f:
-        f.write('{"msg": [{}]}')
-        f.flush()
-
-        h = test_module.Hierarchy.load(f.name)
-        eq_(h.data, {})
-        eq_(h.children, [])
-
-
-def test_load_hierarchy_1():
-    h = test_module.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json'))
-    eq_(h.data['name'], 'root')
+def load_test_hierarchy():
+    return test_module.Hierarchy.load_json(os.path.join(DATA_PATH, 'hierarchy.json'))
 
 
 @raises(KeyError)
@@ -44,10 +33,9 @@ def test_find_in_hierarchy_beyond_me():
 
 
 def test_find_in_hierarchy_2():
-    res = test_module.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json')).find(
-                               'name', 'Primary somatosensory area, barrel field')
+    res = load_test_hierarchy().find('acronym', 'L1')
     eq_(len(res), 1)
-    eq_(res[0].data['name'], 'Primary somatosensory area, barrel field')
+    eq_(res[0].data['acronym'], 'L1')
 
 
 @raises(KeyError)
@@ -60,10 +48,9 @@ def test_get_in_hierarchy_1():
 
 
 def test_get_in_hierarchy_2():
-    h = test_module.Hierarchy.load(os.path.join(DATA_PATH, 'hierarchy.json')).find(
-                             'name', 'Primary somatosensory area, barrel field')
+    h = load_test_hierarchy().find('acronym', 'S1HL')
     res = h[0].get('id')
-    eq_(res, set([329, 981, 201, 1047, 1070, 1038, 1062]))
+    eq_(res, set([726, 1125, 1126, 1127, 1128, 1129, 1130]))
 
 
 def test_collect_in_hierarchy():
