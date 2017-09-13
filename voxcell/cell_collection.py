@@ -20,7 +20,6 @@ class CellCollection(object):
         self.positions = None
         self.orientations = None
         self.properties = pd.DataFrame()
-        self.meta = {}
         self.seeds = None
 
     def add_properties(self, new_properties, overwrite=True):
@@ -76,8 +75,6 @@ class CellCollection(object):
             filename(str): fullpath to filename to write
         '''
         with h5py.File(filename, 'w') as f:
-            f.attrs.update(self.meta)
-
             f.create_group('cells')
             f.create_group('library')
 
@@ -124,8 +121,6 @@ class CellCollection(object):
         cells = cls()
 
         with h5py.File(filename, 'r') as f:
-            cells.meta.update(f.attrs)
-
             if 'circuit/seeds' in f:
                 cells.seeds = np.array(f['circuit/seeds'])
 

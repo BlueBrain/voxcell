@@ -96,7 +96,6 @@ def assert_equal_cells(c0, c1):
         c1.properties.sort_index(axis=1),
         check_names=True
     )
-    eq_(c0.meta, c1.meta)
     assert_equal(c0.seeds, c1.seeds)
 
 
@@ -240,13 +239,6 @@ def test_add_properties():
         VoxcellError,
         cells.add_properties, properties1, overwrite=False
     )
-
-
-def test_save_load_meta():
-    cells = test_module.CellCollection()
-    cells.meta['foo'] = 42
-    cells.meta['bar'] = "abcd"
-    check_roundtrip(cells)
 
 
 @raises(VoxcellError)
