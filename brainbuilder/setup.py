@@ -38,8 +38,13 @@ VERSION = imp.load_source("brainbuilder.version", "brainbuilder/version.py").VER
 
 setup(
     name='brainbuilder',
+    author='NSE Team',
+    author_email='bbp-ou-nse@groupes.epfl.ch',
     version=VERSION,
-    description='code to build brains',
+    description='BrainBuilder is a tool to define the cells that will compose a circuit.',
+    url='https://bbpteam.epfl.ch/project/issues/projects/BRBLD/issues/',
+    download_url='https://bbpcode.epfl.ch/browse/code/platform/BrainBuilder/',
+    license='BBP-internal-confidential',
     install_requires=REQS,
     packages=[
         'brainbuilder',

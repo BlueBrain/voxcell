@@ -37,8 +37,15 @@ VERSION = imp.load_source("voxcell.version", "voxcell/version.py").VERSION
 
 setup(
     name='voxcell',
+    author='NSE Team',
+    author_email='bbp-ou-nse@groupes.epfl.ch',
     version=VERSION,
-    description='code to build collections of cells',
+    description='Voxcell is a small library to handle probability'
+                ' distributions that have a spatial component and to use them'
+                ' to build collection of cells in space.',
+    url='https://bbpteam.epfl.ch/project/issues/projects/BRBLD/issues/',
+    download_url='https://bbpcode.epfl.ch/browse/code/platform/BrainBuilder/',
+    license='BBP-internal-confidential',
     install_requires=REQS,
     packages=['voxcell'],
     include_package_data=True,
