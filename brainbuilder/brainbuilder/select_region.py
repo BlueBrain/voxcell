@@ -27,15 +27,41 @@ def select_region(annotation_raw, density, hierarchy, region_name, inverse=False
     return density.with_data(density.raw * in_region)
 
 
-def select_hemisphere(density_raw, left=True):
+def select_hemisphere(density_raw, left=True, orientation="LPS"):
     '''Trim a density voxel dataset to keep only those in one of the two hemispheres.
 
     Args:
         density_raw: voxel data from Allen Brain Institute.
         left: if True select the left hemisphere (default), otherwise select the right one.
+        orientation: Specify the axis system. "LPS" by default (compatible with the
+                     BlueBrain Nexus). Use "PIR" for compability with Allen Brain
+                     Institute atlas. Accepted values are: "RAS", "right-anterior-superior",
+                     "LAS", "left-anterior-superior", "LPS", "left-posterior-superior",
+                     "PIR", "posterior-inferior-right"
     '''
+    if orientation == "right-anterior-superior":
+        orientation = "RAS"
+    elif orientation == "left-anterior-superior":
+        orientation = "LAS"
+    elif orientation == "left-posterior-superior":
+        orientation = "LPS"
+    elif orientation == "posterior-inferior-right":
+        orientation = "PIR"
+
     in_region = np.ones_like(density_raw, dtype=np.bool)
-    in_region[:, :, in_region.shape[2] // 2:] = False
-    if not left:
-        in_region = np.invert(in_region)
+
+    if orientation in ["RAS", "LAS", "LPS"]:
+        in_region[in_region.shape[0] // 2:, :, :] = False
+    elif orientation == "PIR":
+        in_region[:, :, in_region.shape[2] // 2:] = False
+    else:
+        raise ValueError("Orientation not supported.")
+
+    if left:
+        if orientation in ["LAS", "LPS"]:
+            in_region = np.invert(in_region)
+    else:
+        if orientation in ["PIR", "RAS"]:
+            in_region = np.invert(in_region)
+
     return density_raw * in_region
