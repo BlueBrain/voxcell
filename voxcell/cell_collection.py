@@ -20,7 +20,7 @@ class CellCollection(object):
         self.positions = None
         self.orientations = None
         self.properties = pd.DataFrame()
-        self.seeds = None
+        self.seeds = np.random.random(4)  # used by Functionalizer later (sic!)
 
     def add_properties(self, new_properties, overwrite=True):
         '''adds new columns to the properties DataFrame
