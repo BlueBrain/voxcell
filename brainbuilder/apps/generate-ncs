@@ -4,7 +4,7 @@
 
 import argparse
 
-from voxcell.core import CellCollection
+from voxcell import CellCollection
 
 
 if __name__ == '__main__':
