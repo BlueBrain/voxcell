@@ -872,7 +872,7 @@ var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
   }
 
   function buildSquareCloudMaterial(size) {
-    return new THREE.PointCloudMaterial({
+    return new THREE.PointsMaterial({
       size: size,
       vertexColors: THREE.VertexColors,
       transparent: true,
