@@ -44,7 +44,7 @@ setup(
                 ' distributions that have a spatial component and to use them'
                 ' to build collection of cells in space.',
     url='https://bbpteam.epfl.ch/project/issues/projects/BRBLD/issues/',
-    download_url='https://bbpcode.epfl.ch/browse/code/platform/BrainBuilder/',
+    download_url='https://bbpteam.epfl.ch/repository/devpi/+search?query=name%3Avoxcell',
     license='BBP-internal-confidential',
     install_requires=REQS,
     packages=['voxcell'],
