@@ -53,14 +53,15 @@ LONG_DESCRIPTION = 'viewers for voxcell the brain building framework'
 
 def enable_extensions():
     # installs and enable nb_extensions
+    log.info('enabling extensions')
     extensions = ['widgetsnbextension', 'voxcellview']
     try:
         import notebook
         from notebook.nbextensions import enable_nbextension_python, install_nbextension_python
         for ext in extensions:
             log.info('Installing ' + ext + ' extension')
-            install_nbextension_python(ext, logger=log)
-            enable_nbextension_python(ext)
+            install_nbextension_python(ext, user=False, sys_prefix=True, logger=log)
+            enable_nbextension_python(ext, user=False, sys_prefix=True)
         log.info('nb_extensions installed successfully')
     except (ImportError, OSError) as e:
         log.error('Failed to install or enable extension: ' + str(e))
