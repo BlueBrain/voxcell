@@ -6,4 +6,8 @@
 
 // Export widget models and views, and the npm package version number.
 module.exports = require('./brainBuilderViewer.js');
-module.exports['version'] = require('../package.json').version;
+try {
+	module.exports['version'] = require('../package.json').version;
+} catch(e) {
+	console.error('package.json not found');
+}
