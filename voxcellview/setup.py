@@ -51,22 +51,6 @@ log.info('$PATH=%s' % os.environ['PATH'])
 LONG_DESCRIPTION = 'viewers for voxcell the brain building framework'
 
 
-def enable_extensions():
-    # installs and enable nb_extensions
-    log.info('enabling extensions')
-    extensions = ['widgetsnbextension', 'voxcellview']
-    try:
-        import notebook
-        from notebook.nbextensions import enable_nbextension_python, install_nbextension_python
-        for ext in extensions:
-            log.info('Installing ' + ext + ' extension')
-            install_nbextension_python(ext, user=False, sys_prefix=True, logger=log)
-            enable_nbextension_python(ext, user=False, sys_prefix=True)
-        log.info('nb_extensions installed successfully')
-    except (ImportError, OSError) as e:
-        log.error('Failed to install or enable extension: ' + str(e))
-
-
 def js_prerelease(command, strict=False):
     """decorator for building minified js/css prior to another command"""
     class DecoratedCommand(command):
@@ -105,6 +89,7 @@ def update_package_data(distribution):
 class NPM(Command):
     '''build NPM package'''
     description = 'install package.json dependencies using npm'
+    log.info(description)
     user_options = []
     node_modules = os.path.join(node_root, 'node_modules')
     targets = [
@@ -156,7 +141,6 @@ class NPM(Command):
 
         # update package data in case this created new files
         update_package_data(self.distribution)
-        enable_extensions()
 
 
 setup_args = {
