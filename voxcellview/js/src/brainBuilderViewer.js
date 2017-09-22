@@ -1,13 +1,13 @@
 'use strict';
 var brainBuilderViewer = brainBuilderViewer || {};
-var Detector = require('../extern/Detector.js');
-var THREE = require('../extern/three.min.js');
+var Detector = require('js/extern/Detector.js');
+var THREE = require('js/extern/three.min.js');
 // dat does not export its variable
-var dat = require('../extern/dat.gui.min.js');
-var ScreenFull = require('../extern/screenfull.min.js');
+var dat = require('js/extern/dat.gui.min.js');
+var ScreenFull = require('js/extern/screenfull.min.js');
 // trackball requires THREE to be defined beforehand
-require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
-var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
+require('imports?THREE=js/extern/three.min.js!js/extern/TrackballControls.js');
+var morphologyBuilder = require('js/src/morphologyBuilder.js').morphologyBuilder;
 
 (function() {
   var DEFAULTPARTICLESIZE = 10.0;

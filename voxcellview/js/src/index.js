@@ -25,7 +25,7 @@ for (var i in loadedModules) {
   }
 }
 try {
-  module.exports['version'] = require('./package.json').version;
+  module.exports['version'] = require('js/package.json').version;
 } catch(e) {
   console.error('package.json not found');
 }

@@ -89,7 +89,6 @@ def update_package_data(distribution):
 class NPM(Command):
     '''build NPM package'''
     description = 'install package.json dependencies using npm'
-    log.info(description)
     user_options = []
     node_modules = os.path.join(node_root, 'node_modules')
     targets = [
