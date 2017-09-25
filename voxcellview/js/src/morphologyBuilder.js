@@ -2,8 +2,8 @@
 'use strict';
 
 var morphologyBuilder = morphologyBuilder || {};
-var THREE = require('js/extern/three.min.js');
-var _ = require('js/extern/lodash.min.js');
+var THREE = require('../extern/three.min.js');
+var _ = require('../extern/lodash.min.js');
 
 (function() {
 

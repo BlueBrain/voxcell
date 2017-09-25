@@ -1,5 +1,4 @@
 var version = require('./package.json').version;
-var path = require('path');
 
 // Custom webpack loaders are generally the same for all webpack bundles, hence
 // stored in a separate local variable.
@@ -30,11 +29,6 @@ module.exports = [
      // custom widget.
      // It must be an amd module
      //
-        resolve: {
-            alias: {
-                'js': path.resolve(__dirname, './'),
-            },
-        },
         entry: './src/index.js',
         output: {
             filename: 'index.js',
@@ -61,11 +55,6 @@ module.exports = [
      // The target bundle is always `dist/index.js`, which is the path required
      // by the custom widget embedder.
      //
-        resolve: {
-            alias: {
-                'js': path.resolve(__dirname, './'),
-            },
-        },
         entry: './src/embed.js',
         output: {
             filename: 'index.js',
