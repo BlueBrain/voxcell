@@ -43,6 +43,7 @@ def test_load_nrrd_scalar_payload():
     eq_(actual.raw.shape, (1, 2))
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
+    assert_almost_equal(actual.bbox, np.array([[100, 200], [110, 240]]))
 
 def test_load_nrrd_vector_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))

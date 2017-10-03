@@ -15,7 +15,7 @@ CI_REQS=requirements_ci_infra.txt
 
 PYLINTRC=.pylintrc
 
-NOSEOPS=--ignore-files="(core|math|positions).py"
+NOSEOPS=--ignore-files="^(core|math|positions).py"
 
 ##### DO NOT MODIFY BELOW #####################
 
