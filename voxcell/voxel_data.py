@@ -77,6 +77,12 @@ class VoxelData(object):
         """ Shape of the data stored per voxel. """
         return self.raw.shape[self.ndim:]
 
+    @property
+    def bbox(self):
+        """ Bounding box. """
+        return np.array([self.offset,
+                         self.offset + self.voxel_dimensions * self.shape])
+
     @classmethod
     def load_nrrd(cls, nrrd_path):
         ''' read volumetric data from a nrrd file '''
