@@ -1,0 +1,19 @@
+version: v1.0
+composition:
+  L2:
+    L23_MC:
+      density: MC.nrrd
+      density_factor: 0.1
+      etypes:
+        bNAC: 0.3333
+        cNAC: 0.6667
+    L2_IPC:
+      density: 42.0
+      etypes:
+        cADpyr: 1.0
+  L3:
+    L23_MC:
+      density: MC.nrrd
+      etypes:
+        bNAC: 0.5
+        cNAC: 0.5

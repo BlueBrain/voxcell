@@ -1,6 +1,8 @@
 '''compatibility functions with existing BBP formats'''
 import itertools
 import logging
+import numbers
+import yaml
 from six import iteritems
 from six.moves import zip
 
@@ -8,12 +10,13 @@ import lxml.etree
 import numpy as np
 import pandas as pd
 
-from voxcell import CellCollection
+from voxcell import CellCollection, VoxelData
 from voxcell import traits as tt
 from voxcell.math_utils import lcmm, angles_to_matrices
 from scipy.ndimage import distance_transform_edt  # pylint: disable=E0611
 
 from brainbuilder.version import VERSION
+from brainbuilder.exceptions import BrainBuilderError
 
 
 L = logging.getLogger(__name__)
@@ -263,6 +266,100 @@ def load_recipe_cell_traits(recipe_filename, atlas, region_map):
             distributions.loc[data.index, region_id] = data.values
 
     return tt.SpatialDistribution(atlas, distributions, cell_traits)
+
+
+def load_metype_composition(filepath, atlas, region_map):
+    """
+    Load me-type composition defined as a set of mtype densities bound to atlas.
+
+    Args:
+        filepath: Path to YAML with me-type composition (TODO: link to spec)
+        atlas: VoxelData with brain region IDs
+        region_map: {<region> -> [IDs]} mapping
+
+    Returns:
+        total_density: VoxelData with total cell density
+        sdist: SpatialDistribution of (region, mtype) properties
+        etypes: dict of etype ratios per (region, mtype)
+
+    Example YAML:
+    >
+      version: v1.0
+      composition:
+        L1:
+          L1_HAC:
+            density: HAC.nrrd
+            density_factor: 0.9
+            etypes:
+              bNAC: 0.2
+               cIR:  0.8
+          L1_DAC:
+                ...
+        L2:
+          L23_PC:
+            density: 11000  # cells / mm^3
+            etypes:
+              cADpyr: 1.0
+            ...
+    """
+    # pylint: disable=too-many-locals
+    def _load_density(density, mask):
+        """ Load density from NRRD or single float value + mask. """
+        if isinstance(density, numbers.Number):
+            result = np.zeros_like(mask, dtype=np.float32)
+            result[mask] = float(density)
+        else:
+            result = VoxelData.load_nrrd(density).raw.astype(np.float32)
+            result[~mask] = 0
+        return result
+
+    with open(filepath, 'r') as f:
+        content = yaml.load(f)
+
+    assert content['version'] == 'v1.0'
+    composition = content['composition']
+
+    densities, traits = [], []
+    etypes = {}
+
+    for region in sorted(composition.keys()):
+        if region not in region_map:
+            L.warning("Region '%s' not in the region map, skipping", region)
+            continue
+        region_mask = np.isin(atlas.raw, list(region_map[region]))
+        if not np.any(region_mask):
+            L.warning("No voxels found for region '%s'", region)
+            continue
+        for mtype in sorted(composition[region]):
+            params = composition[region][mtype]
+            L.info("Loading '%s' density...", mtype)
+            density = _load_density(params['density'], region_mask)
+            if 'density_factor' in params:
+                density *= params['density_factor']
+            densities.append(density)
+            traits.append((region, mtype))
+            etypes[(region, mtype)] = params['etypes']
+
+    total_density = sum(densities)
+    ijk = np.nonzero(total_density > 0)
+    if len(ijk[0]) == 0:
+        raise BrainBuilderError("No voxel with total density > 0")
+
+    L.info("Composing (region, mtype) SpatialDistribution...")
+    traits = pd.DataFrame(traits, columns=['region', 'mtype'])
+    distributions = pd.DataFrame(
+        np.stack(density[ijk] for density in densities) / total_density[ijk]
+    )
+
+    field = np.full_like(atlas.raw, -1, dtype=np.int32)
+    field[ijk] = np.arange(distributions.shape[1])
+
+    L.info("Done!")
+    return (
+        atlas.with_data(total_density),
+        tt.SpatialDistribution(atlas.with_data(field), distributions, traits),
+        etypes
+    )
 
 
 def load_neurondb_v4(neurondb_filename):

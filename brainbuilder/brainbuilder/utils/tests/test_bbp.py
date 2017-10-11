@@ -8,6 +8,7 @@ except ImportError:
     from io import StringIO
 
 from nose.tools import eq_, raises
+from mock import patch
 
 import numpy as np
 import pandas as pd
@@ -142,6 +143,48 @@ def test_load_recipe_cell_traits():
             ['1', 'mtype-B', 'etype-B1', 'PYR', 'EXC'],
             ['2', 'mtype-C', 'etype-C1', 'INT', 'INH'],
         ], columns=['region', 'mtype', 'etype', 'morph_class', 'synapse_class']).sort_index(axis=1)
+    )
+
+
+@patch('voxcell.VoxelData.load_nrrd')
+def test_load_metype_composition(mock_load_nrrd):
+    atlas = VoxelData(np.array([[2, 22, 404], [3, 0, 405]]), voxel_dimensions=(10,))
+    region_map = {'L2': (2, 22), 'L3': (3,), '404': (404,)}
+
+    MC_density = VoxelData(np.array([[10, 20, 30], [40, 50, 60]]), voxel_dimensions=(10,))
+    mock_load_nrrd.return_value = MC_density
+
+    total_density, sdist, etypes = bbp.load_metype_composition(
+        os.path.join(DATA_PATH, 'metype_composition.yaml'), atlas, region_map
+    )
+
+    assert_almost_equal(total_density.raw, [[42 + 0.1 * 10, 42 + 0.1 * 20, 0], [40, 0, 0]])
+
+    assert_equal(sdist.field.raw, [[0, 1, -1], [2, -1, -1]])
+    assert_frame_equal(
+        sdist.traits,
+        pd.DataFrame([
+            ['L2', 'L23_MC'],
+            ['L2', 'L2_IPC'],
+            ['L3', 'L23_MC'],
+        ], columns=['region', 'mtype'])
+    )
+    assert_frame_equal(
+        sdist.distributions,
+        pd.DataFrame([
+            [0.0232558, 0.0454545, 0.0],
+            [0.9767442, 0.9545455, 0.0],
+            [0.0000000, 0.0000000, 1.0],
+        ]),
+        check_dtype=False
+    )
+
+    assert_equal(
+        etypes, {
+            ('L2', 'L23_MC'): {'cNAC': 0.6667, 'bNAC': 0.3333},
+            ('L2', 'L2_IPC'): {'cADpyr': 1.0},
+            ('L3', 'L23_MC'): {'cNAC': 0.5, 'bNAC': 0.5},
+        }
     )
 
 
