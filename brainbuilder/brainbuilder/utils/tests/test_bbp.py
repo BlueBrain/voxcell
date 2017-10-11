@@ -160,7 +160,7 @@ def test_load_metype_composition(mock_load_nrrd):
 
     assert_almost_equal(total_density.raw, [[42 + 0.1 * 10, 42 + 0.1 * 20, 0], [40, 0, 0]])
 
-    assert_equal(sdist.field.raw, [[0, 1, -1], [2, -1, -1]])
+    assert_equal(sdist.field.raw, [[1, 2, -1], [0, -1, -1]])
     assert_frame_equal(
         sdist.traits,
         pd.DataFrame([
@@ -172,9 +172,9 @@ def test_load_metype_composition(mock_load_nrrd):
     assert_frame_equal(
         sdist.distributions,
         pd.DataFrame([
-            [0.0232558, 0.0454545, 0.0],
-            [0.9767442, 0.9545455, 0.0],
-            [0.0000000, 0.0000000, 1.0],
+            [0.0, 0.0232558, 0.0454545],
+            [0.0, 0.9767442, 0.9545455],
+            [1.0, 0.0000000, 0.0000000],
         ]),
         check_dtype=False
     )

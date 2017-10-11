@@ -411,19 +411,23 @@ def load_metype_composition(filepath, atlas, region_map):
             traits.append((region, mtype))
             etypes[(region, mtype)] = params['etypes']
 
-    total_density = sum(densities)
+    total_density = np.sum(np.stack(densities), axis=0)
     ijk = np.nonzero(total_density > 0)
     if len(ijk[0]) == 0:
         raise BrainBuilderError("No voxel with total density > 0")
 
     L.info("Composing (region, mtype) SpatialDistribution...")
     traits = pd.DataFrame(traits, columns=['region', 'mtype'])
+
+    unique_dist, dist_idx = np.unique(
+        np.stack(density[ijk] for density in densities), axis=1, return_inverse=True
+    )
     distributions = pd.DataFrame(
-        np.stack(density[ijk] for density in densities) / total_density[ijk]
+        unique_dist / np.sum(unique_dist, axis=0)
     )
 
     field = np.full_like(atlas.raw, -1, dtype=np.int32)
-    field[ijk] = np.arange(distributions.shape[1])
+    field[ijk] = dist_idx
 
     L.info("Done!")
     return (
