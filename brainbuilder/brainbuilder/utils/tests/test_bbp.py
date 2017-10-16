@@ -281,8 +281,8 @@ def test_get_region_distributions_from_placement_hints_unknown_region():
     # these should be just ignored
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 0, 'etype': 1, 'mtype': 1, 'placement_hints': (1,)},
-        {'name': 'b', 'layer': 999, 'etype': 2, 'mtype': 2, 'placement_hints': (1,)}
+        {'name': 'a', 'layer': 0, 'etype': 1, 'mtype': 1, 'placement_hints': (1.,)},
+        {'name': 'b', 'layer': 999, 'etype': 2, 'mtype': 2, 'placement_hints': (1.,)}
     ])
 
     region_layers_map = {
@@ -480,10 +480,10 @@ def test_get_region_distributions_from_placement_hints_multiple_regions():
 def test_get_region_distributions_from_placement_hints_percentile_selection():
 
     neurondb = pd.DataFrame([
-        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1, 2)},     # 1 2
-        {'name': 'b', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (2, 1)},     # 2 1
-        {'name': 'c', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (3,)},       # 3 3
-        {'name': 'd', 'layer': 2, 'etype': 2, 'mtype': 2, 'placement_hints': (1, 2, 1)},  # 1 2 1
+        {'name': 'a', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (1., 2.)},     # 1 2
+        {'name': 'b', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (2., 1.)},     # 2 1
+        {'name': 'c', 'layer': 1, 'etype': 1, 'mtype': 1, 'placement_hints': (3.,)},        # 3 3
+        {'name': 'd', 'layer': 2, 'etype': 2, 'mtype': 2, 'placement_hints': (1., 2., 1.)}, # 1 2 1
     ])
 
     region_layers_map = {

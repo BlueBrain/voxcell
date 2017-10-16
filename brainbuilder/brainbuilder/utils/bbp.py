@@ -198,6 +198,77 @@ def load_recipe_as_spatial_distribution(recipe_filename, annotation, region_laye
     return transform_recipe_into_spatial_distribution(annotation, recipe, region_layers_map)
 
 
+def _hex_prism_volume(side, height):
+    return 3 * np.sqrt(3) * side * side * height / 2
+
+
+def load_builder_recipe(recipe_filename, atlas, region_map):
+    """
+    Load BBP builder recipe.
+
+    Returns:
+        density: VoxelData with cell density (cell count / mm^3)
+        sdist: (region, mtype, etype, morph_class, synapse_class) SpatialDistribution
+
+    Density is calculated for 'column' defined in the recipe and mapped to `atlas`.
+    """
+    # pylint: disable=too-many-locals
+    recipe_tree = _parse_recipe(recipe_filename)
+
+    total_cell_count = int(recipe_tree.find('/NeuronTypes').attrib['totalNeurons'])
+    layer_thickness = {
+        elem.attrib['id']: float(elem.attrib['thickness'])
+        for elem in recipe_tree.iterfind('/column/layer')
+    }
+
+    lattice = get_lattice_vectors(recipe_filename)
+    a1 = np.linalg.norm(lattice['a1'])
+    a2 = np.linalg.norm(lattice['a2'])
+    assert np.isclose(a1, a2)
+    hex_side = a1
+
+    density = np.zeros_like(atlas.raw, dtype=np.float32)
+    sdist_field = -1 * np.ones_like(atlas.raw, dtype=np.int16)
+    dist_ids = {}
+
+    for layer_id, layer_elem in enumerate(recipe_tree.iterfind('/NeuronTypes/Layer'), 1):
+        layer = layer_elem.attrib['id']
+        layer_ratio = 0.01 * float(layer_elem.attrib['percentage'])
+        layer_height = layer_thickness[layer]
+        layer_volume_mm3 = _hex_prism_volume(hex_side, layer_height) / 1e9
+        layer_density = layer_ratio * total_cell_count / layer_volume_mm3
+        L.debug("'%s' density: %.3f", layer, layer_density)
+        region_ids = region_map.get(layer)
+        if not region_ids:
+            L.warning("No '%s' region in region map", layer)
+            continue
+        mask = np.isin(atlas.raw, list(region_ids))
+        if not np.any(mask):
+            L.warning("No voxels tagged for layer %s", layer)
+            continue
+        density[mask] = layer_density
+        sdist_field[mask] = layer_id
+        dist_ids[layer] = layer_id
+
+    traits = get_distribution_from_recipe(recipe_filename)
+    distributions = pd.DataFrame(
+        data=0.0, index=traits.index, columns=sorted(dist_ids.values())
+    )
+    for layer, dist_id in iteritems(dist_ids):
+        data = traits[traits.layer == layer]['percentage']
+        distributions.loc[data.index, dist_id] = data.values
+    distributions /= distributions.sum()
+
+    traits.rename(columns={'layer': 'region'}, inplace=True)
+    del traits['percentage']
+
+    density = atlas.with_data(density)
+    sdist = tt.SpatialDistribution(
+        atlas.with_data(sdist_field), distributions, traits
+    )
+    return density, sdist
+
+
 def load_recipe_cell_density(recipe_filename, atlas, region_map):
     """
     Take BBP cell recipe and return VoxelData with cell densities.
