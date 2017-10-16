@@ -45,7 +45,7 @@ def test_split_distribution_collection_empty_2():
 
 
 def test_split_distribution_collection_single_0():
-    distributions = pd.DataFrame([{0: 1}])
+    distributions = pd.DataFrame([{0: 1.}])
     traits = pd.DataFrame([{'name': 'a'}])
     attributes = ('name',)
 

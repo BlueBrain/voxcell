@@ -475,7 +475,7 @@ def get_placement_hints_table(morphs):
         scores = np.array(list(itertools.chain(*hints_group.values))).reshape((count, length))
 
         # placement hints are organised bottom (high score) to top (low score)
-        scores = np.fliplr(scores)
+        scores = np.fliplr(scores).astype(np.float)
 
         repetitions = [subdivision_count // length] * length
         extended = np.repeat(scores, repetitions, axis=1)
