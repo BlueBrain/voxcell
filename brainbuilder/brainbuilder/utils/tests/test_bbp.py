@@ -17,6 +17,7 @@ from pandas.util.testing import assert_frame_equal
 
 from voxcell import Hierarchy, VoxelData
 
+from brainbuilder.exceptions import BrainBuilderError
 from brainbuilder.utils import bbp
 
 
@@ -144,6 +145,27 @@ def test_load_recipe_cell_traits():
             ['2', 'mtype-C', 'etype-C1', 'INT', 'INH'],
         ], columns=['region', 'mtype', 'etype', 'morph_class', 'synapse_class']).sort_index(axis=1)
     )
+
+
+def test_bind_profile1d_to_atlas():
+    dist = VoxelData(np.array([[0.5, np.nan], [0.001, 0.999]]), voxel_dimensions=(10, 10))
+    actual = bbp.bind_profile1d_to_atlas(np.arange(100), dist)
+    assert_almost_equal(
+        actual.raw,
+        [[50, np.nan], [0, 99]]
+    )
+
+
+@raises(BrainBuilderError)
+def test_bind_profile1d_to_atlas_raises_1():
+    dist = VoxelData(np.array([[0.5, np.nan], [0.001, 0.999]]), voxel_dimensions=(10, 10))
+    bbp.bind_profile1d_to_atlas(np.arange(5), dist)
+
+
+@raises(BrainBuilderError)
+def test_bind_profile1d_to_atlas_raises_2():
+    dist = VoxelData(np.array([[1.4, np.nan], [0.001, 0.999]]), voxel_dimensions=(10, 10))
+    bbp.bind_profile1d_to_atlas(np.arange(100), dist)
 
 
 @patch('voxcell.VoxelData.load_nrrd')

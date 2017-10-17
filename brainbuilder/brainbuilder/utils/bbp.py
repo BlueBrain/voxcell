@@ -339,6 +339,28 @@ def load_recipe_cell_traits(recipe_filename, atlas, region_map):
     return tt.SpatialDistribution(atlas, distributions, cell_traits)
 
 
+def bind_profile1d_to_atlas(profile1d, relative_distance):
+    """
+    Bind 1D profile to an atlas.
+
+    Args:
+        profile1d: 1D NumPy vector of length 100
+        relative_distance: VoxelData with [0..1] relative distance from region bottom to top
+
+    Returns:
+        VoxelData with `profile1d` bound to an atlas using `relative_distance`.
+    """
+    if len(profile1d) != 100:
+        raise BrainBuilderError("1D profile should specify 100 numbers")
+    mask = ~np.isnan(relative_distance.raw)
+    dist = relative_distance.raw[mask]
+    if (dist < 0).any() or (dist > 1).any():
+        raise BrainBuilderError("Relative distance should be in 0..1 range")
+    result = np.full_like(relative_distance.raw, np.nan)
+    result[mask] = profile1d[(100 * dist).astype(np.int)]
+    return relative_distance.with_data(result)
+
+
 def load_metype_composition(filepath, atlas, region_map):
     """
     Load me-type composition defined as a set of mtype densities bound to atlas.

@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+"""
+Bind 1D profile(s) to an atlas.
+"""
+
+import os
+import argparse
+import logging
+
+import numpy as np
+
+from voxcell import VoxelData
+from brainbuilder.exceptions import BrainBuilderError
+from brainbuilder.utils import bbp
+
+
+L = logging.getLogger('bind2atlas')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Bind 1D profile(s) to an atlas")
+    parser.add_argument(
+        '-d', '--distance',
+        required=True,
+        help="Path to NRRD with relative distance"
+    )
+    parser.add_argument(
+        'input',
+        nargs='+',
+        help="Input file paths"
+    )
+    args = parser.parse_args()
+    logging.basicConfig(format="%(message)s", level=logging.INFO)
+    rel_dist = VoxelData.load_nrrd(args.distance)
+    for input_path in args.input:
+        basename, _ = os.path.splitext(input_path)
+        output_path = basename + ".nrrd"
+        L.info("%s -> %s", input_path, output_path)
+        try:
+            profile1d = np.loadtxt(input_path, dtype=np.float32)
+            profile3d = bbp.bind_profile1d_to_atlas(profile1d, rel_dist)
+            profile3d.save_nrrd(output_path)
+        except BrainBuilderError as ex:
+            L.warning("Could not process '%s', skipping", input_path, exc_info=True)
