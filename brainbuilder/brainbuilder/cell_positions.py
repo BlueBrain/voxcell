@@ -9,8 +9,8 @@ def _assert_cubic_voxels(voxel_data):
     '''Helper function that verifies whether the voxels of given voxel data are
     cubic.
     '''
-    voxel_dims = voxel_data.voxel_dimensions
-    assert voxel_dims[0] == voxel_dims[1] == voxel_dims[2]
+    a, b, c = np.abs(voxel_data.voxel_dimensions)
+    assert np.isclose(a, b) and np.isclose(a, c)
 
 
 def _get_cell_count(density, density_factor):
@@ -27,12 +27,14 @@ def _get_cell_count(density, density_factor):
 
 def _get_seed(cell_count_per_voxel, voxel_data):
     '''Helper function to calculate seed for Poisson disc sampling. The seed
-    is put at the centre of the voxel with the highest cell count, not to miss
-    that particular point concentration
-    (see also http://devmag.org.za/2009/05/03/poisson-disk-sampling/).
+    is set in a low-density area, to try to avoid that the algorithm gets
+    stuck in the high-density areas. Other pitfalls of the Poisson disc
+    sampling algorithm are illustrated on
+    http://devmag.org.za/2009/05/03/poisson-disk-sampling/.
     '''
-    idcs = np.unravel_index(np.argmax(cell_count_per_voxel),
-                            cell_count_per_voxel.shape)
+    assert np.all(cell_count_per_voxel >= 0)
+    positives = np.ma.masked_values(cell_count_per_voxel, 0)
+    idcs = np.unravel_index(np.argmin(positives), cell_count_per_voxel.shape)
     return (voxel_data.indices_to_positions(idcs) +
             voxel_data.voxel_dimensions / 2.)
 
@@ -92,12 +94,12 @@ def _create_cell_positions_poisson_disc(density, density_factor):
     cell_count_per_voxel, cell_count = _get_cell_count(density, density_factor)
 
     _assert_cubic_voxels(density)
-    voxel_size = density.voxel_dimensions[0]
+    voxel_size = np.abs(density.voxel_dimensions[0])
 
     cell_cnt_masked = np.ma.masked_values(cell_count_per_voxel, 0)
     tmp = np.divide(voxel_size, np.power(cell_cnt_masked, 1. / density.ndim))
     too_large_distance = 2 * np.max(density.bbox[1, :] - density.bbox[0, :])
-    local_distance = tmp.filled(too_large_distance)
+    local_distance = 0.84 * tmp.filled(too_large_distance)
     min_distance = np.min(local_distance.flatten())
 
     def _min_distance_func(point=None):

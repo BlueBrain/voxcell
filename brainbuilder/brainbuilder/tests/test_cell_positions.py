@@ -29,7 +29,7 @@ def test_create_equidistributed_cell_positions_1():
     nt.assert_less_equal(result.shape[0], max_expected_nb_points)
     nt.assert_true(np.all((result >= 0) & (result <= 3 * 100)))
 
-    min_distance = 100
+    min_distance = 0.84 * 100
     min_distance_between_pts = np.min(distance.pdist(result).flatten())
     nt.assert_less_equal(min_distance, min_distance_between_pts)
 
@@ -45,7 +45,7 @@ def test_create_equidistributed_cell_positions_2():
     nt.assert_less_equal(result.shape[0], max_expected_nb_points)
     nt.assert_true(np.all((result >= 0) & (result <= 3 * 100)))
 
-    min_distance = 100
+    min_distance = 0.84 * 100
     min_distance_between_pts = np.min(distance.pdist(result).flatten())
     nt.assert_less_equal(min_distance, min_distance_between_pts)
 
@@ -60,7 +60,7 @@ def test_create_cell_positions_black_white():
     nt.assert_less_equal(result.shape[0], max_expected_nb_points)
     nt.assert_true(np.all((result >= 100) & (result <= 2 * 100)))
 
-    min_distance = 100. / np.power(max_expected_nb_points, 1. / 3.)
+    min_distance = 0.84 * 100. / np.power(max_expected_nb_points, 1. / 3.)
     min_distance_between_pts = np.min(distance.pdist(result).flatten())
     nt.assert_less_equal(min_distance, min_distance_between_pts)
 
@@ -77,6 +77,6 @@ def test_create_cell_positions_black_grey():
     nt.assert_false(np.all((result >= 100) & (result <= 2 * 100)))
 
     # max expected nb points in middle voxel: 4
-    min_distance = 100. / np.power(4., 1. / 3.)
+    min_distance = 0.84 * 100. / np.power(4., 1. / 3.)
     min_distance_between_pts = np.min(distance.pdist(result).flatten())
     nt.assert_less_equal(min_distance, min_distance_between_pts)
