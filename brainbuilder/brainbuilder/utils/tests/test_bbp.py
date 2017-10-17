@@ -169,15 +169,22 @@ def test_bind_profile1d_to_atlas_raises_2():
 
 
 @patch('voxcell.VoxelData.load_nrrd')
-def test_load_metype_composition(mock_load_nrrd):
+@patch('numpy.loadtxt')
+def test_load_metype_composition(mock_loadtxt, mock_load_nrrd):
     atlas = VoxelData(np.array([[2, 22, 404], [3, 0, 405]]), voxel_dimensions=(10,))
     region_map = {'L2': (2, 22), 'L3': (3,), '404': (404,)}
 
-    MC_density = VoxelData(np.array([[10, 20, 30], [40, 50, 60]]), voxel_dimensions=(10,))
-    mock_load_nrrd.return_value = MC_density
+    relative_distance = VoxelData(np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]]), voxel_dimensions=(10,))
+
+    MC_density_1d = np.arange(100)
+    mock_loadtxt.return_value = MC_density_1d
+
+    MC_density_3d = bbp.bind_profile1d_to_atlas(MC_density_1d, relative_distance)
+    mock_load_nrrd.return_value = MC_density_3d
 
     total_density, sdist, etypes = bbp.load_metype_composition(
-        os.path.join(DATA_PATH, 'metype_composition.yaml'), atlas, region_map
+        os.path.join(DATA_PATH, 'metype_composition.yaml'), atlas, region_map,
+        relative_distance=relative_distance
     )
 
     assert_almost_equal(total_density.raw, [[42 + 0.1 * 10, 42 + 0.1 * 20, 0], [40, 0, 0]])

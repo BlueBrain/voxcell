@@ -13,7 +13,7 @@ composition:
         cADpyr: 1.0
   L3:
     L23_MC:
-      density: MC.nrrd
+      density: MC.dat
       etypes:
         bNAC: 0.5
         cNAC: 0.5

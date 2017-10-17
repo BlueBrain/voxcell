@@ -1,4 +1,5 @@
 '''compatibility functions with existing BBP formats'''
+import os
 import itertools
 import logging
 import numbers
@@ -361,7 +362,7 @@ def bind_profile1d_to_atlas(profile1d, relative_distance):
     return relative_distance.with_data(result)
 
 
-def load_metype_composition(filepath, atlas, region_map):
+def load_metype_composition(filepath, atlas, region_map, relative_distance=None):
     """
     Load me-type composition defined as a set of mtype densities bound to atlas.
 
@@ -369,6 +370,7 @@ def load_metype_composition(filepath, atlas, region_map):
         filepath: Path to YAML with me-type composition (TODO: link to spec)
         atlas: VoxelData with brain region IDs
         region_map: {<region> -> [IDs]} mapping
+        relative_distance: VoxelData with relative distance for binding 1D profiles (if needed)
 
     Returns:
         total_density: VoxelData with total cell density
@@ -401,9 +403,17 @@ def load_metype_composition(filepath, atlas, region_map):
         if isinstance(density, numbers.Number):
             result = np.zeros_like(mask, dtype=np.float32)
             result[mask] = float(density)
-        else:
+        elif density.endswith(".nrrd"):
             result = VoxelData.load_nrrd(density).raw.astype(np.float32)
             result[~mask] = 0
+        elif density.endswith(".dat"):
+            if relative_distance is None:
+                raise BrainBuilderError("`relative_distance` is required to load '%s'" % density)
+            profile1d = np.loadtxt(density)
+            result = bind_profile1d_to_atlas(profile1d, relative_distance).raw.astype(np.float32)
+            result[~mask] = 0
+        else:
+            raise BrainBuilderError("Unexpected file extension: '%s'" % os.path.splitext()[1])
         return result
 
     with open(filepath, 'r') as f:
