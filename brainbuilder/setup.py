@@ -48,6 +48,7 @@ setup(
     install_requires=REQS,
     packages=[
         'brainbuilder',
+        'brainbuilder.nexus',
         'brainbuilder.sscx',
         'brainbuilder.hippocampus',
         'brainbuilder.utils',

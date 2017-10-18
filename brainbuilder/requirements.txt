@@ -4,5 +4,6 @@ scipy>=0.13,<1.0
 pandas>=0.17
 lxml>=3.3
 six>=1.0
+requests>=2.18  # TODO: make part of 'nexus' extra
 
 voxcell>=2.3.2,<3.0
