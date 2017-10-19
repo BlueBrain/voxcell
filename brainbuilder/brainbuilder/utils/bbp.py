@@ -357,8 +357,9 @@ def bind_profile1d_to_atlas(profile1d, relative_distance):
     dist = relative_distance.raw[mask]
     if (dist < 0).any() or (dist > 1).any():
         raise BrainBuilderError("Relative distance should be in 0..1 range")
+    bins = np.clip(np.floor(100 * dist).astype(int), 0, 99)
     result = np.full_like(relative_distance.raw, np.nan)
-    result[mask] = profile1d[(100 * dist).astype(np.int)]
+    result[mask] = profile1d[bins]
     return relative_distance.with_data(result)
 
 
