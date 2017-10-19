@@ -11,7 +11,7 @@ import brainbuilder.nexus.voxelbrain as test_module
 
 class TestLocalAtlas(object):
     def setUp(self):
-        self.atlas = test_module.Atlas('/foo')
+        self.atlas = test_module.Atlas.open('/foo')
 
     def test_class(self):
         nt.assert_is_instance(self.atlas, test_module.LocalAtlas)

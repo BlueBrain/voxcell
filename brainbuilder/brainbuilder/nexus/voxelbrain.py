@@ -38,13 +38,15 @@ class Atlas(object):
     """ Helper class for atlas access. """
     __metaclass__ = abc.ABCMeta
 
-    def __new__(cls, url, cache_dir=None):
+    @staticmethod
+    def open(url, cache_dir=None):
+        """ Get Atlas object to access atlas stored at URL. """
         if url.startswith("/"):
-            return super(Atlas, cls).__new__(LocalAtlas)
+            return LocalAtlas(url)
         else:
             if cache_dir is None:
                 raise BrainBuilderError("`cache_dir` should be specified")
-            return super(Atlas, cls).__new__(VoxelBrainAtlas)
+            return VoxelBrainAtlas(url, cache_dir)
 
     @abc.abstractmethod
     def _fetch_data(self, data_type):
