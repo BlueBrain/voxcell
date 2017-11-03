@@ -99,7 +99,33 @@ def _get_seed(domain):
     return domain[0, :] + np.random.random(domain[0, :].shape) * domain_size
 
 
-def generate_points(domain, nb_points, min_distance, seed=None,
+def _add_to_containers(point, sample_points, active_list, grid):
+    '''Helper function to update containers used for Poisson disc sampling.'''
+    sample_points.append(point)
+    idx = len(sample_points) - 1
+    active_list.append(idx)
+    grid.update(point, idx)
+
+
+def _try_generate_point(active_list, nb_trials, point, min_distance, grid,
+                        sample_points, nb_points, progress_bar=None):
+    '''Helper function that generates a new sample point and updates the
+    relevant containers. Trials are limited by a given number of trials.
+    '''
+    for _ in range(nb_trials):
+        new_pt = generate_point_around(point, min_distance(point))
+
+        if grid.domain_contains(new_pt) and grid.no_collision(
+                new_pt, min_distance(new_pt), sample_points):
+            _add_to_containers(new_pt, sample_points, active_list, grid)
+            if progress_bar is not None:
+                progress_bar.update(1)
+
+        if len(sample_points) == nb_points:
+            break
+
+
+def generate_points(bbox, nb_points, min_distance, seed=None,
                     nb_trials=30, display_progress=True):
     '''Generate a number of points with Poisson disc sampling.
 
@@ -118,44 +144,30 @@ def generate_points(domain, nb_points, min_distance, seed=None,
         A list of points.
     '''
     # initialisation of helper containers
+    domain = np.array([np.min(bbox, axis=0), np.max(bbox, axis=0)])
     grid = Grid(domain, min_distance() / np.sqrt(domain.shape[1]))
     active_list = []
     sample_points = []
-
-    def _add_to_containers(point):
-        '''Update containers used for Poisson disc sampling.'''
-        sample_points.append(point)
-        idx = len(sample_points) - 1
-        active_list.append(idx)
-        grid.update(point, idx)
 
     # first point is seed point
     if seed is None:
         seed = _get_seed(domain)
     if grid.domain_contains(seed):
-        _add_to_containers(seed)
+        _add_to_containers(seed, sample_points, active_list, grid)
 
     # generate points
     if display_progress:
         progress_bar = tqdm(total=nb_points)
         progress_bar.update(1) # count the seed as the first
+    else:
+        progress_bar = None
 
     while active_list and (len(sample_points) < nb_points):
         idx = np.random.choice(active_list)
         point = sample_points[idx]
         active_list.remove(idx)
-
-        for _ in range(nb_trials):
-            new_pt = generate_point_around(point, min_distance(point))
-
-            if grid.domain_contains(new_pt) and grid.no_collision(
-                    new_pt, min_distance(new_pt), sample_points):
-                _add_to_containers(new_pt)
-                if display_progress:
-                    progress_bar.update(1)
-
-            if len(sample_points) == nb_points:
-                break
+        _try_generate_point(active_list, nb_trials, point, min_distance, grid,
+                            sample_points, nb_points, progress_bar)
 
     if display_progress:
         progress_bar.close()
