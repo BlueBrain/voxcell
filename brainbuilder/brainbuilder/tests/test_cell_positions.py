@@ -80,3 +80,31 @@ def test_create_cell_positions_black_grey():
     min_distance = 0.84 * 100. / np.power(4., 1. / 3.)
     min_distance_between_pts = np.min(distance.pdist(result).flatten())
     nt.assert_less_equal(min_distance, min_distance_between_pts)
+
+
+def test_get_bbox_indices_nonzero_entries():
+    data = np.array([[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+                     [[0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 0]],
+                     [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
+                     [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
+                     [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]])
+    bbox = np.array([[1, 1, 2], [3, 2, 3]])
+
+    result = test_module.get_bbox_indices_nonzero_entries(data)
+
+    nt.assert_true(np.array_equal(result, bbox))
+
+
+def test_get_bbox_nonzero_entries():
+    data = np.array([[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+                     [[0, 0, 0, 0], [0, 0, 1, 1], [0, 0, 1, 0]],
+                     [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
+                     [[0, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]],
+                     [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]])
+    bbox = np.array([[0., 0., 0.], [50., 15., -4.]])
+    bbox_nonzero = np.array([[10., 5., -2.], [40., 15., -4.]])
+    voxel_dimensions = np.array([10., 5., -1.])
+
+    result = test_module.get_bbox_nonzero_entries(data, bbox, voxel_dimensions)
+
+    nt.assert_true(np.array_equal(result, bbox_nonzero))
