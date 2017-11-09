@@ -122,7 +122,7 @@ def _create_cell_positions_poisson_disc(density, density_factor):
 
     cell_cnt_masked = np.ma.masked_values(cell_count_per_voxel, 0)
     tmp = np.divide(voxel_size, np.power(cell_cnt_masked, 1. / density.ndim))
-    too_large_distance = 2 * np.max(density.bbox[1, :] - density.bbox[0, :])
+    too_large_distance = 2 * np.max(np.abs(density.bbox[1, :] - density.bbox[0, :]))
     local_distance = 0.84 * tmp.filled(too_large_distance)
     min_distance = np.min(local_distance)
 
