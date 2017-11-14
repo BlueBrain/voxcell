@@ -6,7 +6,7 @@ var THREE = require('../extern/three.min.js');
 var dat = require('../extern/dat.gui.min.js');
 var ScreenFull = require('../extern/screenfull.min.js');
 // trackball requires THREE to be defined beforehand
-require('imports?THREE=../extern/three.min.js!../extern/TrackballControls.js');
+require('imports-loader?THREE=../extern/three.min.js!../extern/TrackballControls.js');
 var morphologyBuilder = require('./morphologyBuilder.js').morphologyBuilder;
 
 (function() {

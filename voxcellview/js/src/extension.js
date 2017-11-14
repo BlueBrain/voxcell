@@ -7,8 +7,7 @@ if (window.require) {
     window.require.config({
         map: {
             "*" : {
-                "voxcellview": "nbextensions/voxcellview/index",
-                "jupyter-js-widgets": "nbextensions/jupyter-js-widgets/extension"
+                "voxcellview": "nbextensions/voxcellview/index"
             }
         }
     });

@@ -1,4 +1,5 @@
 var version = require('./package.json').version;
+const path = require('path');
 
 // Custom webpack loaders are generally the same for all webpack bundles, hence
 // stored in a separate local variable.
@@ -19,7 +20,7 @@ module.exports = [
         entry: './src/extension.js',
         output: {
             filename: 'extension.js',
-            path: '../voxcellview/static',
+            path: path.resolve(__dirname, '../voxcellview/static'),
             libraryTarget: 'amd'
         }
     },
@@ -32,14 +33,13 @@ module.exports = [
         entry: './src/index.js',
         output: {
             filename: 'index.js',
-            path: '../voxcellview/static',
+            path: path.resolve(__dirname, '../voxcellview/static'),
             libraryTarget: 'amd'
         },
         devtool: 'source-map',
         module: {
             loaders: loaders
-        },
-        externals: ['jupyter-js-widgets']
+        }
     },
     {// Embeddable voxcellview bundle
      //
@@ -58,14 +58,13 @@ module.exports = [
         entry: './src/embed.js',
         output: {
             filename: 'index.js',
-            path: './dist/',
+            path: path.resolve(__dirname, './dist/'),
             libraryTarget: 'amd',
             publicPath: 'https://unpkg.com/voxcellview@' + version + '/dist/'
         },
         devtool: 'source-map',
         module: {
             loaders: loaders
-        },
-        externals: ['jupyter-js-widgets']
+        }
     }
 ];

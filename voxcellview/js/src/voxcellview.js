@@ -1,4 +1,4 @@
-var widget = require('jupyter-js-widgets');
+var widgets = require('@jupyter-widgets/base');
 var brainBuilderViewer = require('./brainBuilderViewer.js').brainBuilderViewer;
 var _ = require('underscore');
 
@@ -15,10 +15,10 @@ function loadVoxcellAsBytes(name, bytes, shape, dtype, bb){
   reader.readAsArrayBuffer(new Blob([bytes]));
 }
 
-var CircuitView = widget.WidgetView.extend({
+var CircuitView = widgets.DOMWidgetView.extend({
   remove: function() {
     this.bb.onRemove();
-    widget.WidgetView.prototype.remove.apply(this, arguments);
+    widgets.WidgetView.prototype.remove.apply(this, arguments);
   },
   render: function() {
     // TODO: find a way to deactivate properly the save state callback.
@@ -76,7 +76,7 @@ var CircuitView = widget.WidgetView.extend({
     this.bb.onShow();
   },
   initialize: function() {
-    widget.WidgetView.prototype.initialize.apply(this, arguments);
+    widgets.WidgetView.prototype.initialize.apply(this, arguments);
     this.scalar_properties = [];
     this.bytes_properties = [];
     this.array_properties = [];
@@ -91,9 +91,9 @@ var CircuitView = widget.WidgetView.extend({
   }
 });
 
-var CircuitModel = widget.WidgetModel.extend({}, {
+var CircuitModel = widgets.WidgetModel.extend({}, {
   serializers: _.extend({
-  }, widget.WidgetModel.serializers)
+  }, widgets.WidgetModel.serializers)
 });
 
 module.exports = {

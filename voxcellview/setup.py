@@ -12,9 +12,15 @@ from pip.req import parse_requirements
 from distutils import log
 from setuptools import setup, find_packages, Command
 from setuptools.command import (sdist, build_py, egg_info)
-from subprocess import check_call
+from subprocess import check_call, Popen, PIPE
 from voxcellview.version import VERSION as __version__
 
+
+proc = Popen(['npm', '--version'], stdout=PIPE)
+npm_version = proc.stdout.read().decode()
+npm_major_version = int(npm_version[0])
+if npm_major_version < 2:
+    sys.exit("NPM < 2 is no longer supported from version 2.1.2 of voxcellview")
 
 if sys.version_info < (2, 7):
     sys.exit("Python < 2.7 is no longer supported from version 2.1.0")
@@ -49,20 +55,6 @@ log.info('setup.py entered')
 log.info('$PATH=%s' % os.environ['PATH'])
 
 LONG_DESCRIPTION = 'viewers for voxcell the brain building framework'
-
-
-def enable_extensions():
-    # installs and enable nb_extensions
-    log.info('enabling extensions')
-    extensions = ['widgetsnbextension', 'voxcellview']
-    try:
-        import notebook
-        from notebook.nbextensions import enable_nbextension_python, install_nbextension_python
-        for ext in extensions:
-            enable_nbextension_python(ext, user=False, sys_prefix=True)
-        log.info('nb_extensions installed successfully')
-    except (ImportError, OSError) as e:
-        log.error('Failed to install or enable extension: ' + str(e))
 
 
 def js_prerelease(command, strict=False):
@@ -199,4 +191,3 @@ setup_args = {
 }
 
 setup(**setup_args)
-enable_extensions()

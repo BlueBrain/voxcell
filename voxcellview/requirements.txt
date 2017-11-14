@@ -1,7 +1,4 @@
-# fixed version because of https://github.com/jupyter-widgets/ipywidgets#compatibility
-notebook==4.2.*
-ipython==5.*
-ipywidgets==5.*
+ipywidgets>=7.0.4
 neurom>=1.0.0
 tqdm>=4.8.4
 pylru>=1.0.0
