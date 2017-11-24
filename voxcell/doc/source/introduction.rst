@@ -10,7 +10,7 @@ Voxcell is pip installable. It defines its dependencies explicitly so that they 
 
    $ virtualenv venv
    $ source venv/bin/activate
-   $ pip install --index-url http://bbpgb019.epfl.ch:9090/simple/ --pre voxcell
+   $ pip install --index-url https://bbpteam.epfl.ch/repository/devpi/simple voxcell
 
 
 Quick Example
