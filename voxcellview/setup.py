@@ -16,12 +16,6 @@ from subprocess import check_call, Popen, PIPE
 from voxcellview.version import VERSION as __version__
 
 
-proc = Popen(['npm', '--version'], stdout=PIPE)
-npm_version = proc.stdout.read().decode()
-npm_major_version = int(npm_version[0])
-if npm_major_version < 2:
-    sys.exit("NPM < 2 is no longer supported from version 2.1.2 of voxcellview")
-
 if sys.version_info < (2, 7):
     sys.exit("Python < 2.7 is no longer supported from version 2.1.0")
 
@@ -114,7 +108,11 @@ class NPM(Command):
     def has_npm(self):  # pylint: disable=no-self-use
         '''has_npm'''
         try:
-            check_call(['npm', '--version'])
+            proc = Popen(['npm', '--version'], stdout=PIPE)
+            npm_version = proc.stdout.read().decode()
+            npm_major_version = int(npm_version[0])
+            if npm_major_version < 2:
+                return False
             return True
         except:  # pylint: disable=bare-except
             return False
@@ -127,7 +125,7 @@ class NPM(Command):
         '''run'''
         has_npm = self.has_npm()
         if not has_npm:
-            log.error("`npm` unavailable.  If you're running this command using "
+            log.error("`npm` unavailable or version < 2.  If you're running this command using "
                       "sudo, make sure `npm` is available to sudo")
 
         env = os.environ.copy()
