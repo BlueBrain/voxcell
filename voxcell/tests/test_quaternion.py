@@ -91,6 +91,9 @@ def test_matrix_identity():
     check_quaternions_to_matrices(2, m, q)
     check_quaternions_to_matrices(100, m, q)
 
+    # check non-normalized quaternion
+    check_quaternions_to_matrices(1, m, 1000 * q)
+
 
 def test_matrix_90_y():
     m = np.array([[0, 0, 1],
@@ -103,6 +106,9 @@ def test_matrix_90_y():
     check_quaternions_to_matrices(2, m, q)
     check_quaternions_to_matrices(100, m, q)
 
+    # check non-normalized quaternion
+    check_quaternions_to_matrices(1, m, 1000 * q)
+
 
 def test_matrix_180_y():
     m = np.diag([-1, 1, -1])
@@ -111,6 +117,9 @@ def test_matrix_180_y():
     check_quaternions_to_matrices(1, m, q)
     check_quaternions_to_matrices(2, m, q)
     check_quaternions_to_matrices(100, m, q)
+
+    # check non-normalized quaternion
+    check_quaternions_to_matrices(1, m, 1000 * q)
 
 
 def test_matrix_180_heading_90_attitude():
@@ -123,6 +132,9 @@ def test_matrix_180_heading_90_attitude():
     check_quaternions_to_matrices(1, m, q)
     check_quaternions_to_matrices(2, m, q)
     check_quaternions_to_matrices(100, m, q)
+
+    # check non-normalized quaternion
+    check_quaternions_to_matrices(1, m, 1000 * q)
 
 
 def test_roundtrip_complex():

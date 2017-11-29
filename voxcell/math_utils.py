@@ -89,3 +89,10 @@ def angles_to_matrices(angles, axis):
     result[:, k, k] = 1.0
 
     return result
+
+
+def normalize(vs):
+    """ Normalize array along last axis. """
+    norm = np.linalg.norm(vs, axis=-1)
+    norm = np.where(norm > 0, norm, 1.0)
+    return vs / norm[..., np.newaxis]

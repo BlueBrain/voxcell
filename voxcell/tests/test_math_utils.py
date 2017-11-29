@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 
-from nose.tools import assert_true, assert_false
+import nose.tools as nt
 
 import voxcell.math_utils as test_module
 
@@ -23,7 +23,7 @@ def test_is_diagonal_true():
         [2, 0],
         [0, 3]
     ])
-    assert_true(test_module.is_diagonal(A))
+    nt.assert_true(test_module.is_diagonal(A))
 
 
 def test_is_diagonal_false():
@@ -31,7 +31,7 @@ def test_is_diagonal_false():
         [2, 0],
         [1, 3]
     ])
-    assert_false(test_module.is_diagonal(A))
+    nt.assert_false(test_module.is_diagonal(A))
 
 
 def test_lcmm():
@@ -69,3 +69,19 @@ def test_angles_to_matrices_3():
     ]]
     result = test_module.angles_to_matrices(angles, 'z')
     npt.assert_almost_equal(expected, result)
+
+
+def test_normalize_empty():
+    npt.assert_equal(test_module.normalize([]), [])
+
+
+def test_normalize_0():
+    npt.assert_equal(test_module.normalize([1, 0, 0]), [1, 0, 0])
+
+
+def test_normalize_1():
+    npt.assert_equal(test_module.normalize([2, 2, 1]), [2./3, 2./3, 1./3])
+
+
+def test_normalize_3():
+    npt.assert_equal(test_module.normalize([[1, 0, 0], [0, 0, 0]]), [[1, 0, 0], [0, 0, 0]])

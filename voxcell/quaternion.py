@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from voxcell.math_utils import normalize
+
 
 def matrices_to_quaternions(matrices):
     '''build quaternions from an array of 3x3 rotation matrices
@@ -95,6 +97,8 @@ def quaternions_to_matrices(q):
     Returns:
         A Nx3x3 numpy array containing N rotation matrices.
     '''
+
+    q = normalize(q.astype(float))
 
     m11 = 1 - 2 * np.square(q[..., 1]) - 2 * np.square(q[..., 2])
     m12 = 2 * q[..., 0] * q[..., 1] - 2 * q[..., 2] * q[..., 3]
