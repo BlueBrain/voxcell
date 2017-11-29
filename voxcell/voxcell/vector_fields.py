@@ -160,9 +160,11 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
 
 def normalize(vf):
     '''normalize a vector field'''
-    lengths = np.linalg.norm(vf, axis=-1)
-    lengths = np.where(lengths > 0, lengths, 1.0)
-    return vf / lengths[..., np.newaxis]
+    from voxcell import deprecate, math_utils
+    deprecate.warn(
+        "`voxcell.vector_fields.normalize()` method has been moved to `voxcell.math_utils`"
+    )
+    return math_utils.normalize(vf)
 
 
 def gaussian_filter(vf, sigma):
