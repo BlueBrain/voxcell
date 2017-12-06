@@ -7,6 +7,7 @@ Credits:
 
 import numpy as np
 from tqdm import tqdm
+from brainbuilder.exceptions import BrainBuilderError
 
 
 class Grid(object):
@@ -68,6 +69,30 @@ class Grid(object):
         '''Verifies whether a given point is inside the grid domain.'''
         return np.all((point >= self.domain[0, :]) & (point <= self.domain[1, :]))
 
+    def get_random_empty_grid_cell(self):
+        '''Returns the grid coordinates of an empty grid cell.
+
+        Raises:
+            Error if no empty grid cells are present.
+        '''
+        indices = np.where(self.grid == -1)
+        if len(indices[0]):
+            choice = np.random.choice(len(indices[0]))
+            return indices[0][choice], indices[1][choice], indices[2][choice]
+        else:
+            raise BrainBuilderError('No empty cells present in this grid.')
+
+    def generate_random_point_in_empty_grid_cell(self):
+        '''Generates a point in an empty grid cell according to a uniform
+        distribution over that grid cell.
+
+        Raises:
+            Error if no empty grid cells are present.
+        '''
+        empty_grid_cell = np.array(self.get_random_empty_grid_cell())
+        min_corner = self.domain[0, :] + self.cell_size * empty_grid_cell
+        return min_corner + self.cell_size * np.random.random(self.grid.ndim)
+
 
 def generate_point_around(point, min_distance):
     '''Generate point in spherical shell around given point at minimum distance
@@ -107,13 +132,22 @@ def _add_to_containers(point, sample_points, active_list, grid):
     grid.update(point, idx)
 
 
+# pylint: disable=R0913
 def _try_generate_point(active_list, nb_trials, point, min_distance, grid,
-                        sample_points, nb_points, progress_bar=None):
+                        sample_points, nb_points, progress_bar=None,
+                        new_seed=False):
     '''Helper function that generates a new sample point and updates the
     relevant containers. Trials are limited by a given number of trials.
     '''
     for _ in range(nb_trials):
-        new_pt = generate_point_around(point, min_distance(point))
+        if not new_seed:
+            new_pt = generate_point_around(point, min_distance(point))
+        else:
+            try:
+                new_pt = grid.generate_random_point_in_empty_grid_cell()
+            except BrainBuilderError:
+                # spatial grid is full -> stop trying
+                break
 
         if grid.domain_contains(new_pt) and grid.no_collision(
                 new_pt, min_distance(new_pt), sample_points):
@@ -126,7 +160,7 @@ def _try_generate_point(active_list, nb_trials, point, min_distance, grid,
 
 
 def generate_points(bbox, nb_points, min_distance, seed=None,
-                    nb_trials=30, display_progress=True):
+                    nb_trials=30, display_progress=True, reseed_fraction=0.9):
     '''Generate a number of points with Poisson disc sampling.
 
     Args:
@@ -139,6 +173,9 @@ def generate_points(bbox, nb_points, min_distance, seed=None,
         nb_trials: number of trials each time a new point is generated
         display_progress: boolean that indicates whether a progress bar is
                           displayed. Default is True.
+        reseed_fraction: try generating a new seed if the point generation
+                         stopped at an amount of points that does not exceed
+                         reseed_fraction * nb_points.
 
     Returns:
         A list of points.
@@ -168,6 +205,13 @@ def generate_points(bbox, nb_points, min_distance, seed=None,
         active_list.remove(idx)
         _try_generate_point(active_list, nb_trials, point, min_distance, grid,
                             sample_points, nb_points, progress_bar)
+
+        # re-seed if necessary
+        generated_fraction = 1. * len(sample_points) / nb_points
+        if not active_list and (generated_fraction < reseed_fraction):
+            _try_generate_point(active_list, nb_trials, point, min_distance,
+                                grid, sample_points, nb_points, progress_bar,
+                                True)
 
     if display_progress:
         progress_bar.close()

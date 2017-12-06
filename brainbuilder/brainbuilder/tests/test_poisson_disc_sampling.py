@@ -5,6 +5,7 @@ import nose.tools as nt
 from voxcell import VoxelData
 
 import brainbuilder.poisson_disc_sampling as test_module
+from brainbuilder.exceptions import BrainBuilderError
 
 
 def setup_func():
@@ -13,6 +14,52 @@ def setup_func():
 
 def teardown_func():
     pass
+
+
+def test_grid_empty_cell():
+    domain = np.array([[0, 0, 0], [100, 200, 500]])
+    grid = test_module.Grid(domain, 100)
+    # mark some cells as non-empty
+    grid.grid[0, 0, 0] = 0
+    grid.grid[0, 1, 3] = 0
+    grid.grid[0, 2, 4] = 0
+
+    empty_cell = grid.get_random_empty_grid_cell()
+
+    nt.assert_equal(grid.grid[empty_cell], -1)
+
+
+def test_grid_no_empty_cell():
+    domain = np.array([[0, 0, 0], [100, 200, 500]])
+    grid = test_module.Grid(domain, 100)
+    # no empty cells
+    grid.grid = np.ones(grid.grid.shape)
+
+    nt.assert_raises(BrainBuilderError, grid.get_random_empty_grid_cell)
+
+
+def test_generate_random_point_in_empty_cell():
+    domain = np.array([[0, 0, 0], [100, 200, 500]])
+    grid = test_module.Grid(domain, 100)
+    # mark some cells as non-empty
+    grid.grid[0, 0, 0] = 0
+    grid.grid[0, 1, 3] = 0
+    grid.grid[0, 2, 4] = 0
+
+    point = grid.generate_random_point_in_empty_grid_cell()
+
+    grid_point = grid.get_grid_coords(point)
+    nt.assert_equal(grid.grid[grid_point], -1)
+
+
+def test_generate_random_point_in_empty_cell():
+    domain = np.array([[0, 0, 0], [100, 200, 500]])
+    grid = test_module.Grid(domain, 100)
+    # no empty cells
+    grid.grid = np.ones(grid.grid.shape)
+
+    nt.assert_raises(BrainBuilderError,
+                     grid.generate_random_point_in_empty_grid_cell)
 
 
 @nt.with_setup(setup_func, teardown_func)
