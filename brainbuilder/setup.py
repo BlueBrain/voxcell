@@ -56,7 +56,6 @@ setup(
     include_package_data=True,
     scripts=[
         'apps/bind2atlas',
-        'apps/generate-ncs',
-        'apps/merge-mvd3',
+        'apps/brainbuilder',
     ],
 )

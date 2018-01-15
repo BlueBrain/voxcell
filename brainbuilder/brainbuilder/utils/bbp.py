@@ -4,9 +4,10 @@ import itertools
 import logging
 import numbers
 import yaml
-from six import iteritems
+from six import iteritems, text_type
 from six.moves import zip
 
+import h5py
 import lxml.etree
 import numpy as np
 import pandas as pd
@@ -939,3 +940,30 @@ def write_property_targets(f, cells, prop, mapping=None):
         if mapping is not None:
             value = mapping(value)
         write_target(f, value, gids=gids)
+
+
+def _get_recipe_mtypes(recipe_path):
+    """ List of mtypes in the order they appear in builder recipe. """
+    result = []
+    recipe = _parse_recipe(recipe_path)  # pylint: disable=protected-access
+    for elem in recipe.iterfind('/NeuronTypes/Layer/StructuralType'):
+        mtype = elem.attrib['id']
+        if mtype not in result:
+            result.append(mtype)
+    return result
+
+
+def reorder_mtypes(mvd3_path, recipe_path):
+    """ Re-order /library/mtypes to align with builder recipe. """
+    recipe_mtypes = _get_recipe_mtypes(recipe_path)
+
+    with h5py.File(mvd3_path, 'a') as h5f:
+        mvd3_mtypes = h5f.pop('/library/mtype')[:]
+        mapping = np.zeros(len(mvd3_mtypes), dtype=np.uint8)
+        for k, mtype in enumerate(mvd3_mtypes):
+            mapping[k] = recipe_mtypes.index(mtype)
+
+        mvd3_mtype_index = h5f.pop('/cells/properties/mtype')[:]
+        dt = h5py.special_dtype(vlen=text_type)
+        h5f['/cells/properties/mtype'] = mapping[mvd3_mtype_index]
+        h5f.create_dataset('/library/mtype', data=recipe_mtypes, dtype=dt)
