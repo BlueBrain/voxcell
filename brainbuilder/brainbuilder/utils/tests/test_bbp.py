@@ -15,7 +15,7 @@ import pandas as pd
 from numpy.testing import assert_equal, assert_almost_equal
 from pandas.util.testing import assert_frame_equal
 
-from voxcell import Hierarchy, VoxelData
+from voxcell import CellCollection, Hierarchy, VoxelData
 
 from brainbuilder.exceptions import BrainBuilderError
 from brainbuilder.utils import bbp
@@ -215,6 +215,18 @@ def test_load_metype_composition(mock_loadtxt, mock_load_nrrd):
             ('L3', 'L23_MC'): {'cNAC': 0.5, 'bNAC': 0.5},
         }
     )
+
+
+def test_load_neurondb_v3():
+    actual = bbp.load_neurondb_v3(os.path.join(DATA_PATH, 'neuronDBv4.dat'))
+    expected = pd.DataFrame({
+        'morphology': ["morph-a", "morph-b"],
+        'region': ["1", "2"],
+        'mtype': ["L1_DAC", "L23_PC"],
+        'etype': ["bNAC", "dNAC"],
+        'me_combo': ["me-combo-a", "me-combo-b"],
+    })
+    assert_frame_equal(expected.sort_index(axis=1), actual.sort_index(axis=1))
 
 
 def test_load_neurondb_v4():
@@ -776,3 +788,65 @@ def test_write_property_targets():
         ""
     ])
     eq_(actual, expected)
+
+
+def test_assign_emodels():
+    cells = CellCollection()
+    cells.properties = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A'),
+        ('morph-B', 'region-B', 'mtype-B', 'etype-B', 'prop-B'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop'])
+    morphdb = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'me_combo-A'),
+        ('morph-B', 'region-B', 'mtype-B', 'etype-B', 'me_combo-B'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'me_combo'])
+    actual = bbp.assign_emodels(cells, morphdb).properties
+    expected = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A', 'me_combo-A'),
+        ('morph-B', 'region-B', 'mtype-B', 'etype-B', 'prop-B', 'me_combo-B'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop', 'me_combo'])
+    assert_frame_equal(actual, expected, check_like=True)
+
+
+def test_assign_emodels_multiple_choice():
+    np.random.seed(0)
+    cells = CellCollection()
+    cells.properties = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop'])
+    morphdb = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'me_combo-A1'),
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'me_combo-A2'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'me_combo'])
+    actual = bbp.assign_emodels(cells, morphdb).properties
+    expected = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A', 'me_combo-A1'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop', 'me_combo'])
+    assert_frame_equal(actual, expected, check_like=True)
+
+
+def test_assign_emodels_overwrite():
+    cells = CellCollection()
+    cells.properties = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A', 'me_combo-A0'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop', 'me_combo'])
+    morphdb = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'me_combo-A1'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'me_combo'])
+    actual = bbp.assign_emodels(cells, morphdb).properties
+    expected = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A', 'me_combo-A1'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop', 'me_combo'])
+    assert_frame_equal(actual, expected, check_like=True)
+
+
+@raises(BrainBuilderError)
+def test_assign_emodels_raises():
+    cells = CellCollection()
+    cells.properties = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A', 'prop-A'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'prop'])
+    morphdb = pd.DataFrame([
+        ('morph-A', 'region-A', 'mtype-A', 'etype-A1', 'me_combo-A1'),
+    ], columns=['morphology', 'region', 'mtype', 'etype', 'me_combo'])
+    actual = bbp.assign_emodels(cells, morphdb)

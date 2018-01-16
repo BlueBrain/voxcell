@@ -1,4 +1,7 @@
 '''compatibility functions with existing BBP formats'''
+
+#pylint: disable=too-many-lines
+
 import os
 import itertools
 import logging
@@ -471,12 +474,31 @@ def load_metype_composition(filepath, atlas, region_map, relative_distance=None)
     )
 
 
+def load_neurondb_v3(neurondb_filename):
+    '''load a neurondb v3 file
+
+    Returns:
+        A DataFrame where the columns are:
+            morphology, region, mtype, etype, me_combo
+    '''
+    columns = [
+        'morphology',
+        'region',
+        'mtype',
+        'etype',
+        'me_combo',
+    ]
+    return pd.read_csv(
+        neurondb_filename, sep=r'\s+', names=columns, usecols=range(5), dtype=str, na_filter=False
+    )
+
+
 def load_neurondb_v4(neurondb_filename):
     '''load a neurondb v4 file
 
     Returns:
         A DataFrame where the columns are:
-            morphology, layer, mtype, etype, metype, placement_hints
+            morphology, layer, mtype, etype, me_combo, placement_hints
     '''
 
     def read_records(lines):
@@ -940,6 +962,35 @@ def write_property_targets(f, cells, prop, mapping=None):
         if mapping is not None:
             value = mapping(value)
         write_target(f, value, gids=gids)
+
+
+def assign_emodels(cells, morphdb):
+    """ Assign electrical models to CellCollection based MorphDB. """
+    df = cells.as_dataframe()
+
+    ME_COMBO = 'me_combo'
+    if ME_COMBO in df:
+        L.warning("'%s' property would be overwritten", ME_COMBO)
+        del df[ME_COMBO]
+
+    JOIN_COLS = ['morphology', 'region', 'mtype', 'etype']
+
+    df = df.join(morphdb.set_index(JOIN_COLS)[ME_COMBO], on=JOIN_COLS)
+
+    not_assigned = np.count_nonzero(df[ME_COMBO].isnull())
+    if not_assigned > 0:
+        raise BrainBuilderError("Could assign pick emodel for %d cell(s)" % not_assigned)
+
+    # choose 'me_combo' randomly if several are available
+    df = df.sample(frac=1)
+    df = df[~df.index.duplicated(keep='first')]
+
+    df = df.sort_index()
+
+    result = CellCollection.from_dataframe(df)
+    result.seeds = cells.seeds
+
+    return result
 
 
 def _get_recipe_mtypes(recipe_path):
