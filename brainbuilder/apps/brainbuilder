@@ -93,5 +93,40 @@ def merge(mvd3, output):
     CellCollection.from_dataframe(merged).save(output)
 
 
+@app.group(name="targets")
+def _targets():
+    """ Tools for working with .target files """
+    pass
+
+
+@_targets.command()
+@click.argument("mvd3")
+@click.option("--etype", is_flag=True, help="Include etype-based targets")
+@click.option("--region", is_flag=True, help="Include region-based targets")
+@click.option("--layer", is_flag=True, help="Include layer-based targets (SSCX)")
+@click.option("--column", is_flag=True, help="Include column-based targets (SSCX)")
+@click.option("-o", "--output", help="Path to output .target file", required=True)
+def from_mvd3(mvd3, etype, region, layer, column, output):
+    """ Generate .target file from MVD3 """
+    cells = CellCollection.load(mvd3).as_dataframe()
+    SYNAPSE_CLASSES = {
+        'EXC': 'Excitatory',
+        'INH': 'Inhibitory',
+    }
+    with open(output, 'w') as f:
+        bbp.write_target(f, 'Mosaic', include_targets=['All'])
+        bbp.write_target(f, 'All', include_targets=sorted(cells['mtype'].unique()))
+        bbp.write_property_targets(f, cells, 'synapse_class', mapping=SYNAPSE_CLASSES.__getitem__)
+        bbp.write_property_targets(f, cells, 'mtype')
+        if etype:
+            bbp.write_property_targets(f, cells, 'etype')
+        if region:
+            bbp.write_property_targets(f, cells, 'region')
+        if layer:
+            bbp.write_property_targets(f, cells, 'layer', mapping=lambda x: "Layer%d" % x)
+        if column:
+            bbp.write_property_targets(f, cells, 'hypercolumn', mapping=lambda x: "mc%d_Column" % x)
+
+
 if __name__ == '__main__':
     app()
