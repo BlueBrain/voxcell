@@ -477,6 +477,8 @@ def load_metype_composition(filepath, atlas, region_map, relative_distance=None)
 def load_neurondb_v3(neurondb_filename):
     '''load a neurondb v3 file
 
+    If second column is numeric (layer IDs), it is prefixed with 'L' to obtain region name.
+
     Returns:
         A DataFrame where the columns are:
             morphology, region, mtype, etype, me_combo
@@ -488,9 +490,13 @@ def load_neurondb_v3(neurondb_filename):
         'etype',
         'me_combo',
     ]
-    return pd.read_csv(
-        neurondb_filename, sep=r'\s+', names=columns, usecols=range(5), dtype=str, na_filter=False
+    result = pd.read_csv(
+        neurondb_filename, sep=r'\s+', names=columns, usecols=range(5), na_filter=False
     )
+    if pd.api.types.is_numeric_dtype(result['region']):
+        # Append 'L' to cortex layer number
+        result['region'] = result['region'].apply(lambda x: "L%d" % x)
+    return result
 
 
 def load_neurondb_v4(neurondb_filename):

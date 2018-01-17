@@ -218,15 +218,27 @@ def test_load_metype_composition(mock_loadtxt, mock_load_nrrd):
 
 
 def test_load_neurondb_v3():
-    actual = bbp.load_neurondb_v3(os.path.join(DATA_PATH, 'neuronDBv4.dat'))
+    actual = bbp.load_neurondb_v3(os.path.join(DATA_PATH, 'neuronDBv3.dat'))
     expected = pd.DataFrame({
         'morphology': ["morph-a", "morph-b"],
-        'region': ["1", "2"],
+        'region': ["L1", "L2"],
         'mtype': ["L1_DAC", "L23_PC"],
         'etype': ["bNAC", "dNAC"],
         'me_combo': ["me-combo-a", "me-combo-b"],
     })
-    assert_frame_equal(expected.sort_index(axis=1), actual.sort_index(axis=1))
+    assert_frame_equal(actual, expected, check_like=True)
+
+
+def test_load_neurondb_v4_as_v3():
+    actual = bbp.load_neurondb_v3(os.path.join(DATA_PATH, 'neuronDBv4.dat'))
+    expected = pd.DataFrame({
+        'morphology': ["morph-a", "morph-b"],
+        'region': ["L1", "L2"],
+        'mtype': ["L1_DAC", "L23_PC"],
+        'etype': ["bNAC", "dNAC"],
+        'me_combo': ["me-combo-a", "me-combo-b"],
+    })
+    assert_frame_equal(actual, expected, check_like=True)
 
 
 def test_load_neurondb_v4():
@@ -239,7 +251,7 @@ def test_load_neurondb_v4():
         'me_combo': ["me-combo-a", "me-combo-b"],
         'placement_hints': [[1.0, 1.0], [1.0, 1.0, 0.0]],
     })
-    assert_frame_equal(expected.sort_index(axis=1), actual.sort_index(axis=1))
+    assert_frame_equal(actual, expected, check_like=True)
 
 
 def test_transform_neurondb_into_spatial_distribution_empty():
