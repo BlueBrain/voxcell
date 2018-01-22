@@ -129,7 +129,7 @@ class VoxelData(object):
         Args:
             nrrd_path(string): full path to nrrd file
         '''
-        #from: http://teem.sourceforge.net/nrrd/format.html#space
+        # from http://teem.sourceforge.net/nrrd/format.html#space
         options = {
             'space dimension': self.ndim,
             'space directions': np.diag(self.voxel_dimensions),

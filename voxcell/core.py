@@ -1,5 +1,5 @@
 '''core container classes'''
-#pylint:disable=unused-import
+# pylint:disable=unused-import
 
 from voxcell import deprecate, VoxcellError
 from voxcell.cell_collection import CellCollection
