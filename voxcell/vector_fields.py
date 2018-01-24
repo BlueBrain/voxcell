@@ -160,11 +160,12 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
 
 def normalize(vf):
     '''normalize a vector field'''
-    from voxcell import deprecate, math_utils
+    from voxcell.math_utils import normalize as _normalize
+    from voxcell.utils import deprecate
     deprecate.warn(
         "`voxcell.vector_fields.normalize()` method has been moved to `voxcell.math_utils`"
     )
-    return math_utils.normalize(vf)
+    return _normalize(vf)
 
 
 def gaussian_filter(vf, sigma):
@@ -182,7 +183,6 @@ def gaussian_filter(vf, sigma):
     filtered = vf.copy()
     mask = np.any(vf != 0, axis=-1)
 
-    # pylint: disable=E1101
     filtered[..., 0] = mask * scipy.ndimage.gaussian_filter(filtered[..., 0], sigma=sigma)
     filtered[..., 1] = mask * scipy.ndimage.gaussian_filter(filtered[..., 1], sigma=sigma)
     filtered[..., 2] = mask * scipy.ndimage.gaussian_filter(filtered[..., 2], sigma=sigma)
@@ -235,7 +235,7 @@ def join_vector_fields(vf0, *vfs):
         vfs: rest of vector fields. All of them must have the same shape.
     '''
     vfs = (vf0,) + vfs
-    assert all(v.shape == vf0.shape for v in vfs)
+    assert all(v.shape == vf0.shape for v in vfs)  # pylint: disable=no-member
 
     joined = np.zeros_like(vf0)
     joined_mask = np.zeros(joined.shape[:-1], dtype=np.bool)

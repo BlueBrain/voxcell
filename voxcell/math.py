@@ -1,9 +1,5 @@
-# pylint: skip-file
-import warnings
+'''helper mathematical functions'''
 
-from voxcell.math_utils import *
-from voxcell.quaternion import *
-
-from voxcell import deprecate
+from voxcell.utils import deprecate
 
 deprecate.fail("Deprecated, please use voxcell.math_utils instead")

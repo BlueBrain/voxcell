@@ -3,9 +3,10 @@
 import numpy as np
 import nrrd
 
-from voxcell import math_utils, deprecate
+from voxcell import math_utils
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import quaternions_to_matrices
+from voxcell.utils import deprecate
 
 
 def _pivot_axes(a, k):
@@ -238,6 +239,7 @@ class VoxelData(object):
             mask = np.full_like(self.raw, False, dtype=bool)
             mask[indices] = True
             self.raw[np.logical_not(mask)] = na_value
+            return None
         else:
             raw = np.full_like(self.raw, na_value)
             raw[indices] = self.raw[indices]
@@ -258,6 +260,7 @@ class VoxelData(object):
         mask = np.apply_along_axis(predicate, -1, xyz)
         if inplace:
             self.raw[np.invert(mask)] = 0
+            return None
         else:
             raw = np.zeros_like(self.raw)
             raw[mask] = self.raw[mask]
@@ -283,6 +286,7 @@ class VoxelData(object):
         if inplace:
             self.raw = raw
             self.offset = offset
+            return None
         else:
             return VoxelData(raw, self.voxel_dimensions, offset)
 

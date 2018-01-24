@@ -35,6 +35,9 @@ setup(
         'scipy>=0.13',
         'six>=1.0',
     ],
-    packages=['voxcell'],
+    packages=[
+        'voxcell',
+        'voxcell.utils',
+    ],
     test_suite='nose.collector'
 )

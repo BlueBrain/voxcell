@@ -6,8 +6,8 @@ import itertools
 
 from six import iteritems
 
-from voxcell import deprecate
 from voxcell.exceptions import VoxcellError
+from voxcell.utils import deprecate
 
 
 def _sub_dict(dict_, keys):

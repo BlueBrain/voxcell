@@ -2,7 +2,7 @@
 
 import warnings
 
-from voxcell import VoxcellError
+from voxcell.exceptions import VoxcellError
 
 
 class VoxcellDeprecationWarning(UserWarning):

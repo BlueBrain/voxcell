@@ -1,6 +1,6 @@
 '''Basic algorithm to create positions for cell bodies from a density distribution'''
 import numpy as np
-from voxcell import deprecate
+from voxcell.utils import deprecate
 
 deprecate.fail("Deprecated. Please use 'brainbuilder.cell_positions' module instead.")
 
