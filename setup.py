@@ -38,6 +38,5 @@ setup(
     packages=[
         'voxcell',
         'voxcell.utils',
-    ],
-    test_suite='nose.collector'
+    ]
 )
