@@ -101,6 +101,7 @@ class VoxelData(object):
                 'right-anterior-superior': 3, 'RAS': 3,
                 'left-anterior-superior': 3, 'LAS': 3,
                 'left-posterior-superior': 3, 'LPS': 3,
+                'posterior-inferior-right': 3, 'PIR': 3,
             }[options['space']]
         else:
             ndim = 0  # use all 'space directions'
