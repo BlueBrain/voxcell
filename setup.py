@@ -32,11 +32,13 @@ setup(
         'numpy>=1.9',
         'pandas>=0.17',
         'pynrrd>=0.2',
+        'requests>=2.18',
         'scipy>=0.13',
         'six>=1.0',
     ],
     packages=[
         'voxcell',
+        'voxcell.nexus',
         'voxcell.utils',
     ]
 )
