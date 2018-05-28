@@ -5,6 +5,14 @@ import numpy as np
 from voxcell import math_utils
 from voxcell.voxel_data import VoxelData
 
+from voxcell.utils import deprecate
+
+
+deprecate.warn("""
+    voxcell.build would be deprecated in voxcell==3.0.
+    Please contact NSE team if you are using it.
+""")
+
 
 def sphere_mask(shape, radius):
     '''build the boolean mask of a sphere centered in the middle

@@ -101,8 +101,8 @@ def assert_equal_cells(c0, c1):
 
 def check_roundtrip(original):
     with tempcwd():
-        original.save('cells.h5')
-        restored = test_module.CellCollection.load('cells.h5')
+        original.save_mvd3('cells.h5')
+        restored = test_module.CellCollection.load_mvd3('cells.h5')
         assert_equal_cells(original, restored)
         return restored
 
@@ -197,7 +197,7 @@ def test_circuit_seeds():
     cells = test_module.CellCollection()
     cells.properties['foo'] = ['a', 'b', 'c']
     with tempcwd():
-        cells.save('cells.h5')
+        cells.save_mvd3('cells.h5')
         with h5py.File('cells.h5') as f:
             eq_(f['circuit']['seeds'].shape, (4,))
 

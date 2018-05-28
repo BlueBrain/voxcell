@@ -9,6 +9,8 @@ from six import iteritems, text_type
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
 
+from voxcell.utils import deprecate
+
 
 class CellCollection(object):
     '''Encapsulates all the data related to a collection of cells that compose a circuit.
@@ -69,6 +71,13 @@ class CellCollection(object):
         return result
 
     def save(self, filename):
+        # pylint: disable=missing-docstring
+        deprecate.warn(
+            "CellCollection.save() is deprecated, please use CellCollection.save_mvd3() instead"
+        )
+        self.save_mvd3(filename)
+
+    def save_mvd3(self, filename):
         '''save this cell collection to HDF5
 
         Args:
@@ -109,6 +118,14 @@ class CellCollection(object):
 
     @classmethod
     def load(cls, filename):
+        # pylint: disable=missing-docstring
+        deprecate.warn(
+            "CellCollection.load() is deprecated, please use CellCollection.load_mvd3() instead"
+        )
+        return cls.load_mvd3(filename)
+
+    @classmethod
+    def load_mvd3(cls, filename):
         '''load a cell collection from HDF5
 
         Args:
