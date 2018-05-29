@@ -20,12 +20,18 @@ import numpy as np
 from scipy.ndimage import morphology
 import scipy.ndimage
 
+from voxcell.utils import deprecate
+
 
 L = logging.getLogger(__name__)
 
 
 def generate_homogeneous_field(mask, direction):
     '''create an homogeneous field from a direction vector replicated according to a binary mask'''
+    deprecate.warn("""
+        This method would be deprecated in voxcell==3.0.
+        Please contact NSE team if you are using it.
+    """)
     field = np.zeros(shape=(mask.shape + direction.shape), dtype=direction.dtype)
     field[mask] = direction
     return field
@@ -63,6 +69,10 @@ def calculate_fields_by_distance_from(region, reference):
     voxel in reference_mask
     If reference is part of region, the vectors there will be (0,0,0).
     Result is not normalized.'''
+    deprecate.warn("""
+        This method would be deprecated in voxcell==3.0.
+        Please contact NSE team if you are using it.
+    """)
     return _calculate_fields_by_distance(region, reference, 1)
 
 
@@ -71,6 +81,10 @@ def calculate_fields_by_distance_to(region, reference):
     to the closest voxel in reference_mask.
     If reference is part of region, the vectors there will be (0,0,0).
     Result is not normalized.'''
+    deprecate.warn("""
+        This method would be deprecated in voxcell==3.0.
+        Please contact NSE team if you are using it.
+    """)
     return _calculate_fields_by_distance(region, reference, -1)
 
 
@@ -79,6 +93,10 @@ def calculate_fields_by_distance_between(region, first, last):
     from first to last.
     If first and last overlap, the vectors there will be (0,0,0).
     Result is not normalized.'''
+    deprecate.warn("""
+        This method would be deprecated in voxcell==3.0.
+        Please contact NSE team if you are using it.
+    """)
     field_to_last = calculate_fields_by_distance_to(region, last)
     field_from_first = calculate_fields_by_distance_from(region, first)
     return join_vector_fields(field_to_last, field_from_first)
@@ -92,6 +110,10 @@ def compute_cylindrical_tangent_vectors(points, center_point):
         A numpy array of the same shape as points (Nx3)
     '''
     # TODO make this take axis of the cylinder
+    deprecate.warn("""
+        This method would be deprecated in voxcell==3.0.
+        Please contact NSE team if you are using it.
+    """)
     from_center = points - center_point
     tangents = np.zeros_like(from_center)
 
@@ -133,6 +155,10 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
     Returns:
         A 4D numpy array representing a vector field with a shape equivalent to annotation_raw.
     '''
+    deprecate.warn("""
+        This method would be deprecated in voxcell==3.0.
+        Please contact NSE team if you are using it.
+    """)
     center_point = np.array(annotation_raw.shape) * 0.5
     center_point[2] *= 1.25
     half_region_mask = region_mask.copy()
@@ -161,7 +187,6 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
 def normalize(vf):
     '''normalize a vector field'''
     from voxcell.math_utils import normalize as _normalize
-    from voxcell.utils import deprecate
     deprecate.warn(
         "`voxcell.vector_fields.normalize()` method has been moved to `voxcell.math_utils`"
     )
