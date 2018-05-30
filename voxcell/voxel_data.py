@@ -2,10 +2,10 @@
 
 import numpy as np
 import nrrd
+import quaternion as quat
 
 from voxcell import math_utils
 from voxcell.exceptions import VoxcellError
-from voxcell.quaternion import quaternions_to_matrices
 from voxcell.utils import deprecate
 
 
@@ -327,7 +327,4 @@ class OrientationField(VoxelData):
         if result.dtype == np.int8:
             result = result / 127.0
 
-        # change quaternion component order: (w, x, y, z) -> (x, y, z, w)
-        result = np.roll(result, -1, axis=-1)
-
-        return quaternions_to_matrices(result)
+        return quat.as_rotation_matrix(quat.from_float_array(result))

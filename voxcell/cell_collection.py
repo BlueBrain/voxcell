@@ -3,13 +3,44 @@
 import h5py
 import numpy as np
 import pandas as pd
+import quaternion as quat
 
 from six import iteritems, text_type
 
 from voxcell.exceptions import VoxcellError
-from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
-
 from voxcell.utils import deprecate
+
+
+def matrices_to_quaternions(m):
+    """
+    Build quaternions from an array of 3x3 rotation matrices
+
+    Args:
+        m: A Nx3x3 numpy array containing N rotation matrices.
+
+    Returns:
+        Nx4 numpy array containing a unit quaternion for each rotation matrix.
+        The quaternion components are stored as (x, y, z, w)
+    """
+    q = quat.as_float_array(quat.from_rotation_matrix(m, nonorthogonal=False))
+    # change quaternion component order: (w, x, y, z) -> (x, y, z, w)
+    return np.roll(q, -1, axis=-1)
+
+
+def quaternions_to_matrices(q):
+    """
+    Build 3x3 rotation matrices from an array of quaternions.
+
+    Args:
+        q: A Nx4 numpy array containing a quaternion for each rotation matrix.
+        The quaternion components are stored as (x, y, z, w)
+
+    Returns:
+        A Nx3x3 numpy array containing N rotation matrices.
+    """
+    # change quaternion component order: (x, y, z, w) -> (w, x, y, z)
+    q = np.roll(q, 1, axis=-1)
+    return quat.as_rotation_matrix(quat.from_float_array(q))
 
 
 class CellCollection(object):

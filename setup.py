@@ -30,6 +30,7 @@ setup(
     install_requires=[
         'h5py>=2.3',
         'numpy>=1.9',
+        'numpy-quaternion>=2018.5.17',
         'pandas>=0.17',
         'pynrrd>=0.2',
         'requests>=2.18',
