@@ -1,14 +1,15 @@
-.. Voxcell documentation master file, created by
-   sphinx-quickstart on Wed Dec  9 08:05:16 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. |name| replace:: ``voxcell``
 
-Welcome to Voxcell's documentation!
+Welcome to |name|'s documentation!
 ===================================
 
-Voxcell is a small library to handle probability distributions that have a spatial component
-and to use them to build collection of cells in space.
+|name| is a library aimed to provide an access to brain atlases stored in `VoxelBrain <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Voxel+Brain+REST+API>`_.
 
+In addition, it could be used for:
+
+* accessing other volumetric datasets in compatible format
+* handling probability distributions that have a spatial component
+* manipulating vector fields
 
 Contents
 --------
@@ -16,10 +17,9 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-   introduction
-   data
-   mvd3
-   api
+   install
+   atlas
+   extras
 
 
 Indices and tables
