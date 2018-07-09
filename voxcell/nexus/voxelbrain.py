@@ -14,7 +14,7 @@ except ImportError:
     # pylint: disable=no-name-in-module,import-error
     from urllib import parse as urlparse
 
-from voxcell import VoxelData, Hierarchy
+from voxcell import VoxelData, Hierarchy, RegionMap
 
 from voxcell.exceptions import VoxcellError
 
@@ -78,6 +78,10 @@ class Atlas(object):
     def load_hierarchy(self):
         """ Load brain region hierarchy. """
         return Hierarchy.load_json(self._fetch_hierarchy())
+
+    def load_region_map(self):
+        """ Load brain region hierarchy as RegionMap. """
+        return RegionMap.load_json(self._fetch_hierarchy())
 
 
 class VoxelBrainAtlas(Atlas):

@@ -28,6 +28,7 @@ setup(
     download_url='https://bbpteam.epfl.ch/repository/devpi/+search?query=name%3Avoxcell',
     license='BBP-internal-confidential',
     install_requires=[
+        'future>=0.16',
         'h5py>=2.3',
         'numpy>=1.9',
         'numpy-quaternion>=2018.5.17',
