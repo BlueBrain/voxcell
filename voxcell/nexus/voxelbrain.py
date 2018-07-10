@@ -14,6 +14,8 @@ except ImportError:
     # pylint: disable=no-name-in-module,import-error
     from urllib import parse as urlparse
 
+import numpy as np
+
 from voxcell import VoxelData, Hierarchy, RegionMap
 
 from voxcell.exceptions import VoxcellError
@@ -82,6 +84,18 @@ class Atlas(object):
     def load_region_map(self):
         """ Load brain region hierarchy as RegionMap. """
         return RegionMap.load_json(self._fetch_hierarchy())
+
+    def get_region_mask(self, value, attr='acronym', with_descendants=True):
+        """ VoxelData with 0/1 mask indicating regions matching `value`. """
+        rmap = self.load_region_map()
+        brain_regions = self.load_data('brain_regions')
+        region_ids = rmap.find(
+            value, attr=attr, with_descendants=with_descendants, ignore_case=True
+        )
+        if not region_ids:
+            raise VoxcellError("Region not found: '%s'" % value)
+        result = np.isin(brain_regions.raw, list(region_ids))
+        return brain_regions.with_data(result)
 
 
 class VoxelBrainAtlas(Atlas):
