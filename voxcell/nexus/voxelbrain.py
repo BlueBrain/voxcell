@@ -48,6 +48,9 @@ class Atlas(object):
     """ Helper class for atlas access. """
     __metaclass__ = abc.ABCMeta
 
+    def __init__(self):
+        self._memcache = {}
+
     @staticmethod
     def open(url, cache_dir=None):
         """ Get Atlas object to access atlas stored at URL. """
@@ -73,34 +76,71 @@ class Atlas(object):
         """ Fetch brain region hierarchy JSON. """
         pass
 
-    def load_data(self, data_type, cls=VoxelData):
+    def _check_cache(self, key, callback, memcache):
+        if key in self._memcache:
+            return self._memcache[key]
+        result = callback()
+        if memcache:
+            self._memcache[key] = result
+        return result
+
+    def load_data(self, data_type, cls=VoxelData, memcache=False):
         """ Load atlas data layer. """
-        return cls.load_nrrd(self._fetch_data(data_type))
+        def _callback():
+            return cls.load_nrrd(self._fetch_data(data_type))
 
-    def load_hierarchy(self):
-        """ Load brain region hierarchy. """
-        return Hierarchy.load_json(self._fetch_hierarchy())
-
-    def load_region_map(self):
-        """ Load brain region hierarchy as RegionMap. """
-        return RegionMap.load_json(self._fetch_hierarchy())
-
-    def get_region_mask(self, value, attr='acronym', with_descendants=True):
-        """ VoxelData with 0/1 mask indicating regions matching `value`. """
-        rmap = self.load_region_map()
-        brain_regions = self.load_data('brain_regions')
-        region_ids = rmap.find(
-            value, attr=attr, with_descendants=with_descendants, ignore_case=True
+        return self._check_cache(
+            ('data', data_type, cls),
+            callback=_callback,
+            memcache=memcache
         )
-        if not region_ids:
-            raise VoxcellError("Region not found: '%s'" % value)
-        result = np.isin(brain_regions.raw, list(region_ids))
-        return brain_regions.with_data(result)
+
+    def load_hierarchy(self, memcache=False):
+        """ Load brain region hierarchy. """
+        def _callback():
+            return Hierarchy.load_json(self._fetch_hierarchy())
+
+        return self._check_cache(
+            ('hierarchy',),
+            callback=_callback,
+            memcache=memcache
+        )
+
+    def load_region_map(self, memcache=False):
+        """ Load brain region hierarchy as RegionMap. """
+        def _callback():
+            return RegionMap.load_json(self._fetch_hierarchy())
+
+        return self._check_cache(
+            ('region_map',),
+            callback=_callback,
+            memcache=memcache
+        )
+
+    def get_region_mask(self, value, attr='acronym', with_descendants=True, memcache=False):
+        """ VoxelData with 0/1 mask indicating regions matching `value`. """
+        def _callback():
+            rmap = self.load_region_map()
+            brain_regions = self.load_data('brain_regions')
+            region_ids = rmap.find(
+                value, attr=attr, with_descendants=with_descendants, ignore_case=True
+            )
+            if not region_ids:
+                raise VoxcellError("Region not found: '%s'" % value)
+            result = np.isin(brain_regions.raw, list(region_ids))
+            return brain_regions.with_data(result)
+
+        return self._check_cache(
+            ('region_mask', value, attr, with_descendants),
+            callback=_callback,
+            memcache=memcache
+        )
 
 
 class VoxelBrainAtlas(Atlas):
     """ Helper class for VoxelBrain atlas. """
     def __init__(self, url, cache_dir):
+        super(VoxelBrainAtlas, self).__init__()
         self._url = url.rstrip("/")
         resp = requests.get(self._url)
         resp.raise_for_status()
@@ -137,6 +177,7 @@ class VoxelBrainAtlas(Atlas):
 class LocalAtlas(Atlas):
     """ Helper class for locally stored atlas. """
     def __init__(self, dirpath):
+        super(LocalAtlas, self).__init__()
         self.dirpath = dirpath
 
     def _fetch_data(self, data_type):
