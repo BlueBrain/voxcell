@@ -72,8 +72,10 @@ class CellCollection(object):
         ''' remove cells with one or more unassigned property '''
         idx_unassigned = self.properties[self.properties.isnull().any(axis=1)].index
         self.properties = self.properties.drop(idx_unassigned)
-        self.orientations = np.delete(self.orientations, idx_unassigned, 0)
-        self.positions = np.delete(self.positions, idx_unassigned, 0)
+        if self.orientations is not None:
+            self.orientations = np.delete(self.orientations, idx_unassigned, 0)
+        if self.positions is not None:
+            self.positions = np.delete(self.positions, idx_unassigned, 0)
 
     def as_dataframe(self):
         ''' return a dataframe with all cell properties '''

@@ -186,6 +186,17 @@ def test_remove_unassigned():
     assert_equal(cells.properties['bar'], np.array([0, 3, 4]))
 
 
+def test_remove_unassigned_none():
+    cells = test_module.CellCollection()
+    cells.properties['foo'] = np.array(['', 'a', None, 'b', 'c'])
+    cells.properties['bar'] = np.array([0, None, 2, 3, 4])
+    cells.remove_unassigned_cells()
+    assert_is_none(cells.positions)
+    assert_is_none(cells.orientations)
+    assert_equal(cells.properties['foo'], np.array(['', 'b', 'c']))
+    assert_equal(cells.properties['bar'], np.array([0, 3, 4]))
+
+
 def test_circuit_seeds():
     cells = test_module.CellCollection()
     cells.seeds = (1, 2, 3, 4)
