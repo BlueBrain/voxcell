@@ -2,11 +2,10 @@
 
 import numpy as np
 import nrrd
-import quaternion as quat
 
 from voxcell import math_utils
 from voxcell.exceptions import VoxcellError
-from voxcell.utils import deprecate
+from voxcell.utils import deprecate, quat
 
 
 def _pivot_axes(a, k):

@@ -3,12 +3,11 @@
 import h5py
 import numpy as np
 import pandas as pd
-import quaternion as quat
 
 from six import iteritems, text_type
 
 from voxcell.exceptions import VoxcellError
-from voxcell.utils import deprecate
+from voxcell.utils import deprecate, quat
 
 
 def matrices_to_quaternions(m):
