@@ -34,6 +34,8 @@ def test_positions_to_indices():
     raw = np.zeros(2)
     v = test_module.VoxelData(raw, voxel_dimensions=(10.0,), offset=(10.0,))
     assert_equal(v.positions_to_indices([15., 25.]), [0, 1])
+    assert_equal(v.positions_to_indices([15., 25.], keep_fraction=True), [0.5, 1.5])
+
     # border effects
     assert_equal(v.positions_to_indices([9.9999999]), [0])
     assert_equal(v.positions_to_indices([19.9999999]), [0])

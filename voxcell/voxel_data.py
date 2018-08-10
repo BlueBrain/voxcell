@@ -166,11 +166,22 @@ class VoxelData(object):
         voxel_idx_tuple = tuple(voxel_idx.transpose())
         return self.raw[voxel_idx_tuple]
 
-    def positions_to_indices(self, positions, strict=True):
-        '''take positions, and figure out to which voxel they belong'''
+    def positions_to_indices(self, positions, strict=True, keep_fraction=False):
+        '''take positions, and the index of the voxel to which they belong
+
+        Args:
+            positions(np.array of Nx3): positions in voxel volume
+            strict(bool): raise VoxcellError if any of the positions are out of bounds
+            keep_fraction(bool): keep the fractional portion of the positions
+
+        Returns:
+            np.array(Nx3) with the voxels coordinates corresponding to each position.
+
+        '''
         result = (positions - self.offset) / self.voxel_dimensions
         result[np.abs(result) < 1e-7] = 0.  # suppress rounding errors around 0
-        result = np.floor(result).astype(np.int)
+        if not keep_fraction:
+            result = np.floor(result).astype(np.int)
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
         result[result >= self.shape] = VoxelData.OUT_OF_BOUNDS
         if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
