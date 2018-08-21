@@ -33,7 +33,7 @@ setup(
         'numpy>=1.9',
         'numpy-quaternion>=2018.5.17',
         'pandas>=0.17',
-        'pynrrd>=0.2',
+        'pynrrd>=0.2,<0.3.0',
         'requests>=2.18',
         'scipy>=0.13',
         'six>=1.0',
