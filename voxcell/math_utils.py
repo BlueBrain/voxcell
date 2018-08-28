@@ -96,3 +96,17 @@ def normalize(vs):
     norm = np.linalg.norm(vs, axis=-1)
     norm = np.where(norm > 0, norm, 1.0)
     return vs / norm[..., np.newaxis]
+
+
+def isin(a, values):
+    """
+    "Naive" NumPy.isin() analogue.
+
+    For our usecases (>10^9 non-unique elements in `a`, <10^2 unique elements in tested `values`),
+    NumPy.isin() takes same amount of time, but is 3x more memory-hungry.
+    """
+    a = np.asarray(a)
+    result = np.full_like(a, False, dtype=np.bool)
+    for v in set(values):
+        result |= (a == v)
+    return result

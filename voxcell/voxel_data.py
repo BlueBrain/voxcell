@@ -288,7 +288,7 @@ class VoxelData(object):
         Returns:
             None if `inplace` is True, new VoxelData otherwise
         """
-        mask = np.logical_not(np.isin(self.raw, na_values))
+        mask = np.logical_not(math_utils.isin(self.raw, na_values))
         aabb = math_utils.minimum_aabb(mask)
 
         raw = math_utils.clip(self.raw, aabb)

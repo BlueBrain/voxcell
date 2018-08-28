@@ -85,3 +85,37 @@ def test_normalize_1():
 
 def test_normalize_3():
     npt.assert_equal(test_module.normalize([[1, 0, 0], [0, 0, 0]]), [[1, 0, 0], [0, 0, 0]])
+
+
+def test_isin_empty():
+    npt.assert_equal(test_module.isin([], [1, 2]), [])
+
+
+def test_isin_0():
+    npt.assert_equal(
+        test_module.isin(
+            [[1, 2], [2, 3]],
+            []
+        ),
+        [[False, False], [False, False]]
+    )
+
+
+def test_isin_1():
+    npt.assert_equal(
+        test_module.isin(
+            [[1, 2], [2, 3]],
+            [2, 4, 4]
+        ),
+        [[False, True], [True, False]]
+    )
+
+
+def test_isin_2():
+    npt.assert_equal(
+        test_module.isin(
+            [[1, 2], [2, 3]],
+            set([1, 2, 3, 5])
+        ),
+        [[True, True], [True, True]]
+    )

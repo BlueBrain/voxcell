@@ -14,9 +14,9 @@ except ImportError:
     # pylint: disable=no-name-in-module,import-error
     from urllib import parse as urlparse
 
-import numpy as np
 
 from voxcell import VoxelData, Hierarchy, RegionMap
+from voxcell import math_utils
 
 from voxcell.exceptions import VoxcellError
 
@@ -127,7 +127,7 @@ class Atlas(object):
             )
             if not region_ids:
                 raise VoxcellError("Region not found: '%s'" % value)
-            result = np.isin(brain_regions.raw, list(region_ids))
+            result = math_utils.isin(brain_regions.raw, region_ids)
             return brain_regions.with_data(result)
 
         return self._check_cache(
