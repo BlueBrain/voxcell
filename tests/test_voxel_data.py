@@ -188,10 +188,6 @@ def test_orientation_field():
     field = test_module.OrientationField(np.array([[1., 0., 0., 0.]]), voxel_dimensions=(2,))
     npt.assert_almost_equal(
         field.lookup([1.]),
-        np.identity(3)
-    )
-    npt.assert_almost_equal(
-        field.lookup([[1.]]),
         [np.identity(3)]
     )
 
@@ -199,10 +195,6 @@ def test_orientation_field_compact():
     field = test_module.OrientationField(np.array([[127, 0, 0, 0]], dtype=np.int8), voxel_dimensions=(2,))
     npt.assert_almost_equal(
         field.lookup([1.]),
-        np.identity(3)
-    )
-    npt.assert_almost_equal(
-        field.lookup([[1.]]),
         [np.identity(3)]
     )
 

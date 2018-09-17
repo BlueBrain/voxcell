@@ -1,4 +1,4 @@
-import voxcell.cell_collection as test_module
+import voxcell.quaternion as test_module
 
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
@@ -39,6 +39,18 @@ def test_quaternion_90_y():
                   [-1, 0, 0]])
 
     q = np.array([0., 0.707107, 0., 0.707107])
+
+    check_matrices_to_quaternions(1, m, q)
+    check_matrices_to_quaternions(2, m, q)
+    check_matrices_to_quaternions(100, m, q)
+
+
+def test_quaternion_copysign():
+    # copysign should not affect our implementaton
+    # see:
+    # http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/paul.htm
+    m = np.diag([1, 1, -1])
+    q = np.array([0, 0, 0, 1])
 
     check_matrices_to_quaternions(1, m, q)
     check_matrices_to_quaternions(2, m, q)

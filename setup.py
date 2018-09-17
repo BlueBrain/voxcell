@@ -31,7 +31,6 @@ setup(
         'future>=0.16',
         'h5py>=2.3',
         'numpy>=1.9',
-        'numpy-quaternion>=2018.5.17',
         'pandas>=0.17',
         'pynrrd>=0.2,<0.3.0',
         'requests>=2.18',

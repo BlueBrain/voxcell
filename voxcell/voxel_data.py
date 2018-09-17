@@ -5,7 +5,8 @@ import nrrd
 
 from voxcell import math_utils
 from voxcell.exceptions import VoxcellError
-from voxcell.utils import deprecate, quat
+from voxcell.quaternion import quaternions_to_matrices
+from voxcell.utils import deprecate
 
 
 def _pivot_axes(a, k):
@@ -337,4 +338,7 @@ class OrientationField(VoxelData):
         if result.dtype == np.int8:
             result = result / 127.0
 
-        return quat.as_rotation_matrix(quat.from_float_array(result))
+        # change quaternion component order: (w, x, y, z) -> (x, y, z, w)
+        result = np.roll(result, -1, axis=-1)
+
+        return quaternions_to_matrices(result)
