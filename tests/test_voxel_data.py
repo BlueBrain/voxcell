@@ -151,7 +151,7 @@ def test_clip_out_of_bounds():
 def test_filter():
     raw = np.array([[11, 12], [21, 22]])
     original = test_module.VoxelData(raw, voxel_dimensions=(2, 6), offset=(10, 20))
-    filtered = original.filter(lambda p: p[0] > 12 and p[1] > 26)
+    filtered = original.filter(lambda p: np.logical_and(p[..., 0] > 12, p[..., 1] > 26))
     assert_equal(original.raw, raw)
     assert_equal(filtered.raw, [[0, 0], [0, 22]])
     assert_equal(filtered.raw, [[0, 0], [0, 22]])
@@ -161,7 +161,7 @@ def test_filter():
 
 def test_filter_inplace():
     original = test_module.VoxelData(np.array([[11, 12], [21, 22]]), (2, 6), offset=(10, 20))
-    original.filter(lambda p: p[0] > 12 and p[1] > 26, inplace=True)
+    original.filter(lambda p: np.logical_and(p[..., 0] > 12, p[..., 1] > 26), inplace=True)
     assert_equal(original.raw, [[0, 0], [0, 22]])
 
 

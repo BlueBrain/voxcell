@@ -261,7 +261,7 @@ class VoxelData(object):
         """ Set values for voxel positions not satisfying `predicate` to zero.
 
             Args:
-                predicate: (x_1,..,x_k) -> bool
+                predicate: N x k [float] -> N x 1 [bool]
                 inplace(bool): modify data inplace
 
             Returns:
@@ -269,7 +269,7 @@ class VoxelData(object):
         """
         ijk = np.stack(np.mgrid[[slice(0, d) for d in self.shape]], axis=-1)
         xyz = self.indices_to_positions(0.5 + ijk)
-        mask = np.apply_along_axis(predicate, -1, xyz)
+        mask = predicate(xyz)
         if inplace:
             self.raw[np.invert(mask)] = 0
             return None
