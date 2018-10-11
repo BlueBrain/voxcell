@@ -269,7 +269,7 @@ class VoxelData(object):
         """
         ijk = np.stack(np.mgrid[[slice(0, d) for d in self.shape]], axis=-1)
         xyz = self.indices_to_positions(0.5 + ijk)
-        mask = predicate(xyz)
+        mask = predicate(xyz.reshape(-1, self.ndim)).reshape(self.shape)
         if inplace:
             self.raw[np.invert(mask)] = 0
             return None
