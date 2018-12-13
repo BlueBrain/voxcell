@@ -26,33 +26,38 @@ class TestLocalAtlas(object):
     def test_class(self):
         nt.assert_is_instance(self.atlas, test_module.LocalAtlas)
 
+    @patch('os.path.exists', return_value=True)
     @patch('voxcell.Hierarchy.load_json', return_value='test')
-    def test_load_hierarchy(self, mock):
+    def test_load_hierarchy(self, mock, _):
         actual = self.atlas.load_hierarchy()
         nt.assert_equal(actual, 'test')
         mock.assert_called_with('/foo/hierarchy.json')
 
+    @patch('os.path.exists', return_value=True)
     @patch('voxcell.RegionMap.load_json', return_value='test')
-    def test_load_region_map(self, mock):
+    def test_load_region_map(self, mock, _):
         actual = self.atlas.load_region_map()
         nt.assert_equal(actual, 'test')
         mock.assert_called_with('/foo/hierarchy.json')
 
+    @patch('os.path.exists', return_value=True)
     @patch('voxcell.VoxelData.load_nrrd', return_value='test')
-    def test_load_data_1(self, mock):
+    def test_load_data_1(self, mock, _):
         actual = self.atlas.load_data('bar')
         nt.assert_equal(actual, 'test')
         mock.assert_called_with('/foo/bar.nrrd')
 
+    @patch('os.path.exists', return_value=True)
     @patch('voxcell.OrientationField.load_nrrd', return_value='test')
-    def test_load_data_2(self, mock):
+    def test_load_data_2(self, mock, _):
         actual = self.atlas.load_data('bar', cls=OrientationField)
         nt.assert_equal(actual, 'test')
         mock.assert_called_with('/foo/bar.nrrd')
 
+    @patch('os.path.exists', return_value=True)
     @patch('voxcell.VoxelData.load_nrrd')
     @patch('voxcell.RegionMap.load_json')
-    def test_get_region_mask(self, mock_rmap, mock_data):
+    def test_get_region_mask(self, mock_rmap, mock_data, _):
         mock_rmap.return_value = RegionMap.from_dict({
             'id': 1,
             'acronym': 'A',

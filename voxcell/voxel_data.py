@@ -245,7 +245,7 @@ class VoxelData(object):
         if np.any(aa > bb):
             raise VoxcellError("Empty slice")
 
-        indices = [range(a, b + 1) for a, b in zip(aa, bb)]
+        indices = tuple(range(a, b + 1) for a, b in zip(aa, bb))
 
         if inplace:
             mask = np.full_like(self.raw, False, dtype=bool)

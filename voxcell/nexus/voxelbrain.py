@@ -67,12 +67,12 @@ class Atlas(object):
             raise VoxcellError("Unexpected URL: '%s'" % url)
 
     @abc.abstractmethod
-    def _fetch_data(self, data_type):
+    def fetch_data(self, data_type):
         """ Fetch `data_type` NRRD. """
         pass
 
     @abc.abstractmethod
-    def _fetch_hierarchy(self):
+    def fetch_hierarchy(self):
         """ Fetch brain region hierarchy JSON. """
         pass
 
@@ -87,7 +87,7 @@ class Atlas(object):
     def load_data(self, data_type, cls=VoxelData, memcache=False):
         """ Load atlas data layer. """
         def _callback():
-            return cls.load_nrrd(self._fetch_data(data_type))
+            return cls.load_nrrd(self.fetch_data(data_type))
 
         return self._check_cache(
             ('data', data_type, cls),
@@ -98,7 +98,7 @@ class Atlas(object):
     def load_hierarchy(self, memcache=False):
         """ Load brain region hierarchy. """
         def _callback():
-            return Hierarchy.load_json(self._fetch_hierarchy())
+            return Hierarchy.load_json(self.fetch_hierarchy())
 
         return self._check_cache(
             ('hierarchy',),
@@ -109,7 +109,7 @@ class Atlas(object):
     def load_region_map(self, memcache=False):
         """ Load brain region hierarchy as RegionMap. """
         def _callback():
-            return RegionMap.load_json(self._fetch_hierarchy())
+            return RegionMap.load_json(self.fetch_hierarchy())
 
         return self._check_cache(
             ('region_map',),
@@ -150,7 +150,8 @@ class VoxelBrainAtlas(Atlas):
         if not os.path.exists(self._cache_dir):
             os.makedirs(self._cache_dir)
 
-    def _fetch_data(self, data_type):
+    def fetch_data(self, data_type):
+        """ Fetch `data_type` NRRD. """
         resp = requests.get(self._url + "/data")
         resp.raise_for_status()
         data_types = []
@@ -168,7 +169,8 @@ class VoxelBrainAtlas(Atlas):
         filepath = os.path.join(self._cache_dir, "%s.nrrd" % data_type)
         return _download_file(url, filepath, overwrite=False)
 
-    def _fetch_hierarchy(self):
+    def fetch_hierarchy(self):
+        """ Fetch brain region hierarchy JSON. """
         url = self._url + "/filters/brain_region/65535"
         filepath = os.path.join(self._cache_dir, "hierarchy.json")
         return _download_file(url, filepath, overwrite=False)
@@ -180,8 +182,16 @@ class LocalAtlas(Atlas):
         super(LocalAtlas, self).__init__()
         self.dirpath = dirpath
 
-    def _fetch_data(self, data_type):
-        return os.path.join(self.dirpath, "%s.nrrd" % data_type)
+    def _get_filepath(self, filename):
+        result = os.path.join(self.dirpath, filename)
+        if not os.path.exists(result):
+            raise VoxcellError("File not found: '%s'" % result)
+        return result
 
-    def _fetch_hierarchy(self):
-        return os.path.join(self.dirpath, "hierarchy.json")
+    def fetch_data(self, data_type):
+        """ Return filepath to `data_type` NRRD. """
+        return self._get_filepath("%s.nrrd" % data_type)
+
+    def fetch_hierarchy(self):
+        """ Return filepath to brain region hierarchy JSON. """
+        return self._get_filepath("hierarchy.json")

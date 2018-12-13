@@ -14,7 +14,7 @@ NOFIELD = np.array([])
 
 def test_split_distribution_collection_empty_0():
     probabilities = pd.DataFrame()
-    attributes = ('name',)
+    attributes = ['name']
     traits = pd.DataFrame(columns=attributes)
 
     eq_(SpatialDistribution(NOFIELD, probabilities, traits).split(attributes),
@@ -24,7 +24,7 @@ def test_split_distribution_collection_empty_0():
 def test_split_distribution_collection_empty_1():
     traits = pd.DataFrame([{'name': 'a'}])
     distributions = pd.DataFrame(index=traits.index)
-    attributes = ('name',)
+    attributes = 'name'
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
     eq_(sorted(res.keys()), ['a'])
@@ -35,7 +35,7 @@ def test_split_distribution_collection_empty_1():
 def test_split_distribution_collection_empty_2():
     traits = pd.DataFrame([{'name': 'a'}, {'name': 'b'}])
     distributions = pd.DataFrame(index=traits.index)
-    attributes = ('name',)
+    attributes = 'name'
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
     eq_(sorted(res.keys()), ['a', 'b'])
@@ -47,7 +47,7 @@ def test_split_distribution_collection_empty_2():
 def test_split_distribution_collection_single_0():
     distributions = pd.DataFrame([{0: 1.}])
     traits = pd.DataFrame([{'name': 'a'}])
-    attributes = ('name',)
+    attributes = 'name'
 
     # {('a',): SD(NOFIELD, [{0: 1}], traits)})
 
@@ -60,7 +60,7 @@ def test_split_distribution_collection_single_0():
 def test_split_distribution_collection_single_1():
     distributions = pd.DataFrame([0.25, 0.75])
     traits = pd.DataFrame([{'name': 'a'}, {'name': 'b'}])
-    attributes = ('name',)
+    attributes = 'name'
 
     # {('a',): SD(NOFIELD, [{0: 1.0}], traits), ('b',): SD(NOFIELD, [{1: 1.0}], traits)})
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
@@ -72,7 +72,7 @@ def test_split_distribution_collection_single_1():
 def test_split_distribution_collection_single_2():
     distributions = pd.DataFrame([0.2, 0.4, 0.4])
     traits = pd.DataFrame([{'name': 'a'}, {'name': 'b'}, {'name': 'b'}])
-    attributes = ('name',)
+    attributes = 'name'
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
     eq_(sorted(res.keys()), ['a', 'b'])
@@ -86,7 +86,7 @@ def test_split_distribution_collection_multiattr_0():
                            {'name': 'b', 'type': 'y'},
                            {'name': 'b', 'type': 'y'}])
 
-    attributes = ('name', 'type')
+    attributes = ['name', 'type']
 
     # {('a', 'x'): SD(NOFIELD, [{0: 1.0}], traits),
     #  ('b', 'y'): SD(NOFIELD, [{1: 0.5, 2: 0.5}], traits)})
@@ -103,7 +103,7 @@ def test_split_distribution_collection_multiattr_1():
                            {'name': 'b', 'type': 'x'},
                            {'name': 'b', 'type': 'y'}])
 
-    attributes = ('name', 'type')
+    attributes = ['name', 'type']
 
     res = SpatialDistribution(NOFIELD, distributions, traits).split(attributes)
     eq_(sorted(res.keys()), [('a', 'x'), ('b', 'x'), ('b', 'y')])

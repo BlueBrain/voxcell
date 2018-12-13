@@ -100,7 +100,7 @@ class SpatialDistribution(object):
 
         preassigned = preassigned.to_frame() if isinstance(preassigned, pd.Series) else preassigned
 
-        subsections = self.split(tuple(preassigned.columns))
+        subsections = self.split(list(preassigned.columns))
         chosen = np.ones(shape=(len(preassigned)), dtype=np.int) * -1
 
         unique_assigned = preassigned.drop_duplicates()

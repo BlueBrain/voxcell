@@ -72,6 +72,10 @@ def random_orientations(n):
                            np.random.random(n) * np.pi * 2)
 
 
+def random_positions(n):
+    return np.random.random((n, 3))
+
+
 @contextmanager
 def tempcwd():
     '''timer contextmanager'''
@@ -143,7 +147,7 @@ def test_roundtrip_properties_text_multiple():
 
 def test_roundtrip_positions():
     cells = test_module.CellCollection()
-    cells.positions = np.random.random((10, 3))
+    cells.positions = random_positions(10)
     check_roundtrip(cells)
 
 
@@ -157,7 +161,7 @@ def test_roundtrip_complex():
     cells = test_module.CellCollection()
     n = 10
 
-    cells.positions = np.random.random((n, 3))
+    cells.positions = random_positions(n)
     cells.orientations = random_orientations(n)
     cells.properties['synapse_class'] = np.random.choice(['INH', 'EXC'], n)
     cells.properties['mtype'] = np.random.choice(['L5_NGC', 'L5_BTC', 'L6_LBC'], n)
@@ -170,31 +174,52 @@ def test_roundtrip_complex():
     check_roundtrip(cells)
 
 
-def test_remove_unassigned():
-    ''' test that cells with unassigned properties are removed '''
+def test_remove_unassigned_1():
     cells = test_module.CellCollection()
     n = 5
-
-    cells.positions = np.random.random((n, 3))
-    cells.orientations = random_orientations(n)
-    cells.properties['foo'] = np.array(['', 'a', None, 'b', 'c'])
-    cells.properties['bar'] = np.array([0, None, 2, 3, 4])
+    positions = random_positions(n)
+    orientations = random_orientations(n)
+    cells.positions = positions
+    cells.orientations = orientations
+    cells.properties = pd.DataFrame({
+        'foo': ['', 'a', None, 'b', 'c'],
+        'bar': [0., None, 2., 3., 4.]
+    })
     cells.remove_unassigned_cells()
-    eq_(len(cells.positions), 3)
-    eq_(len(cells.orientations), 3)
-    assert_equal(cells.properties['foo'], np.array(['', 'b', 'c']))
-    assert_equal(cells.properties['bar'], np.array([0, 3, 4]))
+    assert_equal(cells.positions, positions[[0, 3, 4]])
+    assert_equal(cells.orientations, orientations[[0, 3, 4]])
+    assert_frame_equal(
+        cells.properties,
+        pd.DataFrame({
+            'foo': ['', 'b', 'c'],
+            'bar': [0., 3., 4.]
+        })
+    )
 
 
-def test_remove_unassigned_none():
+def test_remove_unassigned_2():
     cells = test_module.CellCollection()
-    cells.properties['foo'] = np.array(['', 'a', None, 'b', 'c'])
-    cells.properties['bar'] = np.array([0, None, 2, 3, 4])
+    n = 2
+    cells.positions = random_positions(n)
+    cells.orientations = random_orientations(n)
+    cells.properties = pd.DataFrame({
+        'foo': ['a', 'b'],
+        'bar': [0, 1],
+    })
+    cells.remove_unassigned_cells()
+    assert_equal(len(cells.positions), n)
+    assert_equal(len(cells.orientations), n)
+    assert_equal(len(cells.properties), n)
+
+
+def test_remove_unassigned_3():
+    cells = test_module.CellCollection()
+    cells.properties = pd.DataFrame({
+        'foo': ['a', None],
+    })
     cells.remove_unassigned_cells()
     assert_is_none(cells.positions)
     assert_is_none(cells.orientations)
-    assert_equal(cells.properties['foo'], np.array(['', 'b', 'c']))
-    assert_equal(cells.properties['bar'], np.array([0, 3, 4]))
 
 
 def test_circuit_seeds():
@@ -283,7 +308,7 @@ def test_from_dataframe_no_positions():
 
 def test_to_from_dataframe():
     cells = test_module.CellCollection()
-    cells.positions = np.random.random((3, 3))
+    cells.positions = random_positions(3)
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
 

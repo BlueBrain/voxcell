@@ -41,6 +41,7 @@ class CellCollection(object):
         ''' remove cells with one or more unassigned property '''
         idx_unassigned = self.properties[self.properties.isnull().any(axis=1)].index
         self.properties = self.properties.drop(idx_unassigned)
+        self.properties.reset_index(inplace=True, drop=True)
         if self.orientations is not None:
             self.orientations = np.delete(self.orientations, idx_unassigned, 0)
         if self.positions is not None:

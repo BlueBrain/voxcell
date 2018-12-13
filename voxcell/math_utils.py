@@ -53,7 +53,7 @@ def clip(mask, aabb):
     Returns:
         A new numpy array containing the same values as mask for the space defined by aabb
     '''
-    idx = [slice(s, e + 1) for s, e in zip(*aabb)]
+    idx = tuple(slice(s, e + 1) for s, e in zip(*aabb))
     return mask[idx].copy()
 
 
