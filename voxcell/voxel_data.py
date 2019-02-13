@@ -156,7 +156,7 @@ class VoxelData(object):
         outer_mask = np.any(voxel_idx == VoxelData.OUT_OF_BOUNDS, axis=-1)
         if np.any(outer_mask):
             result = np.full(voxel_idx.shape[:-1], outer_value)
-            inner_mask = np.logical_not(outer_mask)
+            inner_mask = np.logical_not(outer_mask)  # pylint: disable=assignment-from-no-return
             result[inner_mask] = self._lookup_by_indices(voxel_idx[inner_mask])
         else:
             result = self._lookup_by_indices(voxel_idx)
@@ -289,7 +289,9 @@ class VoxelData(object):
         Returns:
             None if `inplace` is True, new VoxelData otherwise
         """
-        mask = np.logical_not(math_utils.isin(self.raw, na_values))
+        mask = np.logical_not(  # pylint: disable=assignment-from-no-return
+            math_utils.isin(self.raw, na_values)
+        )
         aabb = math_utils.minimum_aabb(mask)
 
         raw = math_utils.clip(self.raw, aabb)
@@ -342,3 +344,17 @@ class OrientationField(VoxelData):
         result = np.roll(result, -1, axis=-1)
 
         return quaternions_to_matrices(result)
+
+
+class ROIMask(VoxelData):
+    """
+    Volumetric data defining 0/1 mask.
+
+    See also:
+        https://bbpteam.epfl.ch/project/spaces/pages/viewpage.action?pageId=27234876
+    """
+    def __init__(self, *args, **kwargs):
+        super(ROIMask, self).__init__(*args, **kwargs)
+        if self.raw.dtype not in (np.int8, np.uint8, np.bool):
+            raise VoxcellError("Invalid dtype: '%s' (expected: '(u)int8')" % self.raw.dtype)
+        self.raw = self.raw.astype(np.bool)

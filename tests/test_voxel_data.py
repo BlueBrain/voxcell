@@ -206,3 +206,15 @@ def test_orientation_field_raises():
         VoxcellError,
         test_module.OrientationField, np.zeros((3, 3)), voxel_dimensions=(1,)
     )
+
+def test_roi_mask():
+    field = test_module.ROIMask(np.array([1, 0, 0, 0], dtype=np.uint8), voxel_dimensions=(2,))
+    actual = field.lookup([[1.], [3]])
+    nt.assert_equal(actual.dtype, 'bool')
+    npt.assert_equal(actual, [True, False])
+
+def test_test_roi_mask_raises():
+    nt.assert_raises(
+        VoxcellError,
+        test_module.ROIMask, np.zeros(4, dtype=np.int64), voxel_dimensions=(1,)
+    )

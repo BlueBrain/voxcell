@@ -7,12 +7,10 @@ from voxcell.exceptions import VoxcellError
 
 class VoxcellDeprecationWarning(UserWarning):
     """ voxcell deprecation warning. """
-    pass
 
 
 class VoxcellDeprecationError(VoxcellError):
     """ voxcell deprecation error. """
-    pass
 
 
 def fail(msg=None):

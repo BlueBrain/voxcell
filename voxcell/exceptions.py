@@ -3,4 +3,3 @@
 
 class VoxcellError(Exception):
     """ Base class for voxcell exceptions. """
-    pass

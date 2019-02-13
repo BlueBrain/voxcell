@@ -69,12 +69,10 @@ class Atlas(object):
     @abc.abstractmethod
     def fetch_data(self, data_type):
         """ Fetch `data_type` NRRD. """
-        pass
 
     @abc.abstractmethod
     def fetch_hierarchy(self):
         """ Fetch brain region hierarchy JSON. """
-        pass
 
     def _check_cache(self, key, callback, memcache):
         if key in self._memcache:
