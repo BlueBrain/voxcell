@@ -125,11 +125,12 @@ class VoxelData(object):
 
         return cls(raw, spacings, offset)
 
-    def save_nrrd(self, nrrd_path):
+    def save_nrrd(self, nrrd_path, encoding=None):
         '''save a VoxelData to an nrrd file
 
         Args:
             nrrd_path(string): full path to nrrd file
+            encoding(string): encoding option to save as
         '''
         # from http://teem.sourceforge.net/nrrd/format.html#space
         options = {
@@ -137,6 +138,10 @@ class VoxelData(object):
             'space directions': np.diag(self.voxel_dimensions),
             'space origin': self.offset,
         }
+
+        if encoding is not None:
+            options['encoding'] = encoding
+
         # In NRRD 'payload' axes should go first, move them to the beginning
         nrrd_data = _pivot_axes(self.raw, self.ndim)
         nrrd.write(nrrd_path, nrrd_data, options=options)

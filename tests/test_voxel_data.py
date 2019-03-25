@@ -77,7 +77,12 @@ def test_save_nrrd():
         ok_(np.allclose(vd.raw, new.raw))
         ok_(np.allclose(vd.voxel_dimensions, new.voxel_dimensions))
         ok_(np.allclose(vd.offset, new.offset))
-
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+        vd.save_nrrd(f.name, encoding='raw')
+        f.flush()
+        f.seek(0)
+        new = test_module.VoxelData.load_nrrd(f.name)
+        ok_(np.allclose(vd.raw, new.raw))
 
 def test_shape_checks():
     raw = np.zeros(shape=(2, 2))
