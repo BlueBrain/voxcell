@@ -119,3 +119,94 @@ def test_isin_2():
         ),
         [[True, True], [True, True]]
     )
+
+
+def test_euler2mat():
+    pi2 = np.pi / 2
+    pi3 = np.pi / 3
+    pi4 = np.pi / 4
+    pi6 = np.pi / 6
+    actual = test_module.euler2mat(
+        [0.0, pi2, pi3],  # rotation_angle_z
+        [pi2, 0.0, pi4],  # rotation_angle_y
+        [pi2, pi2, pi6],  # rotation_angle_x
+    )
+    expected = np.array([
+        [
+            [0., 0., 1.],
+            [1., 0., 0.],
+            [0., 1., 0.],
+        ],
+        [
+            [0., -1.,  0.],
+            [0.,  0., -1.],
+            [1.,  0.,  0.],
+        ],
+        [
+            [0.35355339, -0.61237244,  0.70710678],
+            [0.92677670,  0.12682648, -0.35355339],
+            [0.12682648,  0.78033009,  0.61237244],
+        ]
+    ])
+    npt.assert_almost_equal(actual, expected)
+
+
+def test_mat2euler_roundtrip():
+    original = np.asarray([
+        [
+            # ay = pi / 2
+            [0., 0., 1.],
+            [1., 0., 0.],
+            [0., 1., 0.],
+        ],
+        [
+            # ay = -pi / 2
+            [ 0., 0., -1.],
+            [ 0., 1.,  0.],
+            [ 1., 0.,  0.],
+        ],
+        [
+            # ay = pi / 4
+            [0.35355339, -0.61237244,  0.70710678],
+            [0.92677670,  0.12682648, -0.35355339],
+            [0.12682648,  0.78033009,  0.61237244],
+        ]
+    ])
+    actual = test_module.euler2mat(
+        *test_module.mat2euler(original)
+    )
+    npt.assert_almost_equal(original, actual)
+
+
+def _random_angles(n):
+    return 2 * np.pi * np.random.random(n)
+
+
+def test_mat2euler_roundtrip_random():
+    n = 100
+    az = _random_angles(n)
+    ay = _random_angles(n)
+    ax = _random_angles(n)
+    mm = test_module.euler2mat(az, ay, ax)
+    actual = test_module.euler2mat(
+        *test_module.mat2euler(mm)
+    )
+
+
+@nt.raises(AssertionError)
+def test_mat2euler_raises_1():
+    test_module.mat2euler(np.asarray([
+        [0., -1.,  0.],
+        [0.,  0., -1.],
+        [1.,  0.,  0.],
+    ]))
+
+
+@nt.raises(AssertionError)
+def test_mat2euler_raises_2():
+    test_module.mat2euler(np.asarray([
+        [
+            [0., -1.],
+            [1.,  0.],
+        ]
+    ]))

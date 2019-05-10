@@ -5,16 +5,18 @@
 import imp
 import sys
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup, find_packages
 
 
 if sys.version_info < (2, 7):
     sys.exit("Python < 2.7 is no longer supported from version 1.4.0")
 
 VERSION = imp.load_source("voxcell.version", "voxcell/version.py").VERSION
+
+SONATA_REQUIRES = [
+    'libsonata>=0.0.1,<1.0',
+]
+
 
 setup(
     name='voxcell',
@@ -37,9 +39,9 @@ setup(
         'scipy>=0.13',
         'six>=1.0',
     ],
-    packages=[
-        'voxcell',
-        'voxcell.nexus',
-        'voxcell.utils',
-    ]
+    extras_require={
+        'all': SONATA_REQUIRES,
+        'sonata': SONATA_REQUIRES,
+    },
+    packages=find_packages()
 )

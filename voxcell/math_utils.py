@@ -110,3 +110,78 @@ def isin(a, values):
     for v in set(values):
         result |= (a == v)
     return result
+
+
+def euler2mat(az, ay, ax):
+    """
+    Build 3x3 rotation matrices from az, ay, ax rotation angles (in that order).
+
+    Args:
+        az: rotation angles around Z (Nx1 NumPy array; radians)
+        ay: rotation angles around Y (Nx1 NumPy array; radians)
+        ax: rotation angles around X (Nx1 NumPy array; radians)
+
+    Returns:
+        List with 3x3 rotation matrices corresponding to each of N angle triplets.
+
+    See also:
+        https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (R = X1 * Y2 * Z3)
+    """
+
+    c1, s1 = np.cos(ax), np.sin(ax)
+    c2, s2 = np.cos(ay), np.sin(ay)
+    c3, s3 = np.cos(az), np.sin(az)
+
+    mm = np.array([
+        [c2 * c3, -c2 * s3, s2],
+        [c1 * s3 + c3 * s1 * s2, c1 * c3 - s1 * s2 * s3, -c2 * s1],
+        [s1 * s3 - c1 * c3 * s2, c3 * s1 + c1 * s2 * s3, c1 * c2],
+    ])
+
+    return np.asarray([mm[..., i] for i in range(len(az))])
+
+
+def mat2euler(mm):
+    """
+    Decompose 3x3 rotation matrices into az, ay, ax rotation angles (in that order).
+
+    Args:
+        List with 3x3 rotation matrices.
+
+    Returns:
+        az: rotation angles around Z (Nx1 NumPy array; radians)
+        ay: rotation angles around Y (Nx1 NumPy array; radians)
+        ax: rotation angles around X (Nx1 NumPy array; radians)
+
+    See also:
+        https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (R = X1 * Y2 * Z3)
+    """
+    assert len(mm.shape) == 3
+    assert tuple(mm.shape[1:]) == (3, 3)
+
+    az = np.full(mm.shape[0], np.nan)
+    ay = np.full(mm.shape[0], np.nan)
+    ax = np.full(mm.shape[0], np.nan)
+
+    sin_ay = mm[:, 0, 2]
+
+    mask1 = np.isclose(sin_ay, 1.0)
+    az[mask1] = 0.0
+    ay[mask1] = np.pi / 2
+    ax[mask1] = np.arctan2(mm[:, 1, 0][mask1], mm[:, 1, 1][mask1])
+
+    mask2 = np.isclose(sin_ay, -1.0)
+    az[mask2] = 0.0
+    ay[mask2] = -np.pi / 2
+    ax[mask2] = np.arctan2(-mm[:, 1, 0][mask2], mm[:, 1, 1][mask2])
+
+    mask3 = np.logical_not(np.logical_or(mask1, mask2))
+    az[mask3] = np.arctan2(-mm[:, 0, 1][mask3], mm[:, 0, 0][mask3])
+    ay[mask3] = np.arcsin(sin_ay[mask3])
+    ax[mask3] = np.arctan2(-mm[:, 1, 2][mask3], mm[:, 2, 2][mask3])
+
+    assert not np.any(np.isnan(az))
+    assert not np.any(np.isnan(ay))
+    assert not np.any(np.isnan(ax))
+
+    return (az, ay, ax)
