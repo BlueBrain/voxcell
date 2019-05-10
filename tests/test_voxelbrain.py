@@ -75,11 +75,28 @@ class TestLocalAtlas(object):
             [True, False, True]
         )
         npt.assert_equal(
+            self.atlas.get_region_mask('a', ignore_case=True).raw,
+            [True, False, True]
+        )
+        nt.assert_raises(
+            VoxcellError,
+            self.atlas.get_region_mask, 'a'
+        )
+        npt.assert_equal(
             self.atlas.get_region_mask('A', with_descendants=False).raw,
             [True, False, False]
         )
         npt.assert_equal(
-            self.atlas.get_region_mask('aa', attr='name').raw,
+            self.atlas.get_region_mask('aa', attr='name',
+                                       ignore_case=True).raw,
+            [True, False, True]
+        )
+        nt.assert_raises(
+            VoxcellError,
+            self.atlas.get_region_mask, 'aa'
+        )
+        npt.assert_equal(
+            self.atlas.get_region_mask('aA', attr='name').raw,
             [True, False, True]
         )
         nt.assert_raises(

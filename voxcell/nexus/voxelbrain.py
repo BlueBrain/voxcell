@@ -115,13 +115,16 @@ class Atlas(object):
             memcache=memcache
         )
 
-    def get_region_mask(self, value, attr='acronym', with_descendants=True, memcache=False):
+    def get_region_mask(self, value, attr='acronym', with_descendants=True,
+                        ignore_case=False, memcache=False):
         """ VoxelData with 0/1 mask indicating regions matching `value`. """
+
         def _callback():
             rmap = self.load_region_map()
             brain_regions = self.load_data('brain_regions')
             region_ids = rmap.find(
-                value, attr=attr, with_descendants=with_descendants, ignore_case=True
+                value, attr=attr, with_descendants=with_descendants,
+                ignore_case=ignore_case
             )
             if not region_ids:
                 raise VoxcellError("Region not found: '%s'" % value)
