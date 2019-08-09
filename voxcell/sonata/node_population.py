@@ -33,6 +33,11 @@ def _open_population(h5_filepath):
 
 class DataFrameProxy(pd.DataFrame):
     """ Pandas DataFrame with some restrictions on adding columns. """
+    # pylint: disable=abstract-method
+    # newer pylints complain about the missing _constructor_expanddim property
+    # being abstract, but I don't think it makes sense to have it - I could be wrong,
+    # if people get 'method not implemented', then we'll have to add it.
+
     def __init__(self, size):
         super(DataFrameProxy, self).__init__(index=np.arange(size))
 

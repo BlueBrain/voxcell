@@ -22,7 +22,6 @@ class CellCollection(object):
         self.positions = None
         self.orientations = None
         self.properties = pd.DataFrame()
-        self.seeds = np.random.random(4)  # used by Functionalizer later (sic!)
 
     def add_properties(self, new_properties, overwrite=True):
         '''adds new columns to the properties DataFrame
@@ -97,11 +96,6 @@ class CellCollection(object):
                 f.create_dataset('cells/orientations',
                                  data=matrices_to_quaternions(self.orientations))
 
-            # TODO this should be managed by the application that requires that.
-            # This is in the current MVD3 spec and this is a legacy from MVD2.
-            if self.seeds is not None:
-                f.create_dataset('circuit/seeds', data=self.seeds)
-
             for name, series in self.properties.iteritems():
                 data = series.values
 
@@ -141,9 +135,6 @@ class CellCollection(object):
         cells = cls()
 
         with h5py.File(filename, 'r') as f:
-            if 'circuit/seeds' in f:
-                cells.seeds = np.array(f['circuit/seeds'])
-
             data = f['cells']
             if 'positions' in data:
                 cells.positions = np.array(data['positions'])

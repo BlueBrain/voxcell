@@ -100,7 +100,6 @@ def assert_equal_cells(c0, c1):
         c1.properties.sort_index(axis=1),
         check_names=True
     )
-    assert_equal(c0.seeds, c1.seeds)
 
 
 def check_roundtrip(original):
@@ -220,22 +219,6 @@ def test_remove_unassigned_3():
     cells.remove_unassigned_cells()
     assert_is_none(cells.positions)
     assert_is_none(cells.orientations)
-
-
-def test_circuit_seeds():
-    cells = test_module.CellCollection()
-    cells.seeds = (1, 2, 3, 4)
-    check_roundtrip(cells)
-
-
-def test_circuit_seeds():
-    ''' test that MVD3 has /circuit/seeds group by default '''
-    cells = test_module.CellCollection()
-    cells.properties['foo'] = ['a', 'b', 'c']
-    with tempcwd():
-        cells.save_mvd3('cells.h5')
-        with h5py.File('cells.h5') as f:
-            eq_(f['circuit']['seeds'].shape, (4,))
 
 
 def test_as_dataframe():
