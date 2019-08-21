@@ -3,7 +3,7 @@ import os
 import shutil
 import h5py
 from contextlib import contextmanager
-from nose.tools import eq_, assert_raises, assert_is_none, raises
+from nose.tools import ok_, eq_, assert_raises, assert_is_none, raises
 
 import voxcell.cell_collection as test_module
 from voxcell import VoxcellError
@@ -238,6 +238,8 @@ def test_as_dataframe():
     # check that data is copied
     df['foo'] = ['q', 'w', 'v']
     assert_equal(cells.properties['foo'].values, ['a', 'b', 'c'])
+
+    ok_(df.columns.inferred_type in ('string', 'unicode'))
 
 
 def test_add_properties():

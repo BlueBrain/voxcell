@@ -56,6 +56,9 @@ class CellCollection(object):
         if self.orientations is not None:
             result['orientation'] = [m for m in self.orientations]
         result.index = 1 + np.arange(len(result))
+
+        result.columns = map(str, result.columns)
+
         return result
 
     @classmethod
