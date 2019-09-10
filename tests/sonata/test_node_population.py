@@ -9,10 +9,9 @@ import numpy.testing as npt
 import pandas as pd
 import pandas.util.testing as pdt
 
-import mock
 import nose.tools as nt
 
-from mock import patch, Mock
+import mock
 
 from voxcell import VoxcellError
 from voxcell.math_utils import euler2mat
@@ -22,9 +21,9 @@ import voxcell.sonata.node_population as test_module
 
 @nt.raises(VoxcellError)
 def test_open_population_fail():
-    storage = Mock()
+    storage = mock.Mock()
     storage.population_names = ['a', 'b']
-    with patch(test_module.__name__ + '.NodeStorage') as NodeStorage:
+    with mock.patch(test_module.__name__ + '.NodeStorage') as NodeStorage:
         test_module._open_population(mock.ANY)
 
 
@@ -192,10 +191,11 @@ def assert_equal_cells(c0, c1):
     )
 
 
-def check_roundtrip(original):
-    with tempcwd():
-        original.save('nodes.h5')
-        restored = test_module.NodePopulation.load('nodes.h5')
+def check_roundtrip(original, library_properties=None):
+    with tempcwd() as tmp:
+        path = os.path.join(tmp, 'nodes.h5')
+        original.save(path, library_properties)
+        restored = test_module.NodePopulation.load(path)
         assert_equal_cells(original, restored)
         return restored
 
@@ -209,6 +209,9 @@ def test_roundtrip_1():
     cells.attributes['etype'] = np.random.choice(['cADpyr', 'dNAC', 'bSTUT'], n)
     cells.dynamics_attributes['threshold'] = np.random.random(n)
     check_roundtrip(cells)
+
+    #with some columns turned in to @library enum style
+    check_roundtrip(cells, ['mtype', 'etype', ])
 
 
 def test_roundtrip_2():

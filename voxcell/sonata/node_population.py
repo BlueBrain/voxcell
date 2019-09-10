@@ -60,8 +60,7 @@ class NodePopulation(object):
         self._dynamics_attributes = DataFrameProxy(size)
 
     def to_dataframe(self):
-        """
-        Convert into pandas DataFrame.
+        """ Convert into pandas DataFrame.
 
         Attributes and dynamics attributes are merged into single DataFrame.
         Attribute names for the latter ones are prefixed with '@dynamics'.
@@ -120,8 +119,7 @@ class NodePopulation(object):
 
     @classmethod
     def load(cls, filepath):
-        """
-        Load NodePopulation from SONATA Nodes HDF5.
+        """Load NodePopulation from SONATA Nodes HDF5.
 
         Limitations:
           - no CSV support
@@ -142,20 +140,47 @@ class NodePopulation(object):
 
         return result
 
-    def save(self, filepath):
-        """
-        Save to SONATA Nodes HDF5.
+    @staticmethod
+    def _check_props_can_be_in_library(library_properties, attributes):
+        missing_props, non_string_props = [], []
+        for prop in library_properties:
+            if prop not in attributes.columns:
+                missing_props.append(prop)
+            if attributes[prop].dtype != np.object:
+                non_string_props.append(prop)
+
+        if missing_props:
+            raise VoxcellError("Properties %s are not in attributes" % missing_props)
+
+        if non_string_props:
+            raise VoxcellError("Properties %s are not strings, and can't be in the library" %
+                               missing_props)
+
+    def save(self, filepath, library_properties=None):
+        """Save to SONATA Nodes HDF5.
+
+        library_properties(list of string): properties that should be converted
+        to a '@library' enumeration; see SONATA spec for more info
 
         TODO: move to `libsonata`?
         """
+        library_properties = set() if library_properties is None else set(library_properties)
+
         def _write_group(data, out):
             for prop, column in data.iteritems():
                 values = column.values
                 if values.dtype == np.object:
                     dt = h5py.special_dtype(vlen=six.text_type)
-                    out.create_dataset(prop, data=values, dtype=dt)
+                    if prop in library_properties:
+                        unique_values, indices = np.unique(values, return_inverse=True)
+                        out.create_dataset(prop, data=indices.astype(np.uint32))
+                        out.create_dataset('@library/%s' % prop, data=unique_values, dtype=dt)
+                    else:
+                        out.create_dataset(prop, data=values, dtype=dt)
                 else:
                     out.create_dataset(prop, data=values)
+
+        self._check_props_can_be_in_library(library_properties, self._attributes)
 
         with h5py.File(filepath, 'w') as h5f:
             root = h5f.create_group('/nodes/%s' % self.name)
