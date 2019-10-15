@@ -54,6 +54,7 @@ class CellCollection(object):
             result['y'] = self.positions[:, 1]
             result['z'] = self.positions[:, 2]
         if self.orientations is not None:
+            # pylint: disable=unnecessary-comprehension
             result['orientation'] = [m for m in self.orientations]
         result.index = 1 + np.arange(len(result))
 

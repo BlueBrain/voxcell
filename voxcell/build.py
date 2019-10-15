@@ -76,7 +76,7 @@ def triangular_mask(shape, v0, v1, v2):
     mask = np.ones(shape, dtype=np.bool)
     idx = np.nonzero(mask)
     aidx = np.array(idx).transpose()
-    r = np.zeros(aidx.shape[0], dtype=np.bool)
+    r = np.zeros(aidx.shape[0], dtype=np.bool)  # pylint: disable=unsubscriptable-object
 
     # TODO make is_in_triangle take arrays of points so we don't need to do one by one
     for i, p in enumerate(aidx):

@@ -87,38 +87,38 @@ class VoxelData(object):
     @classmethod
     def load_nrrd(cls, nrrd_path):
         ''' read volumetric data from a nrrd file '''
-        data, options = nrrd.read(nrrd_path)
+        data, header = nrrd.read(nrrd_path)
 
         # According to http://teem.sourceforge.net/nrrd/format.html#spacedirections,
         # 'space directions' could use 'none' for "payload" axes.
         # As we need space directions only for "space" axes, we rely on either
         # 'space dimension' or 'space' header to slice them out.
         # NB: only a subset of possible 'space' values is supported at the moment.
-        if 'space dimension' in options:
-            ndim = options['space dimension']
-        elif 'space' in options:
+        if 'space dimension' in header:
+            ndim = header['space dimension']
+        elif 'space' in header:
             ndim = {
                 'right-anterior-superior': 3, 'RAS': 3,
                 'left-anterior-superior': 3, 'LAS': 3,
                 'left-posterior-superior': 3, 'LPS': 3,
                 'posterior-inferior-right': 3, 'PIR': 3,
-            }[options['space']]
+            }[header['space']]
         else:
             ndim = 0  # use all 'space directions'
 
-        if 'space directions' in options:
-            directions = np.array(options['space directions'][-ndim:], dtype=np.float32)
+        if 'space directions' in header:
+            directions = np.array(header['space directions'][-ndim:], dtype=np.float32)
             if not math_utils.is_diagonal(directions):
                 raise NotImplementedError("Only diagonal space directions supported at the moment")
             spacings = directions.diagonal()
-        elif 'spacings' in options:
-            spacings = np.array(options['spacings'][-ndim:], dtype=np.float32)
+        elif 'spacings' in header:
+            spacings = np.array(header['spacings'][-ndim:], dtype=np.float32)
         else:
             raise VoxcellError("spacings not defined in nrrd")
 
         offset = None
-        if 'space origin' in options:
-            offset = np.array(options['space origin'], dtype=np.float32)
+        if 'space origin' in header:
+            offset = np.array(header['space origin'], dtype=np.float32)
 
         # In NRRD 'payload' axes go first, move them to the end
         raw = _pivot_axes(data, len(data.shape) - len(spacings))
@@ -133,18 +133,18 @@ class VoxelData(object):
             encoding(string): encoding option to save as
         '''
         # from http://teem.sourceforge.net/nrrd/format.html#space
-        options = {
+        header = {
             'space dimension': self.ndim,
             'space directions': np.diag(self.voxel_dimensions),
             'space origin': self.offset,
         }
 
         if encoding is not None:
-            options['encoding'] = encoding
+            header['encoding'] = encoding
 
         # In NRRD 'payload' axes should go first, move them to the beginning
         nrrd_data = _pivot_axes(self.raw, self.ndim)
-        nrrd.write(nrrd_path, nrrd_data, options=options)
+        nrrd.write(nrrd_path, nrrd_data, header=header)
 
     def lookup(self, positions, outer_value=None):
         '''find the values in raw corresponding to the given positions

@@ -263,8 +263,8 @@ def join_vector_fields(vf0, *vfs):
     assert all(v.shape == vf0.shape for v in vfs)  # pylint: disable=no-member
 
     joined = np.zeros_like(vf0)
+    # pylint: disable=unsubscriptable-object
     joined_mask = np.zeros(joined.shape[:-1], dtype=np.bool)
-
     for field in vfs:
         field_mask = np.any(field != 0, axis=-1)
         overlap_count = np.count_nonzero(joined_mask & field_mask)

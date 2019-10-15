@@ -34,7 +34,7 @@ setup(
         'h5py>=2.3',
         'numpy>=1.9',
         'pandas>=0.17',
-        'pynrrd>=0.2,<0.3.0',
+        'pynrrd>=0.4.0',
         'requests>=2.18',
         'scipy>=0.13',
         'six>=1.0',
