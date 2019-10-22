@@ -132,8 +132,13 @@ class NodePopulation(object):
 
         _all = Selection([(0, nodes.size)])
 
-        for prop in sorted(nodes.attribute_names):
+        for prop in sorted(nodes.attribute_names - nodes.enumeration_names):
             result.attributes[prop] = nodes.get_attribute(prop, _all)
+
+        for prop in sorted(nodes.enumeration_names):
+            result.attributes[prop] = pd.Categorical.from_codes(
+                nodes.get_enumeration(prop, _all),
+                categories=nodes.enumeration_values(prop))
 
         for prop in sorted(nodes.dynamics_attribute_names):
             result.dynamics_attributes[prop] = nodes.get_dynamics_attribute(prop, _all)
@@ -156,6 +161,12 @@ class NodePopulation(object):
             raise VoxcellError("Properties %s are not strings, and can't be in the library" %
                                missing_props)
 
+    @staticmethod
+    def _write_string_library(group, name, unique_values, indices):
+        dt = h5py.special_dtype(vlen=six.text_type)
+        group.create_dataset(name, data=indices.astype(np.uint32))
+        group.create_dataset('@library/%s' % name, data=unique_values, dtype=dt)
+
     def save(self, filepath, library_properties=None):
         """Save to SONATA Nodes HDF5.
 
@@ -166,17 +177,22 @@ class NodePopulation(object):
         """
         library_properties = set() if library_properties is None else set(library_properties)
 
+        dt = h5py.special_dtype(vlen=six.text_type)
+
         def _write_group(data, out):
             for prop, column in data.iteritems():
                 values = column.values
                 if values.dtype == np.object:
-                    dt = h5py.special_dtype(vlen=six.text_type)
                     if prop in library_properties:
                         unique_values, indices = np.unique(values, return_inverse=True)
-                        out.create_dataset(prop, data=indices.astype(np.uint32))
-                        out.create_dataset('@library/%s' % prop, data=unique_values, dtype=dt)
+                        self._write_string_library(out, prop, unique_values, indices)
                     else:
                         out.create_dataset(prop, data=values, dtype=dt)
+                elif pd.api.types.is_categorical_dtype(values):
+                    self._write_string_library(out,
+                                               prop,
+                                               unique_values=values.categories.values,
+                                               indices=values.codes)
                 else:
                     out.create_dataset(prop, data=values)
 

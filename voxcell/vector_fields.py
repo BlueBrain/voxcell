@@ -184,15 +184,6 @@ def compute_hemispheric_spherical_tangent_fields(annotation_raw, region_mask):
     return tangents_field
 
 
-def normalize(vf):
-    '''normalize a vector field'''
-    from voxcell.math_utils import normalize as _normalize
-    deprecate.warn(
-        "`voxcell.vector_fields.normalize()` method has been moved to `voxcell.math_utils`"
-    )
-    return _normalize(vf)
-
-
 def gaussian_filter(vf, sigma):
     '''apply a gaussian filter to a vector field
 
@@ -263,8 +254,8 @@ def join_vector_fields(vf0, *vfs):
     assert all(v.shape == vf0.shape for v in vfs)  # pylint: disable=no-member
 
     joined = np.zeros_like(vf0)
-    # pylint: disable=unsubscriptable-object
-    joined_mask = np.zeros(joined.shape[:-1], dtype=np.bool)
+    joined_mask = np.zeros(joined.shape[:-1],  # pylint: disable=unsubscriptable-object
+                           dtype=np.bool)
     for field in vfs:
         field_mask = np.any(field != 0, axis=-1)
         overlap_count = np.count_nonzero(joined_mask & field_mask)

@@ -196,6 +196,12 @@ def check_roundtrip(original, library_properties=None):
         path = os.path.join(tmp, 'nodes.h5')
         original.save(path, library_properties)
         restored = test_module.NodePopulation.load(path)
+
+        if library_properties:
+            for prop in library_properties:
+                values = restored.attributes[prop].get_values()
+                del restored.attributes[prop]
+                restored.attributes[prop] = values
         assert_equal_cells(original, restored)
         return restored
 
@@ -208,6 +214,9 @@ def test_roundtrip_1():
     cells.attributes['mtype'] = np.random.choice(['L5_NGC', 'L5_BTC', 'L6_LBC'], n)
     cells.attributes['etype'] = np.random.choice(['cADpyr', 'dNAC', 'bSTUT'], n)
     cells.dynamics_attributes['threshold'] = np.random.random(n)
+    check_roundtrip(cells)
+
+    cells.attributes['morphology'] = pd.Series(['m0'] * 4 + ['m1'] * (n - 4), dtype="category")
     check_roundtrip(cells)
 
     #with some columns turned in to @library enum style
