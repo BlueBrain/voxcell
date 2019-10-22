@@ -1,17 +1,16 @@
 import tempfile
 import os
 import shutil
-import h5py
 from contextlib import contextmanager
 from nose.tools import ok_, eq_, assert_raises, assert_is_none, raises
 
 import voxcell.cell_collection as test_module
 from voxcell import VoxcellError
 
-from numpy.testing import assert_equal, assert_almost_equal
-from pandas.util.testing import assert_frame_equal
 import numpy as np
+from numpy.testing import assert_equal, assert_almost_equal
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 
 
 def euler_to_matrix(bank, attitude, heading):
@@ -26,16 +25,13 @@ def euler_to_matrix(bank, attitude, heading):
         heading: rotation around Y
     '''
 
-    sa = np.sin(attitude)
-    ca = np.cos(attitude)
-    sb = np.sin(bank)
-    cb = np.cos(bank)
-    sh = np.sin(heading)
-    ch = np.cos(heading)
+    sa, ca = np.sin(attitude), np.cos(attitude)
+    sb, cb = np.sin(bank), np.cos(bank)
+    sh, ch = np.sin(heading), np.cos(heading)
 
-    m = np.vstack([ch*ca, -ch*sa*cb + sh*sb, ch*sa*sb + sh*cb,
-                   sa, ca*cb, -ca*sb,
-                   -sh*ca, sh*sa*cb + ch*sb, -sh*sa*sb + ch*cb]).transpose()
+    m = np.vstack([ch * ca, -ch * sa * cb + sh * sb, ch * sa * sb + sh * cb,
+                   sa, ca * cb, -ca * sb,
+                   -sh * ca, sh * sa * cb + ch * sb, -sh * sa * sb + ch * cb]).transpose()
 
     return m.reshape(m.shape[:-1] + (3, 3))
 

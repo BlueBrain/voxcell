@@ -10,6 +10,8 @@ TODO:
     Use `libsonata` instead, once it provides *write* functionality (?)
 """
 
+import logging
+
 import h5py
 import numpy as np
 import pandas as pd
@@ -19,6 +21,21 @@ from libsonata import NodeStorage, Selection
 
 from voxcell.exceptions import VoxcellError
 from voxcell.math_utils import euler2mat, mat2euler
+
+
+L = logging.getLogger(__name__)
+
+
+def _load_mecombo_info(filepath):
+    '''load mecombo information
+
+    Note: this is sometimes known as the '.tsv file', or MEComboInfoFile
+    '''
+    def usecols(name):
+        '''pick the needed columns'''
+        return name not in ('morph_name', 'layer', 'fullmtype', 'etype')
+
+    return pd.read_csv(filepath, sep=r'\s+', usecols=usecols, index_col='combo_name')
 
 
 def _open_population(h5_filepath):
@@ -132,13 +149,13 @@ class NodePopulation(object):
 
         _all = Selection([(0, nodes.size)])
 
-        for prop in sorted(nodes.attribute_names - nodes.enumeration_names):
-            result.attributes[prop] = nodes.get_attribute(prop, _all)
-
-        for prop in sorted(nodes.enumeration_names):
-            result.attributes[prop] = pd.Categorical.from_codes(
-                nodes.get_enumeration(prop, _all),
-                categories=nodes.enumeration_values(prop))
+        for prop in sorted(nodes.attribute_names):
+            if prop in nodes.enumeration_names:
+                result.attributes[prop] = pd.Categorical.from_codes(
+                    nodes.get_enumeration(prop, _all),
+                    categories=nodes.enumeration_values(prop))
+            else:
+                result.attributes[prop] = nodes.get_attribute(prop, _all)
 
         for prop in sorted(nodes.dynamics_attribute_names):
             result.dynamics_attributes[prop] = nodes.get_dynamics_attribute(prop, _all)
@@ -203,3 +220,42 @@ class NodePopulation(object):
             root.create_dataset('node_type_id', data=np.full(self.size, -1))
             _write_group(self._attributes, root.create_group('0'))
             _write_group(self._dynamics_attributes, root.create_group('0/dynamics_params'))
+
+    @classmethod
+    def from_cell_collection(cls, cell_collection, population_name, mecombo_info_path=None):
+        """ Convert CellCollection to SONATA NodePopulation. """
+        if 'me_combo' in cell_collection.properties:
+            if mecombo_info_path is None:
+                L.warning("Please specify 'mecombo_info_path' in order to "
+                          "resolve 'me_combo' property")
+            else:
+                mecombo_info = _load_mecombo_info(mecombo_info_path)
+                L.info("'me_combo' property would be resolved to 'model_template' "
+                       "and dynamics parameters %s",
+                       ", ".join("'%s'" % s
+                                 for s in mecombo_info.columns if s != 'emodel'))
+
+        result = cls(population_name, size=len(cell_collection.properties))
+
+        if cell_collection.positions is not None:
+            result.positions = cell_collection.positions
+
+        if cell_collection.orientations is not None:
+            result.orientations = cell_collection.orientations
+
+        for prop, column in cell_collection.properties.iteritems():
+            if prop == 'me_combo':
+                continue
+            result.attributes[prop] = column.values
+
+        if 'me_combo' in cell_collection.properties and mecombo_info_path:
+            mecombo_params = mecombo_info.loc[cell_collection.properties['me_combo']]
+            for prop, column in mecombo_params.iteritems():
+                values = column.values
+                if prop == 'emodel':
+                    values = [('hoc:' + v) for v in values]
+                    result.attributes['model_template'] = values
+                else:
+                    result.dynamics_attributes[prop] = values
+
+        return result

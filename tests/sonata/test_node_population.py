@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+from six import StringIO
 
 from contextlib import contextmanager
 
@@ -13,7 +14,7 @@ import nose.tools as nt
 
 import mock
 
-from voxcell import VoxcellError
+from voxcell import VoxcellError, CellCollection
 from voxcell.math_utils import euler2mat
 
 import voxcell.sonata.node_population as test_module
@@ -226,3 +227,25 @@ def test_roundtrip_1():
 def test_roundtrip_2():
     cells = test_module.NodePopulation('test', 1)
     check_roundtrip(cells)
+
+
+def test_from_cell_collection():
+    cells = CellCollection()
+    n = 10
+
+    cells.positions = np.random.random((n, 3))
+    cells.orientations = np.array([np.eye(3)] * n)
+    cells.properties['synapse_class'] = np.random.choice(['INH', 'EXC'], n)
+    cells.properties['mtype'] = np.random.choice(['L5_NGC', 'L5_BTC', 'L6_LBC'], n)
+
+    nodes = test_module.NodePopulation.from_cell_collection(cells, 'test')
+    nt.eq_(nodes.attributes.columns.to_list(),
+           ['x', 'y', 'z', 'rotation_angle_xaxis', 'rotation_angle_yaxis',
+            'rotation_angle_zaxis', 'synapse_class', 'mtype'])
+
+    mecombo_info = StringIO('''morph_name layer fullmtype etype emodel combo_name
+morph0 1 mtype0 etype0 emodel0 combo_name0
+morph1 1 mtype1 etype1 emodel1 combo_name1''')
+    cells.properties['me_combo'] = np.random.choice(['combo_name0', 'combo_name1'], n)
+    nodes = test_module.NodePopulation.from_cell_collection(cells, 'test', mecombo_info)
+    nt.ok_(all(s.startswith('hoc:emodel') for s in nodes.attributes.model_template))
