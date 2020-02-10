@@ -133,9 +133,18 @@ class VoxelData(object):
             encoding(string): encoding option to save as
         '''
         # from http://teem.sourceforge.net/nrrd/format.html#space
+        space_directions = np.diag(self.voxel_dimensions)
+        dim_defect = len(self.raw.shape) - self.ndim
+        if dim_defect > 0:
+            # The nrrd specifications require that
+            # we prepend a None for each of the extra axes
+            # before specifying the volume 3D axes.
+            # For instance, a volume of orientations (3D direction vectors or quaternions)
+            # or of RGB colors (3D int vectors) requires an initial None value.
+            space_directions = [None] * dim_defect + list(space_directions)
         header = {
             'space dimension': self.ndim,
-            'space directions': np.diag(self.voxel_dimensions),
+            'space directions': space_directions,
             'space origin': self.offset,
         }
 

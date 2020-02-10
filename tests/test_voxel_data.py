@@ -6,6 +6,7 @@ from nose.tools import eq_, ok_
 import numpy as np
 import numpy.testing as npt
 from numpy.testing import assert_equal, assert_almost_equal, assert_raises
+import nrrd
 
 import voxcell.voxel_data as test_module
 from voxcell.exceptions import VoxcellError
@@ -83,6 +84,23 @@ def test_save_nrrd():
         f.seek(0)
         new = test_module.VoxelData.load_nrrd(f.name)
         ok_(np.allclose(vd.raw, new.raw))
+
+def test_save_nrrd_with_extra_axes():
+    ''' test saving a numpy array with more than 3 dimensions '''
+    raw = np.zeros((6,7,8,4,3)) # two extra dimensions
+    vd = test_module.VoxelData(raw, (1.0, 2.0, 3.0))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+        vd.save_nrrd(f.name)
+        f.flush()
+        f.seek(0)
+        data, header = nrrd.read(f.name)
+        # pynrrd will convert None into np.array([np.nan, np.nan, np.nan])
+        assert_equal(header['space directions'],
+            [
+                [np.nan] * 3, [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
+            ]
+        )
+
 
 def test_shape_checks():
     raw = np.zeros(shape=(2, 2))
