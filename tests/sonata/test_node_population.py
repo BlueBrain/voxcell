@@ -8,7 +8,7 @@ from contextlib import contextmanager
 import numpy as np
 import numpy.testing as npt
 import pandas as pd
-import pandas.util.testing as pdt
+import pandas.testing as pdt
 
 import nose.tools as nt
 
@@ -50,7 +50,8 @@ def test_attributes_1():
     cells.attributes['foo'] = np.array([42, 43])
     cells.attributes['bar'] = ['a', 'b']
     pdt.assert_frame_equal(
-        cells.attributes,
+        # A cast to pd.DataFrame is required, https://github.com/pandas-dev/pandas/issues/31925
+        pd.DataFrame(cells.attributes),
         pd.DataFrame({
             'foo': [42, 43],
             'bar': ['a', 'b'],
@@ -94,7 +95,8 @@ def test_dynamics_attributes():
     cells.dynamics_attributes['foo'] = np.array([42, 43])
     cells.dynamics_attributes['bar'] = ['a', 'b']
     pdt.assert_frame_equal(
-        cells.dynamics_attributes,
+        # A cast to pd.DataFrame is required, https://github.com/pandas-dev/pandas/issues/31925
+        pd.DataFrame(cells.dynamics_attributes),
         pd.DataFrame({
             'foo': [42, 43],
             'bar': ['a', 'b'],
@@ -111,7 +113,8 @@ def test_positions():
     positions = random_positions(n)
     cells.positions = positions
     pdt.assert_frame_equal(
-        cells.attributes,
+        # A cast to pd.DataFrame is required, https://github.com/pandas-dev/pandas/issues/31925
+        pd.DataFrame(cells.attributes),
         pd.DataFrame({
             'x': positions[:, 0],
             'y': positions[:, 1],
@@ -179,14 +182,16 @@ def tempcwd():
 
 def assert_equal_cells(c0, c1):
     pdt.assert_frame_equal(
-        c0.attributes,
-        c1.attributes,
+        # A cast to pd.DataFrame is required, https://github.com/pandas-dev/pandas/issues/31925
+        pd.DataFrame(c0.attributes),
+        pd.DataFrame(c1.attributes),
         check_like=True,
         check_names=True,
     )
     pdt.assert_frame_equal(
-        c0.dynamics_attributes,
-        c1.dynamics_attributes,
+        # A cast to pd.DataFrame is required, https://github.com/pandas-dev/pandas/issues/31925
+        pd.DataFrame(c0.dynamics_attributes),
+        pd.DataFrame(c1.dynamics_attributes),
         check_like=True,
         check_names=True,
     )
@@ -200,7 +205,7 @@ def check_roundtrip(original, library_properties=None):
 
         if library_properties:
             for prop in library_properties:
-                values = restored.attributes[prop].get_values()
+                values = restored.attributes[prop].to_numpy()
                 del restored.attributes[prop]
                 restored.attributes[prop] = values
         assert_equal_cells(original, restored)

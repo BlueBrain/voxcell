@@ -3,7 +3,7 @@ from nose.tools import eq_
 import pandas as pd
 import numpy as np
 from numpy.testing import assert_equal
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
 from voxcell.traits import SpatialDistribution, _drop_duplicate_columns
 from voxcell.voxel_data import VoxelData

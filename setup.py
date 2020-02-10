@@ -33,7 +33,7 @@ setup(
         'future>=0.16',
         'h5py>=2.3',
         'numpy>=1.9',
-        'pandas>=0.17',
+        'pandas>=0.24.2',
         'pynrrd>=0.4.0',
         'requests>=2.18',
         'scipy>=0.13',

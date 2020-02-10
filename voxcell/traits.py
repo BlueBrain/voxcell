@@ -156,7 +156,7 @@ class SpatialDistribution(object):
             A pandas DataFrame with one row for each index and one column for each value of names
         '''
         names = names if names is not None else self.traits.columns
-        df = self.traits[names].ix[chosen]
+        df = self.traits[names].iloc[chosen]
         return df.reset_index().drop('index', 1)
 
     def split(self, attributes):
@@ -176,7 +176,7 @@ class SpatialDistribution(object):
         grouped_distributions = {}
         for attr_values, traits in self.traits.groupby(attributes):
 
-            dists = self.distributions.ix[traits.index]
+            dists = self.distributions.iloc[traits.index]
 
             # remove dists that have become empty
             dists = dists[dists.columns[dists.sum() != 0]]
@@ -225,7 +225,7 @@ class SpatialDistribution(object):
         traits, distributions = [], []
         for value, data in self.traits.groupby(attribute):
             traits.append(value)
-            distributions.append(self.distributions.ix[data.index].sum())
+            distributions.append(self.distributions.iloc[data.index].sum())
 
         traits = pd.DataFrame(traits, columns=[attribute])
         distributions = pd.DataFrame(
@@ -239,7 +239,7 @@ class SpatialDistribution(object):
     def get_probability_field(self, attribute, value):
         '''extract the probability of a particular attribute value from a spatial distribution
 
-        Voxels where the probability is missing will contain a probability of zero.
+        Voxels where the probability is missing will contain a probability value of -1.
 
         Returns:
             A VoxelData with the same shape as sdist.field where every voxel is a float
@@ -247,7 +247,7 @@ class SpatialDistribution(object):
             in that voxel. For voxels with unknown values -1 is used.
         '''
         probs = self.distributions[self.traits[attribute] == value].sum()
-        probs_field = probs[self.field.raw.flatten()]
+        probs_field = probs.reindex(self.field.raw.flatten())
         probs_field = probs_field.fillna(-1)
         return self.field.with_data(probs_field.values.reshape(self.field.raw.shape))
 
@@ -316,4 +316,4 @@ def _drop_duplicate_columns(dataframe, decimals=None):
     tags = df1.index.map(lambda ind: g.indices[ind][0])
     unique_rows_idx, inverse = np.unique(tags, return_inverse=True)
 
-    return df.ix[unique_rows_idx].transpose(), inverse
+    return df.iloc[unique_rows_idx].transpose(), inverse
