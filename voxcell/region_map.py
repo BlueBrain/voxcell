@@ -102,6 +102,31 @@ class RegionMap(object):
 
         return result
 
+    def is_leaf_id(self, _id):
+        """
+        Indicate whether or not the input identifier is a leaf of the hierarchy tree.
+
+        A leaf identifier is the identifier of a region with no children.
+
+        Args:
+            _id(int): region identifier, i.e., an 'id' value in hierarchy.json.
+
+        Returns:
+            True, if is a leaf, False otherwise.
+
+        Raises:
+            VoxcellError if the identifier cannot be found.
+
+        Example:
+            >>> rmap.is_leaf_id(399)
+            True
+            >>> rmap.is_leaf_id(-10)
+            VoxcellError: Region ID not found: -10
+        """
+        if _id not in self._data:
+            raise VoxcellError("Region ID not found: %d" % _id)
+        return not self._children[_id]
+
     def _get(self, _id, attr):
         """ Fetch attribute value for a given region ID. """
         if _id not in self._data:

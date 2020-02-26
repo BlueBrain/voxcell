@@ -150,3 +150,15 @@ def test_from_dict_duplicate_id():
             }
         ]
     })
+
+
+def test_is_leaf_id():
+    eq_(TEST_RMAP.is_leaf_id(1), False)
+    eq_(TEST_RMAP.is_leaf_id(2), True)
+    eq_(TEST_RMAP.is_leaf_id(3), False)
+    eq_(TEST_RMAP.is_leaf_id(4), True)
+
+
+@raises(VoxcellError)
+def test_is_leaf_id_non_existing_id():
+    TEST_RMAP.is_leaf_id(0)  # non-existing id
