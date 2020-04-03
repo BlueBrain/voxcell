@@ -1,4 +1,5 @@
 import os
+import operator
 import tempfile
 import nose.tools as nt
 from nose.tools import eq_, ok_
@@ -241,3 +242,22 @@ def test_test_roi_mask_raises():
         VoxcellError,
         test_module.ROIMask, np.zeros(4, dtype=np.int64), voxel_dimensions=(1,)
     )
+
+
+def test_reduce():
+    # Add 3 int arrays
+    a = test_module.VoxelData(np.array([[11, 12], [21, 22]]), (2, 3))
+    b = test_module.VoxelData(np.array([[1, 0], [0, 0]]), (2, 3))
+    c = test_module.VoxelData(np.array([[1, 0], [0, 0]]), (2, 3))
+
+    # 1 elements: function is not applied
+    d = test_module.VoxelData.reduce(lambda x: x * 100, [a])
+    assert_almost_equal(d.raw, [[11, 12], [21, 22]])
+
+    # 2 elements
+    e = test_module.VoxelData.reduce(operator.add, [a, b])
+    assert_almost_equal(e.raw, [[12, 12], [21, 22]])
+
+    # 3 elements
+    f = test_module.VoxelData.reduce(operator.add, [a, b, c])
+    assert_almost_equal(f.raw, [[13, 12], [21, 22]])

@@ -1,6 +1,8 @@
 """ Access to volumetric data. """
+from functools import reduce
 
 import numpy as np
+from numpy.testing import assert_array_equal
 import nrrd
 
 from voxcell import math_utils
@@ -321,6 +323,30 @@ class VoxelData(object):
     def with_data(self, raw):
         '''return VoxelData of the same shape with different data'''
         return VoxelData(raw, self.voxel_dimensions, self.offset)
+
+    @staticmethod
+    def reduce(function, iterable):
+        '''Returns a VoxelData object by reducing the raw contents of
+        the VoxelData objects in iterable
+
+        Note: if iterable contains only one item, a copy is returned (but function
+        is not applied)
+
+        Args:
+            function (Callable[[np.array, np.array], np.array]): the function to be
+                applied to numpy arrays
+            iterable (Sequence[VoxelData]): a sequence of VoxelData objects
+        '''
+        iterable = list(iterable)
+        if not iterable:
+            raise TypeError('Attempting to reduce an empty sequence')
+
+        for element in iterable:
+            assert isinstance(element, VoxelData)
+            assert_array_equal(element.voxel_dimensions, iterable[0].voxel_dimensions)
+            assert_array_equal(element.offset, iterable[0].offset)
+
+        return iterable[0].with_data(reduce(function, (x.raw for x in iterable)))
 
 
 class OrientationField(VoxelData):
