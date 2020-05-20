@@ -21,6 +21,7 @@ from libsonata import NodeStorage, Selection
 
 from voxcell.exceptions import VoxcellError
 from voxcell.math_utils import euler2mat, mat2euler
+from voxcell.utils import deprecate
 
 
 L = logging.getLogger(__name__)
@@ -71,6 +72,7 @@ class DataFrameProxy(pd.DataFrame):
 class NodePopulation(object):
     """ Read / write access to one-population on-group SONATA node collection. """
     def __init__(self, name, size):
+        deprecate.warn("NodePopulation is deprecated, use CellCollection.load_sonata/save_sonata")
         self.name = name
         self.size = size
         self._attributes = DataFrameProxy(size)

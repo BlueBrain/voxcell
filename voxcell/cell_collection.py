@@ -12,13 +12,46 @@ from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
 from voxcell.utils import deprecate
 
 
+def _load_property(properties, name, values, library_group=None):
+    """Loads single property with respect to a library group if presented.
+
+    Args:
+        properties (pd.DataFrame): properties
+        name (str): property name
+        values (array-like): property values
+        library_group (h5py.Group): library group
+    """
+    values = np.array(values)
+    if library_group is not None and name in library_group:
+        labels = library_group[name]
+        # older versions of h5py don't properly return
+        # variable length strings that pandas can consume
+        # (ie: they fail the to_frame() command with a KeyError
+        # due to the vlen in the dtype, force the conversion
+        # using the numpy array
+        if labels.dtype.names and 'vlen' in labels.dtype.names:
+            unique_values = np.array(labels, dtype=object)
+        else:
+            unique_values = np.array(labels)
+        properties[name] = unique_values[values]
+    else:
+        properties[name] = values
+
+
 class CellCollection(object):
     '''Encapsulates all the data related to a collection of cells that compose a circuit.
 
     Multi-dimensional properties (such as positions and orientations) are attributes.
     General properties are a in a pandas DataFrame object "properties".
     '''
-    def __init__(self):
+
+    # properties that start with it are dynamic, and handled appropriately, see `dynamics_params` in
+    # https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#representing-nodes
+    SONATA_DYNAMIC_PROPERTY = '@dynamics:'
+
+    def __init__(self, population_name='default'):
+        # SONATA population name, currently assume a single population collection
+        self.population_name = population_name
         self.positions = None
         self.orientations = None
         self.properties = pd.DataFrame()
@@ -84,7 +117,7 @@ class CellCollection(object):
         self.save_mvd3(filename)
 
     def save_mvd3(self, filename):
-        '''save this cell collection to HDF5
+        '''save this cell collection to mvd3 HDF5
 
         Args:
             filename(str): fullpath to filename to write
@@ -127,7 +160,7 @@ class CellCollection(object):
 
     @classmethod
     def load_mvd3(cls, filename):
-        '''load a cell collection from HDF5
+        '''load a cell collection from mvd3 HDF5
 
         Args:
             filename(str): fullpath to filename to read
@@ -148,25 +181,86 @@ class CellCollection(object):
                 cells.orientations = quaternions_to_matrices(cells.orientations)
 
             if 'properties' in data:
-                properties = data['properties']
+                for name, values in iteritems(data['properties']):
+                    _load_property(cells.properties, name, values, f.get('library'))
 
-                for name, data in iteritems(properties):
-                    data = np.array(data)
+        return cells
 
-                    if name in f['library']:
-                        labels = f['library'][name]
-                        # older versions of h5py don't properly return
-                        # variable length strings that pandas can consume
-                        # (ie: they fail the to_frame() command with a KeyError
-                        # due to the vlen in the dtype, force the conversion
-                        # using the numpy array
-                        if labels.dtype.names and 'vlen' in labels.dtype.names:
-                            unique_values = np.array(labels, dtype=object)
-                        else:
-                            unique_values = np.array(labels)
-                        cells.properties[name] = unique_values[data]
+    def save_sonata(self, filename):
+        """Save this cell collection to sonata HDF5.
 
+        Args:
+            filename(str): fullpath to filename to write
+        """
+        with h5py.File(filename, 'w') as h5f:
+            population = h5f.create_group('/nodes/%s' % self.population_name)
+            population.create_dataset('node_type_id', data=np.full(len(self.properties), -1))
+            group = population.create_group('0')
+            str_dt = h5py.special_dtype(vlen=text_type)
+            for name, series in self.properties.iteritems():
+                values = series.values
+                if name.startswith(self.SONATA_DYNAMIC_PROPERTY):
+                    name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
+                    dt = str_dt if series.dtype == np.object else series.dtype
+                    group.create_dataset('dynamics_params/' + name, data=values, dtype=dt)
+                elif series.dtype == np.object:
+                    unique_values, indices = np.unique(values, return_inverse=True)
+                    if len(unique_values) < len(values):
+                        group.create_dataset(name, data=indices.astype(np.uint32))
+                        group.create_dataset('library/' + name, data=unique_values, dtype=str_dt)
                     else:
-                        cells.properties[name] = data
+                        group.create_dataset(name, data=values, dtype=str_dt)
+                else:
+                    group.create_dataset(name, data=values)
+
+            if self.orientations is not None:
+                quaternions = matrices_to_quaternions(self.orientations)
+                group.create_dataset('orientation_x', data=quaternions[:, 0])
+                group.create_dataset('orientation_y', data=quaternions[:, 1])
+                group.create_dataset('orientation_z', data=quaternions[:, 2])
+                group.create_dataset('orientation_w', data=quaternions[:, 3])
+            if self.positions is not None:
+                group.create_dataset('x', data=self.positions[:, 0])
+                group.create_dataset('y', data=self.positions[:, 1])
+                group.create_dataset('z', data=self.positions[:, 2])
+
+    @classmethod
+    def load_sonata(cls, filename):
+        """Loads a cell collection from sonata HDF5.
+
+        Args:
+            filename(str): fullpath to filename to read
+
+        Returns:
+            CellCollection object
+        """
+        cells = cls()
+
+        with h5py.File(filename, 'r') as h5f:
+            population_names = list(h5f['/nodes'].keys())
+            assert len(population_names) == 1, 'Single population is supported only'
+            cells.population_name = population_names[0]
+            population = h5f['/nodes/' + population_names[0]]
+            assert '0' in population, 'Single group "0" is supported only'
+            group = population['0']
+
+            if 'x' in group:
+                cells.positions = np.vstack((group['x'], group['y'], group['z'])).T
+            if 'orientation_x' in group:
+                quaternions = np.vstack((group['orientation_x'], group['orientation_y'],
+                                         group['orientation_z'], group['orientation_w']))
+                cells.orientations = quaternions_to_matrices(quaternions.T)
+            properties_names = set(group.keys()) - {'x', 'y', 'z', 'orientation_x', 'orientation_y',
+                                                    'orientation_z', 'orientation_w'}
+            for name in properties_names:
+                if not isinstance(group[name], h5py.Dataset):
+                    continue
+                _load_property(cells.properties, name, group[name], group.get('library'))
+
+            if 'dynamics_params' in group:
+                for name, values in iteritems(group['dynamics_params']):
+                    if not isinstance(values, h5py.Dataset):
+                        continue
+                    cells.properties[cls.SONATA_DYNAMIC_PROPERTY + name] = np.array(values)
 
         return cells
