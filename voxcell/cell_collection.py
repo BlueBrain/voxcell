@@ -207,7 +207,7 @@ class CellCollection(object):
                     unique_values, indices = np.unique(values, return_inverse=True)
                     if len(unique_values) < len(values):
                         group.create_dataset(name, data=indices.astype(np.uint32))
-                        group.create_dataset('library/' + name, data=unique_values, dtype=str_dt)
+                        group.create_dataset('@library/' + name, data=unique_values, dtype=str_dt)
                     else:
                         group.create_dataset(name, data=values, dtype=str_dt)
                 else:
@@ -255,7 +255,7 @@ class CellCollection(object):
             for name in properties_names:
                 if not isinstance(group[name], h5py.Dataset):
                     continue
-                _load_property(cells.properties, name, group[name], group.get('library'))
+                _load_property(cells.properties, name, group[name], group.get('@library'))
 
             if 'dynamics_params' in group:
                 for name, values in iteritems(group['dynamics_params']):
