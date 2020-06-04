@@ -9,8 +9,6 @@ from six import iteritems, text_type
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
 
-from voxcell.utils import deprecate
-
 
 def _load_property(properties, name, values, library_group=None):
     """Loads single property with respect to a library group if presented.
@@ -110,11 +108,16 @@ class CellCollection(object):
         return result
 
     def save(self, filename):
-        # pylint: disable=missing-docstring
-        deprecate.warn(
-            "CellCollection.save() is deprecated, please use CellCollection.save_mvd3() instead"
-        )
-        self.save_mvd3(filename)
+        """Saves this cell collection to HDF5 file in MVD3 or SONATA format.
+
+        Args:
+            filename: filepath to write. If it ends with '.mvd3' then it is treated as MVD3,
+                otherwise as SONATA.
+        """
+        if str(filename).lower().endswith('mvd3'):
+            self.save_mvd3(filename)
+        else:
+            self.save_sonata(filename)
 
     def save_mvd3(self, filename):
         '''save this cell collection to mvd3 HDF5
@@ -152,11 +155,18 @@ class CellCollection(object):
 
     @classmethod
     def load(cls, filename):
-        # pylint: disable=missing-docstring
-        deprecate.warn(
-            "CellCollection.load() is deprecated, please use CellCollection.load_mvd3() instead"
-        )
-        return cls.load_mvd3(filename)
+        """Loads CellCollection from a file.
+
+        Args:
+            filename: filepath to cells file. If it ends with '.mvd3' then it is treated as
+                MVD3 circuit, otherwise as SONATA.
+
+        Returns:
+            CellCollection: loaded cells
+        """
+        if str(filename).lower().endswith('mvd3'):
+            return cls.load_mvd3(filename)
+        return cls.load_sonata(filename)
 
     @classmethod
     def load_mvd3(cls, filename):

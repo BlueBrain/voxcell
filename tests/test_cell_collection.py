@@ -98,49 +98,43 @@ def assert_equal_cells(c0, c1):
     )
 
 
-def check_roundtrip_mvd3(original):
+def check_roundtrip(original):
     with tempcwd():
-        original.save_mvd3('cells.h5')
-        restored = test_module.CellCollection.load_mvd3('cells.h5')
+        original.save('cells.mvd3')
+        restored = test_module.CellCollection.load('cells.mvd3')
         assert_equal_cells(original, restored)
-        return restored
-
-
-def check_roundtrip_sonata(original):
-    with tempcwd():
-        original.save_sonata('cells.sonata.h5')
-        restored = test_module.CellCollection.load_sonata('cells.sonata.h5')
+        restored_mvd3 = test_module.CellCollection.load_mvd3('cells.mvd3')
+        assert_equal_cells(restored, restored_mvd3)
+        original.save('cells.h5')
+        restored = test_module.CellCollection.load('cells.h5')
         assert_equal_cells(original, restored)
+        restored_sonata = test_module.CellCollection.load_sonata('cells.h5')
+        assert_equal_cells(restored, restored_sonata)
         return restored
 
 
 def test_roundtrip_empty():
     cells = test_module.CellCollection()
-    check_roundtrip_mvd3(cells)
-    check_roundtrip_sonata(cells)
+    check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_single():
     cells = test_module.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75]
-    check_roundtrip_mvd3(cells)
-    check_roundtrip_sonata(cells)
+    check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_multiple():
     cells = test_module.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75, 0]
     cells.properties['z-factor'] = [0, 0.75, 0.5, 0.25]
-    check_roundtrip_mvd3(cells)
-    check_roundtrip_sonata(cells)
+    check_roundtrip(cells)
 
 
 def test_roundtrip_properties_text_single():
     cells = test_module.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'pretty']
-    restored = check_roundtrip_mvd3(cells)
-    restored.properties['y-type'].to_frame()
-    restored = check_roundtrip_sonata(cells)
+    restored = check_roundtrip(cells)
     restored.properties['y-type'].to_frame()
 
 
@@ -148,10 +142,7 @@ def test_roundtrip_properties_text_multiple():
     cells = test_module.CellCollection()
     cells.properties['y-type'] = ['pretty', 'ugly', 'ugly', 'pretty']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha']
-    restored = check_roundtrip_mvd3(cells)
-    restored.properties['y-type'].to_frame()
-    restored.properties['z-type'].to_frame()
-    restored = check_roundtrip_sonata(cells)
+    restored = check_roundtrip(cells)
     restored.properties['y-type'].to_frame()
     restored.properties['z-type'].to_frame()
 
@@ -159,15 +150,13 @@ def test_roundtrip_properties_text_multiple():
 def test_roundtrip_positions():
     cells = test_module.CellCollection()
     cells.positions = random_positions(10)
-    check_roundtrip_mvd3(cells)
-    check_roundtrip_sonata(cells)
+    check_roundtrip(cells)
 
 
 def test_roundtrip_orientations():
     cells = test_module.CellCollection()
     cells.orientations = random_orientations(10)
-    check_roundtrip_mvd3(cells)
-    check_roundtrip_sonata(cells)
+    check_roundtrip(cells)
 
 
 def test_roundtrip_complex():
@@ -187,8 +176,7 @@ def test_roundtrip_complex():
     prefix = test_module.CellCollection.SONATA_DYNAMIC_PROPERTY
     cells.properties[prefix + 'current'] = np.arange(n)
     cells.properties[prefix + 'some_prop'] = np.random.choice(['t1', 't2'], n)
-    check_roundtrip_mvd3(cells)
-    check_roundtrip_sonata(cells)
+    check_roundtrip(cells)
 
 
 def test_remove_unassigned_1():
