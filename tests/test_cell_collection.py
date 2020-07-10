@@ -171,18 +171,21 @@ def test_roundtrip_orientations():
 
 def test_roundtrip_complex():
     cells = test_module.CellCollection()
-    n = 10
+    n = 5
 
     cells.positions = random_positions(n)
     cells.orientations = random_orientations(n)
-    cells.properties['synapse_class'] = np.random.choice(['INH', 'EXC'], n)
-    cells.properties['mtype'] = np.random.choice(['L5_NGC', 'L5_BTC', 'L6_LBC'], n)
-    cells.properties['etype'] = np.random.choice(['cADpyr', 'dNAC', 'bSTUT'], n)
-    cells.properties['morphology'] = np.random.choice([
+    cells.properties['synapse_class'] = pd.Categorical.from_codes(
+        codes=[0, 1, 1, 0, 0], categories=['EXC', 'INH'])
+    cells.properties['mtype'] = ['L5_NGC', 'L5_BTC', 'L5_BTC', 'L6_LBC', 'L6_LBC']
+    cells.properties['etype'] = ['cADpyr', 'dNAC', 'dNAC', 'bSTUT', 'bSTUT']
+    cells.properties['morphology'] = [
         'dend-C250500A-P3_axon-C190898A-P2_-_Scale_x1.000_y1.025_z1.000_-_Clone_2',
         'C240300C1_-_Scale_x1.000_y0.975_z1.000_-_Clone_55',
-        'dend-Fluo15_right_axon-Fluo2_right_-_Clone_37'
-    ], n)
+        'C240300C1_-_Scale_x1.000_y0.975_z1.000_-_Clone_55',
+        'dend-Fluo15_right_axon-Fluo2_right_-_Clone_37',
+        'dend-Fluo15_right_axon-Fluo2_right_-_Clone_37',
+    ]
     prefix = test_module.CellCollection.SONATA_DYNAMIC_PROPERTY
     cells.properties[prefix + 'current'] = np.arange(n)
     cells.properties[prefix + 'some_prop'] = np.random.choice(['t1', 't2'], n)

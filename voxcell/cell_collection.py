@@ -31,7 +31,10 @@ def _load_property(properties, name, values, library_group=None):
             unique_values = np.array(labels, dtype=object)
         else:
             unique_values = np.array(labels)
-        properties[name] = unique_values[values]
+        if unique_values.size < 0.5 * values.size:
+            properties[name] = pd.Categorical.from_codes(values, categories=unique_values)
+        else:
+            properties[name] = unique_values[values]
     else:
         properties[name] = values
 
@@ -143,23 +146,18 @@ class CellCollection(object):
             if self.orientations is not None:
                 f.create_dataset('cells/orientations',
                                  data=matrices_to_quaternions(self.orientations))
-
+            # numpy's `np.object` type must be represented as `str_dt`
+            # http://docs.h5py.org/en/latest/strings.html
+            str_dt = h5py.special_dtype(vlen=text_type)
             for name, series in self.properties.iteritems():
                 data = series.values
-
-                if _is_string_enum(series):
-                    # numpy uses "np.object" to represent variable size strings
-                    # however, h5py doesn't like this.
-                    # http://docs.h5py.org/en/latest/strings.html
-
+                if _is_string_enum(series) and not name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     unique_values, indices = np.unique(data, return_inverse=True)
                     f.create_dataset('cells/properties/' + name, data=indices.astype(np.uint32))
-
-                    dt = h5py.special_dtype(vlen=text_type)
-                    f.create_dataset('library/' + name, data=unique_values, dtype=dt)
-
+                    f.create_dataset('library/' + name, data=unique_values, dtype=str_dt)
                 else:
-                    f.create_dataset('cells/properties/' + name, data=data)
+                    dt = str_dt if data.dtype == np.object else data.dtype
+                    f.create_dataset('cells/properties/' + name, data=data, dtype=dt)
 
     @classmethod
     def load(cls, filename):
