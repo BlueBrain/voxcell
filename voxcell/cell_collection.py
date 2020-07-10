@@ -36,6 +36,12 @@ def _load_property(properties, name, values, library_group=None):
         properties[name] = values
 
 
+def _is_string_enum(series):
+    """Whether ``series`` contains enum of strings"""
+    is_cat_str = pd.api.types.is_categorical(series) and series.dtype.categories.dtype == np.object
+    return series.dtype == np.object or is_cat_str
+
+
 class CellCollection(object):
     '''Encapsulates all the data related to a collection of cells that compose a circuit.
 
@@ -103,8 +109,10 @@ class CellCollection(object):
             result.positions = df[['x', 'y', 'z']].values
         if 'orientation' in df:
             result.orientations = np.stack(df['orientation'])
-        props = set(df.columns) - set(['x', 'y', 'z', 'orientation'])
-        result.properties = df[list(props)].reset_index(drop=True)
+        # don't use `set` for filtering because it looses the order of columns => the restored Cells
+        # will have different columns order which is bad.
+        props = [column for column in df.columns if column not in ['x', 'y', 'z', 'orientation']]
+        result.properties = df[props].reset_index(drop=True)
         return result
 
     def save(self, filename):
@@ -139,7 +147,7 @@ class CellCollection(object):
             for name, series in self.properties.iteritems():
                 data = series.values
 
-                if data.dtype == np.object:
+                if _is_string_enum(series):
                     # numpy uses "np.object" to represent variable size strings
                     # however, h5py doesn't like this.
                     # http://docs.h5py.org/en/latest/strings.html
@@ -213,7 +221,7 @@ class CellCollection(object):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
                     dt = str_dt if series.dtype == np.object else series.dtype
                     group.create_dataset('dynamics_params/' + name, data=values, dtype=dt)
-                elif series.dtype == np.object:
+                elif _is_string_enum(series):
                     unique_values, indices = np.unique(values, return_inverse=True)
                     if len(unique_values) < len(values):
                         group.create_dataset(name, data=indices.astype(np.uint32))

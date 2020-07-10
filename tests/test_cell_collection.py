@@ -10,6 +10,7 @@ from voxcell import VoxcellError
 import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 from pandas.testing import assert_frame_equal
 
 
@@ -111,6 +112,15 @@ def check_roundtrip(original):
         restored_sonata = test_module.CellCollection.load_sonata('cells.h5')
         assert_equal_cells(restored, restored_sonata)
         return restored
+
+
+def test_is_string_enum():
+    str_series = pd.Series(list('babc')).astype(CategoricalDtype(list('abcd')))
+    assert test_module._is_string_enum(str_series)
+    int_series = pd.Series([1, 2, 3, 1], dtype="category")
+    assert not test_module._is_string_enum(int_series)
+    float_series = pd.Series(pd.Categorical.from_codes(codes=[0, 0, 1, 0], categories=[1.5, -.4]))
+    assert not test_module._is_string_enum(float_series)
 
 
 def test_roundtrip_empty():
@@ -302,6 +312,8 @@ def test_to_from_dataframe():
     cells.positions = random_positions(3)
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
+    cells.properties['cat'] = pd.Categorical.from_codes(
+        codes=np.zeros(3, dtype=np.uint), categories=['a'])
 
     cells2 = test_module.CellCollection.from_dataframe(cells.as_dataframe())
     assert_almost_equal(cells.positions, cells2.positions)
