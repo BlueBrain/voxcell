@@ -20,6 +20,7 @@ Contents
    install
    atlas
    extras
+   changelog
 
 
 Indices and tables
