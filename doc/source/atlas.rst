@@ -83,55 +83,94 @@ Brain region hierarchy
 
 Brain region IDs are organized into hierarchy (for instance, ``CA`` region in Hippocampus consists of ``CA1``, ``CA2`` and ``CA3``).
 
-This hierarchy, along with brain region names corresponding to IDs, is stored in a JSON file of the following form (full example could be found `here <http://voxels.nexus.apps.bbp.epfl.ch/api/analytics/atlas/releases/9B1F97DD-13B8-4FCF-B9B1-59E4EBE4B5D8/filters/brain_region/65535>`_):
+This hierarchy, along with different fields for each region, is stored in a JSON file of the
+following form (full example could be found `here <http://api.brain-map.org/api/v2/structure_graph_download/1.json>`_):
 
 .. code-block:: console
 
     {
-        "id" : 103,
-        "name" : "CA1a",
+        "id" : 382,
+        "acronym" : "CA1a",
+        "name": "Field CA1",
         "children" : [ {
-          "id" : 1,
-          "name" : "SLM"
+          "id" : 391,
+          "acronym" : "CA1slm"
+          "name": "Field CA1, stratum lacunosum-moleculare"
         }, {
-          "id" : 8,
-          "name" : "SR"
+          "id" : 399,
+          "acronym" : "CA1so"
+          "name": "Field CA1, stratum oriens"
         }, {
-          "id" : 15,
-          "name" : "SP"
+          "id" : 407,
+          "acronym" : "CA1sp"
+          "name": "Field CA1, pyramidal layer",
+        },{
+          "id" : 415,
+          "acronym" : "CA1sr",
+          "name": "Field CA1, stratum radiatum"
         }
     }
 
 
-|name| provides ``Hierarchy`` class for transparent access to these files.
-
-.. code-block:: python
-
-    hierarchy = Hierarchy.load_json(<path-to-JSON>)
-
-Each element stored in ``Hierarchy`` stores the attributes from corresponding JSON part.
-
-The most used method for ``Hierarchy`` is *collecting* some attribute, given the value of another one.
-Note that it returns a set of values for the region(s) matching the searched attribute, *and all of their children recursively*. For instance, collecting region name(s) for a given ID:
-
-.. code-block:: python
-
-    >> hierarchy.collect('id', 101, 'name')
-    {u'CA2', u'SLM', u'SO', u'SP', u'SR'}
-
-or the other way around (region IDs for given region name):
-
-.. code-block:: python
-
-    >> hierarchy.collect('name', 'SLM', 'id')
-    {1, 2, 3, 4, 5, 6, 7}
+|name| provides the ``RegionMap`` class for transparent access to these files.
 
 .. note::
+    This interface replaces the historical ``Hierarchy`` which is deprecated and will be removed
+    in the |name| version 2.8.0.
 
-    We consider changing this interface.
-    For instance, sometimes it might make more sense to return a list of the attributes for the given region and its *parents*, rather than *children*.
-    Please let us know your opinion by dropping an `email <mailto: bbp-ou-nse@groupes.epfl.ch>`_.
+One can use the ``load_json`` method to load hierarchy file and instantiate a ``RegionMap`` object.
 
+.. code-block:: python
+
+    from voxcell import RegionMap
+    region_map = RegionMap.load_json('<path-to-JSON>')
+    # Or you can instantiate directly from a nested directory :
+    region_map = RegionMap.from_dict(hierarchy_dict)
+
+Each element stored in ``RegionMap`` stores the attributes from the corresponding JSON part.
+
+Then you can use this object to retrieve information from the hierarchy :
+
+.. code-block:: python
+
+    >> region_map.get(382, "name")
+       'Field CA1'
+
+With 382 being the Allen Brain id for the 'CA1'.
+
+With this function, you can also retrieve the ``name`` field for all the parent regions :
+
+.. code-block:: python
+
+    >> region_map.get(382, "name", with_ascendants=True)
+    ['Field CA1', "Ammon's horn", 'Hippocampal region', 'Hippocampal formation',
+    'Cortical plate', 'Cerebral cortex', 'Cerebrum']
+This means the 'Field CA1' is included in the 'Ammon's horn', itself included in the 'Hippocampal region'
+etc...
+
+You can also retrieve an ID using a any kind of field. If you know the acronym of the CA1, then you can use it to
+get the CA1 ID :
+
+.. code-block:: python
+
+    >> region_map.find('CA1', "acronym")
+    {382}
+
+You can also mix everything to retrieve information using something else than the id :
+
+.. code-block:: python
+
+    >> region_map.get(region_map.find('Field CA1', "name").pop(), "acronym")
+    'CA1'
+
+You can also check if a brain region possesses a brain sub-region or not :
+
+.. code-block:: python
+
+    >> region_map.is_leaf_id(382)
+    False
+    >> region_map.is_leaf_id(399)
+    True
 
 Fetching data
 ~~~~~~~~~~~~~
@@ -167,11 +206,11 @@ We can load any of those with:
     >> brain_regions = atlas.load_data('brain_regions')
     >> longitude = atlas.load_data('longitude')
 
-as well as brain region hierarchy:
+as well as brain region map :
 
 .. code-block:: python
 
-    >> hierarchy = atlas.load_hierarchy()
+    >> region_map = atlas.load_region_map()
 
 By default, ``VoxelData`` class is used for loading NRRD. To change it to ``OrientationField``, please specify it with:
 
@@ -204,5 +243,5 @@ In this case there is no need to specify ``cache-dir`` when instantiating ``Atla
 
     >> atlas = Atlas.open('/gpfs/bbp.cscs.ch/project/proj67/entities/dev/atlas/O1-230/')
 
-    >> hierarchy = atlas.load_hierarchy()
+    >> region_map = atlas.load_region_map()
     >> brain_regions = atlas.load_data('brain_regions')

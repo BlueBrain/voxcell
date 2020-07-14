@@ -17,6 +17,7 @@ except ImportError:
 
 from voxcell import VoxelData, Hierarchy, RegionMap
 from voxcell import math_utils
+from voxcell.utils import deprecate
 
 from voxcell.exceptions import VoxcellError
 
@@ -95,6 +96,8 @@ class Atlas(object):
 
     def load_hierarchy(self, memcache=False):
         """ Load brain region hierarchy. """
+        deprecate.warn("Deprecated. Please use load_region_map instead. Will be removed in v2.8.0.")
+
         def _callback():
             return Hierarchy.load_json(self.fetch_hierarchy())
 

@@ -8,6 +8,9 @@ Version 2.7.1
   string properties is applied. If unique values of a property make less than half of its all values
   then it is loaded as pandas.Categorical.
 
+- Deprecated the Hierarchy class in profit of the RegionMap. The Hierarchy class should be removed
+  in 2.8.0. Redo the docs for the RegionMap object.
+
 Version 2.7.0
 -------------
 

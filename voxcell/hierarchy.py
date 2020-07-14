@@ -13,6 +13,7 @@ class Hierarchy(object):
     hierarchical part-of relationship.'''
 
     def __init__(self, data):
+        deprecate.warn("Deprecated. Please use RegionMap instead. Will be removed in v2.8.0.")
         self.children = [Hierarchy(c) for c in data.get('children', [])]
         self.data = dict((k, data[k]) for k in set(data.keys()) - set(['children']))
 
