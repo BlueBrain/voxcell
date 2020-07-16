@@ -128,6 +128,14 @@ def test_roundtrip_empty():
     check_roundtrip(cells)
 
 
+def test_roundtrip_none():
+    cells = test_module.CellCollection()
+    cells.properties['y-factor'] = [0.25, np.nan, 0.75]
+    assert_raises(VoxcellError, check_roundtrip, cells)
+    cells.properties['y-factor'] = [None, 0.1, 0.75]
+    assert_raises(VoxcellError, check_roundtrip, cells)
+
+
 def test_roundtrip_properties_numeric_single():
     cells = test_module.CellCollection()
     cells.properties['y-factor'] = [0.25, 0.5, 0.75]
@@ -175,8 +183,9 @@ def test_roundtrip_complex():
 
     cells.positions = random_positions(n)
     cells.orientations = random_orientations(n)
+    cells.properties['all_none'] = pd.Categorical.from_codes(codes=[0] * n, categories=[''])
     cells.properties['synapse_class'] = pd.Categorical.from_codes(
-        codes=[0, 1, 1, 0, 0], categories=['EXC', 'INH'])
+        codes=[0, 1, 1, 0, 0], categories=['', 'INH'])
     cells.properties['mtype'] = ['L5_NGC', 'L5_BTC', 'L5_BTC', 'L6_LBC', 'L6_LBC']
     cells.properties['etype'] = ['cADpyr', 'dNAC', 'dNAC', 'bSTUT', 'bSTUT']
     cells.properties['morphology'] = [

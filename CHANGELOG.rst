@@ -11,6 +11,9 @@ Version 2.7.1
 - Deprecated the Hierarchy class in profit of the RegionMap. The Hierarchy class should be removed
   in 2.8.0. Redo the docs for the RegionMap object.
 
+- Changed saving of `CellCollection`. Raise an error if there is a `None` or `np.NaN` in
+  `CellCollection`.
+
 Version 2.7.0
 -------------
 

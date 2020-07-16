@@ -125,6 +125,10 @@ class CellCollection(object):
             filename: filepath to write. If it ends with '.mvd3' then it is treated as MVD3,
                 otherwise as SONATA.
         """
+        none_properties = self.properties.isnull().any(axis=0)
+        if none_properties.any():
+            names = none_properties.index[none_properties].to_list()
+            raise VoxcellError("Replace `None` in {} properties before saving".format(names))
         if str(filename).lower().endswith('mvd3'):
             self.save_mvd3(filename)
         else:
@@ -150,14 +154,14 @@ class CellCollection(object):
             # http://docs.h5py.org/en/latest/strings.html
             str_dt = h5py.special_dtype(vlen=text_type)
             for name, series in self.properties.iteritems():
-                data = series.values
+                values = series.to_numpy()
                 if _is_string_enum(series) and not name.startswith(self.SONATA_DYNAMIC_PROPERTY):
-                    unique_values, indices = np.unique(data, return_inverse=True)
+                    unique_values, indices = np.unique(values, return_inverse=True)
                     f.create_dataset('cells/properties/' + name, data=indices.astype(np.uint32))
                     f.create_dataset('library/' + name, data=unique_values, dtype=str_dt)
                 else:
-                    dt = str_dt if data.dtype == np.object else data.dtype
-                    f.create_dataset('cells/properties/' + name, data=data, dtype=dt)
+                    dt = str_dt if values.dtype == np.object else values.dtype
+                    f.create_dataset('cells/properties/' + name, data=values, dtype=dt)
 
     @classmethod
     def load(cls, filename):
@@ -214,14 +218,14 @@ class CellCollection(object):
             group = population.create_group('0')
             str_dt = h5py.special_dtype(vlen=text_type)
             for name, series in self.properties.iteritems():
-                values = series.values
+                values = series.to_numpy()
                 if name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
                     dt = str_dt if series.dtype == np.object else series.dtype
                     group.create_dataset('dynamics_params/' + name, data=values, dtype=dt)
                 elif _is_string_enum(series):
                     unique_values, indices = np.unique(values, return_inverse=True)
-                    if len(unique_values) < len(values):
+                    if len(unique_values) < .5 * len(values):
                         group.create_dataset(name, data=indices.astype(np.uint32))
                         group.create_dataset('@library/' + name, data=unique_values, dtype=str_dt)
                     else:
