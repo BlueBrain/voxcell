@@ -8,10 +8,12 @@ import voxcell.cell_collection as test_module
 from voxcell import VoxcellError
 
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
+from numpy.testing import assert_equal, assert_almost_equal, assert_array_equal
 import pandas as pd
-from pandas.api.types import CategoricalDtype
-from pandas.testing import assert_frame_equal
+from pandas.api.types import CategoricalDtype, is_categorical_dtype as is_cat
+from pandas.testing import assert_frame_equal, assert_series_equal
+
+SONATA_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/sonata/')
 
 
 def euler_to_matrix(bank, attitude, heading):
@@ -92,11 +94,16 @@ def assert_equal_cells(c0, c1):
         eq_(c0.orientations, c1.orientations)
     else:
         assert_almost_equal(c0.orientations, c1.orientations)
-    assert_frame_equal(
-        c0.properties.sort_index(axis=1),
-        c1.properties.sort_index(axis=1),
-        check_names=True
-    )
+    sorted_c0 = c0.properties.sort_index(axis=1)
+    sorted_c1 = c1.properties.sort_index(axis=1)
+    assert_array_equal(sorted_c0.columns, sorted_c1.columns)
+    for column in sorted_c0:
+        s_c0, s_c1 = sorted_c0[column], sorted_c1[column]
+        if is_cat(s_c0) or is_cat(s_c1):
+            assert_array_equal(s_c0.to_numpy(), s_c1.to_numpy())
+            assert_array_equal(s_c0.index.to_numpy(), s_c1.index.to_numpy())
+        else:
+            assert_series_equal(s_c0, s_c1, check_names=True)
 
 
 def check_roundtrip(original):
@@ -158,10 +165,26 @@ def test_roundtrip_properties_text_single():
 
 def test_roundtrip_properties_text_multiple():
     cells = test_module.CellCollection()
-    cells.properties['y-type'] = ['pretty', 'ugly', 'ugly', 'pretty']
+    cells.properties['y-type'] = ['ugly', 'pretty', 'ugly', 'ugly']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha']
     restored = check_roundtrip(cells)
     restored.properties['y-type'].to_frame()
+    restored.properties['z-type'].to_frame()
+
+
+def test_roundtrip_properties_text_multiple_transform_to_categorical():
+    cells = test_module.CellCollection()
+    # y-type must be selected as a categorical candidate
+    cells.properties['y-type'] = ['ugly', 'ugly', 'ugly', 'ugly', 'pretty']
+    cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha', 'optimus_prime']
+    # y-type is a string at the beginning
+    assert_equal(cells.properties['y-type'].dtypes, np.object)
+    assert_equal(cells.properties['z-type'].dtypes, np.object)
+    restored = check_roundtrip(cells)
+    restored.properties['y-type'].to_frame()
+    # y-type should be categorical now
+    assert is_cat(restored.properties['y-type'])
+    assert_equal(cells.properties['z-type'].dtypes, np.object)
     restored.properties['z-type'].to_frame()
 
 
@@ -331,3 +354,44 @@ def test_to_from_dataframe():
     assert_almost_equal(cells.positions, cells2.positions)
     assert_almost_equal(cells.orientations, cells2.orientations)
     assert_frame_equal(cells.properties, cells2.properties)
+
+
+def assert_sonata_rotation(filename, good_orientation_type):
+    cells = test_module.CellCollection.load_sonata(filename)
+    assert_equal(cells.orientation_format, good_orientation_type)
+    check_roundtrip(cells)
+    # cannot be included in the roundtrip because the mvd3 conversion will potentially break
+    # the format
+    with tempcwd():
+        original = test_module.CellCollection.load_sonata(filename)
+        original.save_sonata("nodes_.h5")
+        restored = test_module.CellCollection.load_sonata("nodes_.h5")
+        assert_equal(original.orientation_format, restored.orientation_format)
+        for axis in ["x", "y", "z", "w"]:
+            assert "rotation_angle_{}axis".format(axis) not in restored.properties
+            assert "rotation_angle_{}axis".format(axis) not in original.properties
+            assert "orientation_{}".format(axis) not in restored.properties
+            assert "orientation_{}".format(axis) not in original.properties
+
+
+def test_load_sonata_orientations():
+    assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_eulers.h5"), "eulers")
+    assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions.h5"), "quaternions")
+    assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_no_rotation.h5"), "quaternions")
+    with assert_raises(VoxcellError):
+        assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions_w_missing.h5"), "quaternions")
+
+
+def test_set_orientation_type():
+    with tempcwd():
+        cells = test_module.CellCollection.load_sonata(os.path.join(SONATA_DATA_PATH, "nodes_eulers.h5"))
+        assert_equal(cells.orientation_format, "eulers")
+        cells.orientation_format = "quaternions"
+        cells.save_sonata("nodes_.h5")
+        restored = test_module.CellCollection.load_sonata("nodes_.h5")
+        assert_equal(restored.orientation_format, "quaternions")
+        for axis in ["x", "y", "z"]:
+            assert "rotation_angle_{}axis".format(axis) not in restored.properties
+
+        with assert_raises(VoxcellError):
+            cells.orientation_format = "unknown"

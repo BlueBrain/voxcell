@@ -199,7 +199,7 @@ def assert_equal_cells(c0, c1):
 
 def check_roundtrip(original, library_properties=None):
     with tempcwd() as tmp:
-        path = os.path.join(tmp, 'nodes.h5')
+        path = os.path.join(tmp, 'nodes_eulers.h5')
         original.save(path, library_properties)
         restored = test_module.NodePopulation.load(path)
 

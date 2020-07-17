@@ -8,6 +8,42 @@ from six import iteritems, text_type
 
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
+from voxcell.math_utils import euler2mat, mat2euler
+
+
+def _load_sonata_orientations(group, cells):
+    """Set CellCollection rotation matrices from a sonata file."""
+    dataset_names = [name for name in list(group) if isinstance(group[name], h5py.Dataset)]
+    if not dataset_names:
+        return None
+    size = group[dataset_names[0]].shape[0]
+
+    def _get_values(properties):
+        """Retrieve prop from the group if exists."""
+        return [group.get(prop, np.zeros((size,))) for prop in properties]
+
+    props = np.array([
+        'orientation_x',
+        'orientation_y',
+        'orientation_z',
+        'orientation_w',
+    ])
+    orientation_count = np.count_nonzero(np.isin(props, list(group)))
+    if orientation_count == 4:
+        cells.orientation_format = "quaternions"
+        cells.orientations = quaternions_to_matrices(np.vstack(_get_values(props)).T)
+    elif orientation_count in [1, 2, 3]:
+        raise VoxcellError(
+            "Missing orientation fields. Should be 4 quaternions or some euler angles or nothing")
+    else:
+        # need to keep this rotation_angle ordering for euler2mat (expects z, y, x)
+        props = np.array([
+            'rotation_angle_zaxis',
+            'rotation_angle_yaxis',
+            'rotation_angle_xaxis',
+        ])
+        cells.orientation_format = "eulers"
+        cells.orientations = euler2mat(*_get_values(props))
 
 
 def _load_property(properties, name, values, library_group=None):
@@ -56,12 +92,25 @@ class CellCollection(object):
     # https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#representing-nodes
     SONATA_DYNAMIC_PROPERTY = '@dynamics:'
 
-    def __init__(self, population_name='default'):
+    def __init__(self, population_name='default', orientation_format="quaternions"):
         # SONATA population name, currently assume a single population collection
         self.population_name = population_name
         self.positions = None
         self.orientations = None
         self.properties = pd.DataFrame()
+        self._orientation_format = orientation_format
+
+    @property
+    def orientation_format(self):
+        """Return the format of the orientation either "eulers" or "quaternions"."""
+        return self._orientation_format
+
+    @orientation_format.setter
+    def orientation_format(self, val):
+        """Set the format of orientation with only "eulers" or "quaternions"."""
+        if val not in ["quaternions", "eulers"]:
+            raise VoxcellError('You must set orientation_type to either "quaternions" or "eulers".')
+        self._orientation_format = val
 
     def add_properties(self, new_properties, overwrite=True):
         '''adds new columns to the properties DataFrame
@@ -212,6 +261,7 @@ class CellCollection(object):
         Args:
             filename(str): fullpath to filename to write
         """
+        # pylint: disable=too-many-locals
         with h5py.File(filename, 'w') as h5f:
             population = h5f.create_group('/nodes/%s' % self.population_name)
             population.create_dataset('node_type_id', data=np.full(len(self.properties), -1))
@@ -234,11 +284,18 @@ class CellCollection(object):
                     group.create_dataset(name, data=values)
 
             if self.orientations is not None:
-                quaternions = matrices_to_quaternions(self.orientations)
-                group.create_dataset('orientation_x', data=quaternions[:, 0])
-                group.create_dataset('orientation_y', data=quaternions[:, 1])
-                group.create_dataset('orientation_z', data=quaternions[:, 2])
-                group.create_dataset('orientation_w', data=quaternions[:, 3])
+                if self.orientation_format == "quaternions":
+                    quaternions = matrices_to_quaternions(self.orientations)
+                    group.create_dataset('orientation_x', data=quaternions[:, 0])
+                    group.create_dataset('orientation_y', data=quaternions[:, 1])
+                    group.create_dataset('orientation_z', data=quaternions[:, 2])
+                    group.create_dataset('orientation_w', data=quaternions[:, 3])
+                elif self.orientation_format == "eulers":
+                    az, ay, ax = mat2euler(self.orientations)
+                    group.create_dataset('rotation_angle_xaxis', data=ax)
+                    group.create_dataset('rotation_angle_yaxis', data=ay)
+                    group.create_dataset('rotation_angle_zaxis', data=az)
+
             if self.positions is not None:
                 group.create_dataset('x', data=self.positions[:, 0])
                 group.create_dataset('y', data=self.positions[:, 1])
@@ -263,15 +320,16 @@ class CellCollection(object):
             population = h5f['/nodes/' + population_names[0]]
             assert '0' in population, 'Single group "0" is supported only'
             group = population['0']
-
+            keys = set(group.keys())
             if 'x' in group:
                 cells.positions = np.vstack((group['x'], group['y'], group['z'])).T
-            if 'orientation_x' in group:
-                quaternions = np.vstack((group['orientation_x'], group['orientation_y'],
-                                         group['orientation_z'], group['orientation_w']))
-                cells.orientations = quaternions_to_matrices(quaternions.T)
-            properties_names = set(group.keys()) - {'x', 'y', 'z', 'orientation_x', 'orientation_y',
-                                                    'orientation_z', 'orientation_w'}
+
+            rotation_datasets = {'orientation_x', 'orientation_y', 'orientation_z', 'orientation_w',
+                                 'rotation_angle_zaxis', 'rotation_angle_yaxis',
+                                 'rotation_angle_xaxis'}
+            if len(rotation_datasets - keys) != len(rotation_datasets):
+                _load_sonata_orientations(group, cells)
+            properties_names = keys - {'x', 'y', 'z'}.union(rotation_datasets)
             for name in properties_names:
                 if not isinstance(group[name], h5py.Dataset):
                     continue

@@ -14,6 +14,18 @@ Version 2.7.1
 - Changed saving of `CellCollection`. Raise an error if there is a `None` or `np.NaN` in
   `CellCollection`.
 
+- Fixed the orientation loading for sonata files in `CellCollection`. Two different formats
+  exist : the euler's angles and the quaternions.
+
+    - use quaternions if all "orientation_[x|y|z]" are present
+    - if some of the "orientation_[x|y|z]" fields are here but not all. Raise.
+    - if orientations and rotation_angles are present use quaternions
+    - if no quaternions and some of the rotation_angles use the eulers angles
+      and assign 0 to the missing ones.
+
+- Added a orientation_format property to the `CellCollection` class. This allows the user to choose
+  which sonata orientation format she/he wants to use.
+
 Version 2.7.0
 -------------
 
