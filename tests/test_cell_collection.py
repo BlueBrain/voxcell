@@ -293,6 +293,40 @@ def test_as_dataframe():
     ok_(df.columns.inferred_type in ('string', 'unicode'))
 
 
+def test_size():
+    # Nothing
+    cells = test_module.CellCollection()
+    assert cells.size() == 0
+
+    # positions only
+    cells = test_module.CellCollection()
+    cells.positions = np.random.random((3, 3))
+    assert cells.size() == 3
+
+    # orientations only
+    cells = test_module.CellCollection()
+    cells.orientations = random_orientations(3)
+    assert cells.size() == 3
+
+    # properties only
+    cells = test_module.CellCollection()
+    cells.properties['foo'] = np.array(['a', 'b', 'c'])
+    assert cells.size() == 3
+
+    cells = test_module.CellCollection()
+    cells.positions = np.random.random((3, 3))
+    cells.orientations = random_orientations(3)
+    cells.properties['foo'] = np.array(['a', 'b', 'c'])
+    assert cells.size() == 3
+
+    # bad sizes : properties too small
+    cells = test_module.CellCollection()
+    cells.positions = np.random.random((3, 3))
+    cells.orientations = random_orientations(3)
+    cells.properties['foo'] = np.array(['a', 'b'])
+    assert_raises(VoxcellError, cells.size)
+
+
 def test_add_properties():
     cells = test_module.CellCollection()
     properties1 = pd.DataFrame({

@@ -82,11 +82,11 @@ def _is_string_enum(series):
 
 
 class CellCollection(object):
-    '''Encapsulates all the data related to a collection of cells that compose a circuit.
+    """Encapsulates all the data related to a collection of cells that compose a circuit.
 
     Multi-dimensional properties (such as positions and orientations) are attributes.
     General properties are a in a pandas DataFrame object "properties".
-    '''
+    """
 
     # properties that start with it are dynamic, and handled appropriately, see `dynamics_params` in
     # https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE.md#representing-nodes
@@ -99,6 +99,27 @@ class CellCollection(object):
         self.orientations = None
         self.properties = pd.DataFrame()
         self._orientation_format = orientation_format
+
+    def _nonzero_sizes(self):
+        return list({len(obj) for obj in [self.properties, self.positions, self.orientations] if
+                     obj is not None and len(obj) != 0})
+
+    def _check_sizes(self):
+        if len(self._nonzero_sizes()) > 1:
+            raise VoxcellError("Lengths of properties, position, orientation don't match")
+
+    def size(self):
+        """Return the size of the CellCollection.
+
+        If the positions, orientations or properties are filled with values it checks the sizes of
+        these objects and then return the size of the CellCollection.
+        """
+        self._check_sizes()
+        sizes = self._nonzero_sizes()
+        return sizes[0] if sizes else 0
+
+    def __len__(self):
+        return self.size()
 
     @property
     def orientation_format(self):
@@ -113,20 +134,20 @@ class CellCollection(object):
         self._orientation_format = val
 
     def add_properties(self, new_properties, overwrite=True):
-        '''adds new columns to the properties DataFrame
+        """adds new columns to the properties DataFrame
 
         Args:
             new_properties: a pandas DataFrame object
             overwrite: if True, overwrites columns with the same name.
             Otherwise, a VoxcellError is raised.
-        '''
+        """
         for name, prop in new_properties.iteritems():
             if (not overwrite) and (name in self.properties):
                 raise VoxcellError("Column '{0}' already exists".format(name))
             self.properties[name] = prop
 
     def remove_unassigned_cells(self):
-        ''' remove cells with one or more unassigned property '''
+        """ remove cells with one or more unassigned property """
         idx_unassigned = self.properties[self.properties.isnull().any(axis=1)].index
         self.properties = self.properties.drop(idx_unassigned)
         self.properties.reset_index(inplace=True, drop=True)
@@ -136,7 +157,7 @@ class CellCollection(object):
             self.positions = np.delete(self.positions, idx_unassigned, 0)
 
     def as_dataframe(self):
-        ''' return a dataframe with all cell properties '''
+        """ return a dataframe with all cell properties """
         result = self.properties.copy()
         if self.positions is not None:
             result['x'] = self.positions[:, 0]
@@ -153,7 +174,7 @@ class CellCollection(object):
 
     @classmethod
     def from_dataframe(cls, df):
-        ''' return a CellCollection object from a dataframe of cell properties '''
+        """ return a CellCollection object from a dataframe of cell properties """
         if not (df.index == 1 + np.arange(len(df))).all():
             raise VoxcellError("Index != 1..{0} (got: {1})".format(len(df), df.index.values))
         result = cls()
@@ -184,11 +205,12 @@ class CellCollection(object):
             self.save_sonata(filename)
 
     def save_mvd3(self, filename):
-        '''save this cell collection to mvd3 HDF5
+        """save this cell collection to mvd3 HDF5
 
         Args:
             filename(str): fullpath to filename to write
-        '''
+        """
+        self._check_sizes()
         with h5py.File(filename, 'w') as f:
             f.create_group('cells')
             f.create_group('library')
@@ -229,14 +251,14 @@ class CellCollection(object):
 
     @classmethod
     def load_mvd3(cls, filename):
-        '''load a cell collection from mvd3 HDF5
+        """load a cell collection from mvd3 HDF5
 
         Args:
             filename(str): fullpath to filename to read
 
         Returns:
             CellCollection object
-        '''
+        """
 
         cells = cls()
 
@@ -252,7 +274,6 @@ class CellCollection(object):
             if 'properties' in data:
                 for name, values in iteritems(data['properties']):
                     _load_property(cells.properties, name, values, f.get('library'))
-
         return cells
 
     def save_sonata(self, filename):
@@ -262,6 +283,7 @@ class CellCollection(object):
             filename(str): fullpath to filename to write
         """
         # pylint: disable=too-many-locals
+        self._check_sizes()
         with h5py.File(filename, 'w') as h5f:
             population = h5f.create_group('/nodes/%s' % self.population_name)
             population.create_dataset('node_type_id', data=np.full(len(self.properties), -1))

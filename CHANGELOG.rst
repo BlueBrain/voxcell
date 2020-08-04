@@ -26,6 +26,10 @@ Version 2.7.1
 - Added a orientation_format property to the `CellCollection` class. This allows the user to choose
   which sonata orientation format she/he wants to use.
 
+- Added a size function to `CellCollection`.
+
+- Check the sizes of the orientations/positions/properties before saving.
+
 Version 2.7.0
 -------------
 
