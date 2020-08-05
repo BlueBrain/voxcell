@@ -296,28 +296,33 @@ def test_as_dataframe():
 def test_size():
     # Nothing
     cells = test_module.CellCollection()
-    assert cells.size() == 0
+    assert_equal(cells.size(), 0)
+    assert_equal(len(cells), cells.size())
 
     # positions only
     cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
-    assert cells.size() == 3
+    assert_equal(cells.size(), 3)
+    assert_equal(len(cells), cells.size())
 
     # orientations only
     cells = test_module.CellCollection()
     cells.orientations = random_orientations(3)
-    assert cells.size() == 3
+    assert_equal(cells.size(), 3)
+    assert_equal(len(cells), cells.size())
 
     # properties only
     cells = test_module.CellCollection()
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
-    assert cells.size() == 3
+    assert_equal(cells.size(), 3)
+    assert_equal(len(cells), cells.size())
 
     cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
-    assert cells.size() == 3
+    assert_equal(cells.size(), 3)
+    assert_equal(len(cells), cells.size())
 
     # bad sizes : properties too small
     cells = test_module.CellCollection()
