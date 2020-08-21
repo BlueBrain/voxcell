@@ -1,5 +1,9 @@
 [MESSAGES CONTROL]
-disable=bad-continuation,fixme,invalid-name,len-as-condition,no-else-return,useless-object-inheritance
+disable=bad-continuation,fixme,invalid-name,len-as-condition,no-else-return,useless-object-inheritance, super-with-arguments
+
+# Note: As long as python2 is used, we cannot use the new Super of python3,
+# see https://www.python.org/dev/peps/pep-3135/.
+# This is why `pylint: disable=super-with-arguments` is required above.
 
 [FORMAT]
 # Maximum number of characters on a single line.

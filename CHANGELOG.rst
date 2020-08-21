@@ -4,6 +4,10 @@ Changelog
 Version 2.7.1
 -------------
 
+- Set the nrrd header_ field `kinds` with the value `['vector', 'domain', 'domain', domain']` when saving an
+  nrrd file which holds a non-scalar vector field over a volume. This change enables visualization of
+  direction vectors (3D vector field) and orientations (quaternions, 4D) with ITK-SNAP_ and 3D Slicer_.
+
 - Changed processing of properties of CellCollection that are pandas.Categorical. A special rule for
   string properties is applied. If unique values of a property make less than half of its all values
   then it is loaded as pandas.Categorical.
@@ -35,3 +39,8 @@ Version 2.7.0
 
 - Introduce serialization of CellCollection to SONATA format. It is the preferred choice. MVD3 can
   be saved/loaded only when the direct file extension `.mvd3` is used.
+
+
+.. _header: http://teem.sourceforge.net/nrrd/format.html#kinds
+.. _ITK-SNAP: http://www.itksnap.org/pmwiki/pmwiki.php
+.. _Slicer: https://www.slicer.org/

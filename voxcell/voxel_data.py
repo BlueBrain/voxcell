@@ -150,6 +150,14 @@ class VoxelData(object):
             'space origin': self.offset,
         }
 
+        # Case of an N-dimensional vector field over a volume
+        if dim_defect == 1 and np.issubdtype(self.raw.dtype, np.number):
+            # Required by ITK-SNAP (http://www.itksnap.org/pmwiki/pmwiki.php) and 3D Slicer
+            # (https://download.slicer.org/) to render 3D-vector fields using a RGB field.
+            # Note that ITK-SNAP raises a "Failed to load segmentation error" but lets you watch
+            # the volumetric data.
+            header['kinds'] = ['vector', 'domain', 'domain', 'domain']
+
         if encoding is not None:
             header['encoding'] = encoding
 

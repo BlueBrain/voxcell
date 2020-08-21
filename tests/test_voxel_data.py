@@ -6,7 +6,7 @@ from nose.tools import eq_, ok_
 
 import numpy as np
 import numpy.testing as npt
-from numpy.testing import assert_equal, assert_almost_equal, assert_raises
+from numpy.testing import assert_equal, assert_almost_equal, assert_raises, assert_array_equal
 import nrrd
 
 import voxcell.voxel_data as test_module
@@ -94,13 +94,33 @@ def test_save_nrrd_with_extra_axes():
         vd.save_nrrd(f.name)
         f.flush()
         f.seek(0)
-        data, header = nrrd.read(f.name)
+        _, header = nrrd.read(f.name)
         # pynrrd will convert None into np.array([np.nan, np.nan, np.nan])
         assert_equal(header['space directions'],
             [
                 [np.nan] * 3, [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
             ]
         )
+        assert 'kinds' not in header
+
+def test_save_nrrd_vector_field():
+    ''' test saving a numpy array with exactly 4 dimensions and a numeric dtype '''
+    raw = np.zeros((6, 7, 8, 5)) # one extra dimension
+    vd = test_module.VoxelData(raw, (1.0, 2.0, 3.0))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+        vd.save_nrrd(f.name)
+        f.flush()
+        f.seek(0)
+        _, header = nrrd.read(f.name)
+        # pynrrd's reader will convert None into np.array([np.nan, np.nan, np.nan])
+        assert_equal(header['space directions'],
+            [
+                [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
+            ]
+        )
+        assert_array_equal(header['kinds'], ['vector', 'domain', 'domain', 'domain'])
+
+
 
 
 def test_shape_checks():
