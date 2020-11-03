@@ -31,7 +31,7 @@ setup(
     license='BBP-internal-confidential',
     install_requires=[
         'future>=0.16',
-        'h5py>=2.3',
+        'h5py>=2.3,<3.0.0',
         'numpy>=1.9',
         'pandas>=0.24.2',
         'pynrrd>=0.4.0',

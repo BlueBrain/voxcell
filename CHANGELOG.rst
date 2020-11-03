@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 2.7.2
+--------------
+
+Bug Fixes
+~~~~~~~~~
+
+- Force the version of h5py to h5py<3.0.0. h5py==3.0.0 dropped the python2 support and changed the
+  string behaviors.
+
+
 Version 2.7.1
 -------------
 
