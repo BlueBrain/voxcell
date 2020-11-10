@@ -13,7 +13,8 @@ import pandas as pd
 from pandas.api.types import CategoricalDtype, is_categorical_dtype as is_cat
 from pandas.testing import assert_frame_equal, assert_series_equal
 
-SONATA_DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/sonata/')
+DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/')
+SONATA_DATA_PATH = os.path.join(DATA_PATH, 'sonata/')
 
 
 def euler_to_matrix(bank, attitude, heading):
@@ -128,6 +129,17 @@ def test_is_string_enum():
     assert not test_module._is_string_enum(int_series)
     float_series = pd.Series(pd.Categorical.from_codes(codes=[0, 0, 1, 0], categories=[1.5, -.4]))
     assert not test_module._is_string_enum(float_series)
+
+
+def test_load_mvd2():
+    cells_mvd3 = test_module.CellCollection.load_mvd3(os.path.join(DATA_PATH, 'mvd2_mvd3/circuit.mvd3'))
+    cells_mvd2 = test_module.CellCollection.load_mvd2(os.path.join(DATA_PATH, 'mvd2_mvd3/circuit.mvd2'))
+    assert_equal_cells(cells_mvd2, cells_mvd3)
+
+
+def test_roundtrip_mvd():
+    cells = test_module.CellCollection.load_mvd2(os.path.join(DATA_PATH, 'mvd2_mvd3/circuit.mvd2'))
+    check_roundtrip(cells)
 
 
 def test_roundtrip_empty():
@@ -418,12 +430,14 @@ def test_load_sonata_orientations():
     assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions.h5"), "quaternions")
     assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_no_rotation.h5"), "quaternions")
     with assert_raises(VoxcellError):
-        assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions_w_missing.h5"), "quaternions")
+        assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions_w_missing.h5"),
+                               "quaternions")
 
 
 def test_set_orientation_type():
     with tempcwd():
-        cells = test_module.CellCollection.load_sonata(os.path.join(SONATA_DATA_PATH, "nodes_eulers.h5"))
+        cells = test_module.CellCollection.load_sonata(
+            os.path.join(SONATA_DATA_PATH, "nodes_eulers.h5"))
         assert_equal(cells.orientation_format, "eulers")
         cells.orientation_format = "quaternions"
         cells.save_sonata("nodes_.h5")

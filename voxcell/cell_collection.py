@@ -1,4 +1,5 @@
 """ Cell collection access / writer. """
+import collections
 
 import h5py
 import numpy as np
@@ -8,7 +9,7 @@ from six import iteritems, text_type
 
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
-from voxcell.math_utils import euler2mat, mat2euler
+from voxcell.math_utils import euler2mat, mat2euler, angles_to_matrices
 
 
 def _load_sonata_orientations(group, cells):
@@ -248,6 +249,74 @@ class CellCollection(object):
         if str(filename).lower().endswith('mvd3'):
             return cls.load_mvd3(filename)
         return cls.load_sonata(filename)
+
+    @classmethod
+    def load_mvd2(cls, filename):
+        """load a cell collection from mvd2 HDF5
+
+        This method is a copy of `loadMVD2` from bluepy/v2/impl/cells_mvd.py
+
+        Args:
+            filename(str): fullpath to filename to read
+
+        Returns:
+            CellCollection object
+        """
+
+        def parse_neuron_line(line):
+            """ Parser for neurons """
+            tokens = line.split()
+            return {
+                'morphology': tokens[0],
+                'hypercolumn': int(tokens[2]),
+                'minicolumn': int(tokens[3]),
+                'layer': 1 + int(tokens[4]),
+                'mtype': mtypes[int(tokens[5])],
+                'morph_class': morph_classes[int(tokens[5])],
+                'synapse_class': synapse_classes[int(tokens[5])],
+                'etype': etypes[int(tokens[6])],
+                'x': float(tokens[7]),
+                'y': float(tokens[8]),
+                'z': float(tokens[9]),
+                'orientation': float(tokens[10]),
+                'me_combo': tokens[11]
+            }
+
+        SECTIONS = (
+            "Neurons Loaded", "MicroBox Data",
+            "MiniColumnsPosition", "CircuitSeeds",
+            "MorphTypes", "ElectroTypes", "FOOTER"
+        )
+
+        CATEGORICAL_PROPS = [
+            'mtype', 'etype', 'morph_class', 'synapse_class',
+            'morphology', 'me_combo'
+        ]
+
+        section_lines = collections.defaultdict(list)
+        accumulator = None
+
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line in SECTIONS:
+                    accumulator = section_lines[line]
+                elif accumulator is not None:
+                    accumulator.append(line)
+
+        mtypes = [line.split()[0] for line in section_lines['MorphTypes']]
+        morph_classes = [line.split()[1] for line in section_lines['MorphTypes']]
+        synapse_classes = [line.split()[2] for line in section_lines['MorphTypes']]
+        etypes = [line.split()[0] for line in section_lines['ElectroTypes']]
+
+        result = pd.DataFrame(list(map(parse_neuron_line, section_lines['Neurons Loaded'])))
+        for c in CATEGORICAL_PROPS:
+            result[c] = result[c].astype('category')
+
+        result['orientation'] = list(angles_to_matrices(np.pi * result['orientation'] / 180, 'y'))
+
+        result.index = 1 + np.arange(len(result))
+        return cls.from_dataframe(result)
 
     @classmethod
     def load_mvd3(cls, filename):
