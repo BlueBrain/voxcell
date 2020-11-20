@@ -1,6 +1,44 @@
 Changelog
 =========
 
+Version 3.0.0
+-------------
+
+
+Python 2 compatibility
+~~~~~~~~~~~~~~~~~~~~~~
+
+- Dropped Python 2 support
+
+
+Bug Fixes
+~~~~~~~~~
+
+- Fixed issue with H5PY >= 3.0.0 string type behavior.
+Changes in H5py >= 3.0.0 API affected the reading of h5 files by returning string fields
+as bytes fields. The recommended use of the method `Dataset.asstr()` to return string field is implemented in this version.
+
+
+Removed modules
+~~~~~~~~~~~~~~~
+
+- Removed deprecated module `voxcell.positions`
+
+- Removed deprecated module `voxcell.build`
+
+- Removed deprecated module `voxcell.core`
+
+- Removed deprecated module `voxcell.voxell_data`
+
+- Removed deprecated function `voxcell.vector_field.generate_homogeneous_field`:
+- Removed deprecated function `voxcell.vector_field.calculate_fields_by_distance_from`:
+- Removed deprecated function `voxcell.vector_field.calculate_fields_by_distance_to`:
+- Removed deprecated function `voxcell.vector_field.calculate_fields_by_distance_between`:
+- Removed deprecated function `voxcell.vector_field.compute_cylindrical_tangent_vectors`:
+- Removed deprecated function `voxcell.vector_field.compute_hemispheric_spherical_tangent_fields`:
+
+
+
 Version 2.7.4
 --------------
 

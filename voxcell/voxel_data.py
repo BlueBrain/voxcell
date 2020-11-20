@@ -8,7 +8,6 @@ import nrrd
 from voxcell import math_utils
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import quaternions_to_matrices
-from voxcell.utils import deprecate
 
 
 def _pivot_axes(a, k):
@@ -237,13 +236,6 @@ class VoxelData(object):
             `values` could be a single value or an iterable.
         '''
         return self.count(values) * self.voxel_volume
-
-    def clipped(self, aabb):
-        '''return a copy of this data after clipping it to an axis-aligned bounding box'''
-        deprecate.fail("Deprecated. Please use VoxelData.clip() instead.")
-        raw = math_utils.clip(self.raw, aabb)
-        offset = aabb[0] * self.voxel_dimensions
-        return VoxelData(raw, self.voxel_dimensions, self.offset + offset)
 
     def clip(self, bbox, na_value=0, inplace=False):
         """ Assign `na_value` to voxels outside of axis-aligned bounding box.

@@ -4,23 +4,14 @@ Access to VoxelBrain.
 https://nip.humanbrainproject.eu/documentation/user-manual.html#voxel-brain
 """
 
-import os
 import abc
 import json
-import requests
-
-try:
-    import urlparse
-except ImportError:
-    # pylint: disable=no-name-in-module,import-error
-    from urllib import parse as urlparse
+import os
+import urllib
 
 import numpy as np
-
-from voxcell import VoxelData, Hierarchy, RegionMap
-from voxcell import math_utils
-from voxcell.utils import deprecate
-
+import requests
+from voxcell import RegionMap, VoxelData, math_utils
 from voxcell.exceptions import VoxcellError
 
 
@@ -57,7 +48,7 @@ class Atlas(object):
     @staticmethod
     def open(url, cache_dir=None):
         """ Get Atlas object to access atlas stored at URL. """
-        parsed = urlparse.urlsplit(url)
+        parsed = urllib.parse.urlsplit(url)
         if parsed.scheme in ('', 'file'):
             return LocalAtlas(url)
         elif parsed.scheme in ('http', 'https'):
@@ -92,19 +83,6 @@ class Atlas(object):
 
         return self._check_cache(
             ('data', data_type, cls),
-            callback=_callback,
-            memcache=memcache
-        )
-
-    def load_hierarchy(self, memcache=False):
-        """ Load brain region hierarchy. """
-        deprecate.warn("Deprecated. Please use load_region_map instead. Will be removed in v2.8.0.")
-
-        def _callback():
-            return Hierarchy.load_json(self.fetch_hierarchy())
-
-        return self._check_cache(
-            ('hierarchy',),
             callback=_callback,
             memcache=memcache
         )

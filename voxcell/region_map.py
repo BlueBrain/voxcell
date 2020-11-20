@@ -5,8 +5,6 @@ import json
 import re
 import logging
 
-import six
-
 from voxcell.exceptions import VoxcellError
 
 
@@ -17,7 +15,7 @@ class Matcher(object):
     """ Helper class for value search. """
     def __init__(self, value, ignore_case=False):
         self.value = value
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             self.ignore_case = ignore_case
             if value.startswith("@"):
                 self.value = re.compile(value[1:], re.IGNORECASE if ignore_case else 0)
@@ -28,7 +26,7 @@ class Matcher(object):
     def __call__(self, value):
         if hasattr(self.value, 'match'):
             return bool(self.value.search(value))
-        elif isinstance(value, six.string_types) and self.ignore_case:
+        elif isinstance(value, str) and self.ignore_case:
             return self.value.upper() == value.upper()
         else:
             return self.value == value

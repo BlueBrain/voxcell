@@ -35,8 +35,8 @@ Voxcell supports loading JSON_ files as support for hierarchy data:
 
 .. code-block:: python
 
-    from voxcell.core import Hierarchy
-    hierarchy = Hierarchy.load('/path/to/file.json')
+    from voxcell.nexus.voxelbrain import Atlas
+    hierarchy = Atlas.open('/path/to/atlas').load_region_map()
 
 Example
 ~~~~~~~

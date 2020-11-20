@@ -115,8 +115,8 @@ following form (full example could be found `here <http://api.brain-map.org/api/
 |name| provides the ``RegionMap`` class for transparent access to these files.
 
 .. note::
-    This interface replaces the historical ``Hierarchy`` which is deprecated and will be removed
-    in the |name| version 2.8.0.
+    This interface replaces the historical ``Hierarchy`` which has been removed
+    in the |name| version 3.0.0.
 
 One can use the ``load_json`` method to load hierarchy file and instantiate a ``RegionMap`` object.
 
@@ -175,9 +175,9 @@ You can also check if a brain region possesses a brain sub-region or not :
 Fetching data
 ~~~~~~~~~~~~~
 
-When working with a VoxelBrain atlas, there is no need to instanstiate ``VoxelData`` and ``Hierarchy`` directly.
+When working with a VoxelBrain atlas, there is no need to instanstiate ``VoxelData`` directly.
 
-|name| provides ``Atlas`` class to transparently fetch data from VoxelBrain in the form of ``VoxelData`` and ``Hierarchy`` objects.
+|name| provides ``Atlas`` class to transparently fetch data from VoxelBrain in the form of ``VoxelData`` objects.
 
 For instance,
 

@@ -5,8 +5,6 @@ import h5py
 import numpy as np
 import pandas as pd
 
-from six import iteritems, text_type
-
 from voxcell.exceptions import VoxcellError
 from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
 from voxcell.math_utils import euler2mat, mat2euler, angles_to_matrices
@@ -56,18 +54,15 @@ def _load_property(properties, name, values, library_group=None):
         values (array-like): property values
         library_group (h5py.Group): library group
     """
-    values = np.array(values)
+    if values.dtype == np.object:
+        values = values.asstr()
+    values = values[()]
     if library_group is not None and name in library_group:
-        labels = library_group[name]
-        # older versions of h5py don't properly return
-        # variable length strings that pandas can consume
-        # (ie: they fail the to_frame() command with a KeyError
-        # due to the vlen in the dtype, force the conversion
-        # using the numpy array
-        if labels.dtype.names and 'vlen' in labels.dtype.names:
-            unique_values = np.array(labels, dtype=object)
+        if library_group[name].dtype == np.object:
+            unique_values = library_group[name].asstr()[()]
         else:
-            unique_values = np.array(labels)
+            unique_values = library_group[name][()]
+
         if unique_values.size < 0.5 * values.size:
             properties[name] = pd.Categorical.from_codes(values, categories=unique_values)
         else:
@@ -78,7 +73,8 @@ def _load_property(properties, name, values, library_group=None):
 
 def _is_string_enum(series):
     """Whether ``series`` contains enum of strings"""
-    is_cat_str = pd.api.types.is_categorical(series) and series.dtype.categories.dtype == np.object
+    is_cat_str = pd.api.types.is_categorical_dtype(series) and \
+        series.dtype.categories.dtype == np.object
     return series.dtype == np.object or is_cat_str
 
 
@@ -142,7 +138,7 @@ class CellCollection(object):
             overwrite: if True, overwrites columns with the same name.
             Otherwise, a VoxcellError is raised.
         """
-        for name, prop in new_properties.iteritems():
+        for name, prop in new_properties.items():
             if (not overwrite) and (name in self.properties):
                 raise VoxcellError("Column '{0}' already exists".format(name))
             self.properties[name] = prop
@@ -224,8 +220,8 @@ class CellCollection(object):
                                  data=matrices_to_quaternions(self.orientations))
             # numpy's `np.object` type must be represented as `str_dt`
             # http://docs.h5py.org/en/latest/strings.html
-            str_dt = h5py.special_dtype(vlen=text_type)
-            for name, series in self.properties.iteritems():
+            str_dt = h5py.special_dtype(vlen=str)
+            for name, series in self.properties.items():
                 values = series.to_numpy()
                 if _is_string_enum(series) and not name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     unique_values, indices = np.unique(values, return_inverse=True)
@@ -341,7 +337,7 @@ class CellCollection(object):
                 cells.orientations = quaternions_to_matrices(cells.orientations)
 
             if 'properties' in data:
-                for name, values in iteritems(data['properties']):
+                for name, values in data['properties'].items():
                     _load_property(cells.properties, name, values, f.get('library'))
         return cells
 
@@ -357,8 +353,8 @@ class CellCollection(object):
             population = h5f.create_group('/nodes/%s' % self.population_name)
             population.create_dataset('node_type_id', data=np.full(len(self.properties), -1))
             group = population.create_group('0')
-            str_dt = h5py.special_dtype(vlen=text_type)
-            for name, series in self.properties.iteritems():
+            str_dt = h5py.special_dtype(vlen=str)
+            for name, series in self.properties.items():
                 values = series.to_numpy()
                 if name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
@@ -427,9 +423,11 @@ class CellCollection(object):
                 _load_property(cells.properties, name, group[name], group.get('@library'))
 
             if 'dynamics_params' in group:
-                for name, values in iteritems(group['dynamics_params']):
+                for name, values in group['dynamics_params'].items():
                     if not isinstance(values, h5py.Dataset):
                         continue
-                    cells.properties[cls.SONATA_DYNAMIC_PROPERTY + name] = np.array(values)
+                    if values.dtype == np.object:
+                        values = values.asstr()
+                    cells.properties[cls.SONATA_DYNAMIC_PROPERTY + name] = values[()]
 
         return cells
