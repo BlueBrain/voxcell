@@ -1,6 +1,25 @@
 Changelog
 =========
 
+Version 2.7.4
+--------------
+
+Improvements
+~~~~~~~~~~~~
+- Remove the NodePopulation implementation and hard deprecate the class. Deprecate the
+  node_population.py module itself.
+
+
+Version 2.7.3
+--------------
+
+New Features
+~~~~~~~~~
+
+- Add a function to retrieve the region ids of layers in a brain region
+
+
+
 Version 2.7.2
 --------------
 
