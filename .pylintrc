@@ -51,4 +51,4 @@ ignore-docstrings=yes
 #as of numpy 1.8.0, name resolution seems to be a problem.  Ignore lookups in numpy
 ignored-classes=numpy,list
 
-extension-pkg-whitelist=numpy,lxml,libsonata
+extension-pkg-whitelist=numpy,lxml

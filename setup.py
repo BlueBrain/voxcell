@@ -13,8 +13,8 @@ if sys.version_info < (2, 7):
 
 VERSION = imp.load_source("voxcell.version", "voxcell/version.py").VERSION
 
+# keep this to avoid breaking the pip API should be removed in 2.9.0
 SONATA_REQUIRES = [
-    'libsonata>=0.0.1,<1.0',
 ]
 
 
