@@ -448,3 +448,13 @@ def test_set_orientation_type():
 
         with assert_raises(VoxcellError):
             cells.orientation_format = "unknown"
+
+
+def test_check_types():
+    # this is a sanity check for the h5py>3.0.0 and the string types
+    cells = test_module.CellCollection.load_sonata(os.path.join(SONATA_DATA_PATH, "nodes_multi_types.h5"))
+    assert_equal(cells.properties["string"].to_numpy(), np.array(['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG'], dtype=np.str))
+    assert_equal(cells.properties["categorical"].to_numpy(), np.array(['A', 'A', 'B', 'A', 'A', 'A', 'A'], dtype=np.str))
+    assert_equal(cells.properties["int"].to_numpy(), np.array([0, 0, 1, 0, 0, 0, 0], dtype=np.int))
+    assert_almost_equal(cells.properties["float"].to_numpy(), np.array([0.0, 0.0, 1.1, 0.0, 0.0, 0.0, 0.0]))
+    assert cells.properties["float"].to_numpy().dtype == np.float32
