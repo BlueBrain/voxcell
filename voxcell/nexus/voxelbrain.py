@@ -216,7 +216,7 @@ class LocalAtlas(Atlas):
             * if the value of "layers" doesn't contain all the required keys:
                 "names", "queries" and "attribute".
             * if the value  of "names" or "ids" is not a list, or if these objects are two lists
-            of different lengths.
+                of different lengths.
         """
 
         def _callback():
@@ -270,18 +270,20 @@ class LocalAtlas(Atlas):
             * hierarchy.json
             * metadata.json
 
-        The content of metadata.json must be of the following form:
-        {
-            ...
-            "layers": {
-                "names": [
-                    "layer 1", "layer 2/3", "layer 4", "layer 5", "layer 6", "Olfactory areas"
-                ],
-                "queries": ["@.*1$", "@.*2/3$", "@.*4$", "@.*5$", ".*6[a|b]?$", "OLF"],
-                "attribute": "acronym"
-            },
-            ...
-        }
+        The content of metadata.json must be of the following form::
+
+            {
+                ...
+                "layers": {
+                    "names": [
+                        "layer 1", "layer 2/3", "layer 4", "layer 5", "layer 6", "Olfactory areas"
+                    ],
+                    "queries": ["@.*1$", "@.*2/3$", "@.*4$", "@.*5$", ".*6[a|b]?$", "OLF"],
+                    "attribute": "acronym"
+                },
+                ...
+            }
+
         The strings of the `queries` list are in one-to-one correspondence with layer `names`.
         The layer `names` list is a user-defined string list which can vary depending on which
         hierarchy.json is used and which brain region is under scrutiny.
@@ -304,7 +306,7 @@ class LocalAtlas(Atlas):
             * if the value of "layers" doesn't contain all the required keys:
                 "names", "queries" and "attribute".
             * if the value  of "names" or "ids" is not a list, or if these objects are two lists
-            of different lengths.
+                of different lengths.
         """
         layer_names, layer_ids = self.get_layers()
 

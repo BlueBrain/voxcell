@@ -13,4 +13,27 @@ Traits
 .. automodule:: voxcell.traits
    :members:
 
-.. _vfapi:
+CellCollection
+--------------
+
+.. automodule:: voxcell.cell_collection
+   :members:
+
+VoxelData
+---------
+
+.. automodule:: voxcell.voxel_data
+   :members:
+
+Utils
+-----
+
+.. automodule:: voxcell.math_utils
+   :members:
+.. automodule:: voxcell.quaternion
+   :members:
+.. automodule:: voxcell.region_map
+   :members:
+.. automodule:: voxcell.vector_fields
+   :members:
+

@@ -21,7 +21,7 @@ Volumetric datasets are stored in VoxelBrain in `NRRD <http://teem.sourceforge.n
 
 The values stored in volumetric datasets could be `scalar <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image>`_ (e.g., brain region ID, cell density); as well as vector (e.g., morphology `orientation field <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field>`_).
 
-For the atlas mentioned above, NRRDs for each volumetric dataset available could be fetched from `here <http://voxels.nexus.apps.bbp.epfl.ch/api/analytics/atlas/releases/9B1F97DD-13B8-4FCF-B9B1-59E4EBE4B5D8/data>`_.
+For the atlas mentioned above, NRRDs for each volumetric dataset available could be fetched from `<http://voxels.nexus.apps.bbp.epfl.ch/api/analytics/atlas/releases/9B1F97DD-13B8-4FCF-B9B1-59E4EBE4B5D8/data>`_.
 
 |name| provides ``VoxelData`` class for transparent access to these files.
 
@@ -145,6 +145,7 @@ With this function, you can also retrieve the ``name`` field for all the parent 
     >> region_map.get(382, "name", with_ascendants=True)
     ['Field CA1', "Ammon's horn", 'Hippocampal region', 'Hippocampal formation',
     'Cortical plate', 'Cerebral cortex', 'Cerebrum']
+
 This means the 'Field CA1' is included in the 'Ammon's horn', itself included in the 'Hippocampal region'
 etc...
 

@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 3.0.1
+-------------
+
+Improvements
+~~~~~~~~~~~~
+- Use sphinx-bluebrain-theme for documentation
+- Add missing API to documentation
+
 Version 3.0.0
 -------------
 
@@ -14,10 +22,9 @@ Python 2 compatibility
 Bug Fixes
 ~~~~~~~~~
 
-- Fixed issue with H5PY >= 3.0.0 string type behavior.
-Changes in H5py >= 3.0.0 API affected the reading of h5 files by returning string fields
-as bytes fields. The recommended use of the method `Dataset.asstr()` to return string field is implemented in this version.
-
+- Fixed issue with H5PY >= 3.0.0 string type behavior. Changes in H5py >= 3.0.0 API affected the
+  reading of h5 files by returning string fields as bytes fields. The recommended use of the method
+  `Dataset.asstr()` to return string field is implemented in this version.
 
 Removed modules
 ~~~~~~~~~~~~~~~
@@ -52,7 +59,7 @@ Version 2.7.3
 --------------
 
 New Features
-~~~~~~~~~
+~~~~~~~~~~~~
 
 - Add a function to retrieve the region ids of layers in a brain region
 

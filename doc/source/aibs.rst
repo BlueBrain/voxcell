@@ -31,7 +31,7 @@ Note that the 3-D mask for any structure is composed of all voxels of the atlas 
 structure and for any of its descendants in the structure hierarchy.
 
 
-Voxcell supports loading JSON_ files as support for hierarchy data:
+Voxcell supports loading JSON files as support for hierarchy data:
 
 .. code-block:: python
 

@@ -23,8 +23,11 @@ setup(
     description='Voxcell is a small library to handle probability'
                 ' distributions that have a spatial component and to use them'
                 ' to build collection of cells in space.',
-    url='https://bbpteam.epfl.ch/project/issues/projects/BRBLD/issues/',
-    download_url='https://bbpteam.epfl.ch/repository/devpi/+search?query=name%3Avoxcell',
+    url='https://bbpteam.epfl.ch/documentation/projects/voxcell',
+    project_urls={
+        "Tracker": "https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
+        "Source": "ssh://bbpcode.epfl.ch/nse/voxcell",
+    },
     license='BBP-internal-confidential',
     install_requires=[
         'future>=0.16',

@@ -18,8 +18,10 @@ Contents
    :maxdepth: 2
 
    install
+   aibs
    atlas
    extras
+   api
    changelog
 
 

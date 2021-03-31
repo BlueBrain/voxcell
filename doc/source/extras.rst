@@ -9,7 +9,7 @@ You can also think of it as a collection of different probability distributions 
 
 Contains three objects:
 
-- *field* is a VoxelData_ object that covers a volume of space
+- *field* is a ``VoxelData`` object that covers a volume of space
 - *distributions* is a pandas.DataFrame object that represents a group of discrete probability distributions
 - *traits* is a pandas.DataFrame object that represents the possible values of the variable
 
