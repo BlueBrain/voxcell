@@ -1,9 +1,9 @@
-import nose.tools as nt
+import pytest
 
 from voxcell.utils import deprecate
 from voxcell.sonata import NodePopulation
 
 
 def test_init():
-    with nt.assert_raises(deprecate.VoxcellDeprecationError):
+    with pytest.raises(deprecate.VoxcellDeprecationError):
         NodePopulation(1, 1)

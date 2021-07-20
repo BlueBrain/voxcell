@@ -1,12 +1,11 @@
 import os
 import operator
 import tempfile
-import nose.tools as nt
-from nose.tools import eq_, ok_
+import pytest
 
 import numpy as np
 import numpy.testing as npt
-from numpy.testing import assert_equal, assert_almost_equal, assert_raises, assert_array_equal
+from numpy.testing import assert_almost_equal, assert_raises, assert_array_equal
 import nrrd
 
 import voxcell.voxel_data as test_module
@@ -19,9 +18,9 @@ DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 def test_lookup():
     raw = np.array([[11, 12], [21, 22]])
     v = test_module.VoxelData(raw, (2, 3), offset=np.array([2, 2]))
-    assert_equal(v.lookup([[2, 3]]), [11])
-    assert_equal(v.lookup([[2, 10], [1, 5]], outer_value=42), [42, 42])
-    assert_equal(v.lookup([[2, 10], [1, 5], [4, 5]], outer_value=42), [42, 42, 22])
+    assert v.lookup([[2, 3]]) == [11]
+    assert_array_equal(v.lookup([[2, 10], [1, 5]], outer_value=42), [42, 42])
+    assert_array_equal(v.lookup([[2, 10], [1, 5], [4, 5]], outer_value=42), [42, 42, 22])
     assert_raises(VoxcellError, v.lookup, [[1, 5]])
     assert_raises(VoxcellError, v.lookup, [[2, 10]])
 
@@ -29,36 +28,36 @@ def test_lookup():
 def test_lookup_vector_data():
     raw = np.array([[[11], [12]], [[21], [22]]])
     v = test_module.VoxelData(raw, (2, 2))
-    assert_equal(v.lookup([[1, 1], [3, 3]]), [[11], [22]])
+    assert_array_equal(v.lookup([[1, 1], [3, 3]]), [[11], [22]])
 
 
 def test_positions_to_indices():
     raw = np.zeros(2)
     v = test_module.VoxelData(raw, voxel_dimensions=(10.0,), offset=(10.0,))
-    assert_equal(v.positions_to_indices([15., 25.]), [0, 1])
-    assert_equal(v.positions_to_indices([15., 25.], keep_fraction=True), [0.5, 1.5])
+    assert_array_equal(v.positions_to_indices([15., 25.]), [0, 1])
+    assert_array_equal(v.positions_to_indices([15., 25.], keep_fraction=True), [0.5, 1.5])
 
     # border effects
-    assert_equal(v.positions_to_indices([9.9999999]), [0])
-    assert_equal(v.positions_to_indices([19.9999999]), [0])
+    assert v.positions_to_indices([9.9999999]) == [0]
+    assert v.positions_to_indices([19.9999999]) == [0]
 
 def test_load_nrrd_scalar_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'scalar.nrrd'))
-    eq_(actual.raw.shape, (1, 2))
+    assert actual.raw.shape == (1, 2)
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
     assert_almost_equal(actual.bbox, np.array([[100, 200], [110, 240]]))
 
 def test_load_nrrd_vector_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
-    eq_(actual.raw.shape, (1, 2, 3))
+    assert actual.raw.shape == (1, 2, 3)
     assert_almost_equal(actual.raw, [[[11, 12, 13], [21, 22, 23]]])
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
 
 def test_load_nrrd_with_space_directions():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'space_directions.nrrd'))
-    eq_(actual.raw.shape, (1, 2, 3))
+    assert actual.raw.shape == (1, 2, 3)
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
 
@@ -76,15 +75,15 @@ def test_save_nrrd():
         f.flush()
         f.seek(0)
         new = test_module.VoxelData.load_nrrd(f.name)
-        ok_(np.allclose(vd.raw, new.raw))
-        ok_(np.allclose(vd.voxel_dimensions, new.voxel_dimensions))
-        ok_(np.allclose(vd.offset, new.offset))
+        assert np.allclose(vd.raw, new.raw)
+        assert np.allclose(vd.voxel_dimensions, new.voxel_dimensions)
+        assert np.allclose(vd.offset, new.offset)
     with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
         vd.save_nrrd(f.name, encoding='raw')
         f.flush()
         f.seek(0)
         new = test_module.VoxelData.load_nrrd(f.name)
-        ok_(np.allclose(vd.raw, new.raw))
+        assert np.allclose(vd.raw, new.raw)
 
 def test_save_nrrd_with_extra_axes():
     ''' test saving a numpy array with more than 3 dimensions '''
@@ -96,11 +95,10 @@ def test_save_nrrd_with_extra_axes():
         f.seek(0)
         _, header = nrrd.read(f.name)
         # pynrrd will convert None into np.array([np.nan, np.nan, np.nan])
-        assert_equal(header['space directions'],
+        assert_array_equal(header['space directions'],
             [
                 [np.nan] * 3, [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
-            ]
-        )
+            ])
         assert 'kinds' not in header
 
 def test_save_nrrd_vector_field():
@@ -113,11 +111,10 @@ def test_save_nrrd_vector_field():
         f.seek(0)
         _, header = nrrd.read(f.name)
         # pynrrd's reader will convert None into np.array([np.nan, np.nan, np.nan])
-        assert_equal(header['space directions'],
+        assert_array_equal (header['space directions'],
             [
                 [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
-            ]
-        )
+            ])
         assert_array_equal(header['kinds'], ['vector', 'domain', 'domain', 'domain'])
 
 
@@ -133,9 +130,9 @@ def test_shape_checks():
 def test_with_data():
     original = test_module.VoxelData(np.array([0, 1]), voxel_dimensions=(2,), offset=(42,))
     replaced = original.with_data(np.array([2, 3]))
-    assert_equal(replaced.raw, [2, 3])
-    assert_equal(replaced.voxel_dimensions, original.voxel_dimensions)
-    assert_equal(replaced.offset, original.offset)
+    assert_array_equal(replaced.raw, [2, 3])
+    assert replaced.voxel_dimensions == original.voxel_dimensions
+    assert replaced.offset == original.offset
 
 
 def test_indices_to_positions():
@@ -146,33 +143,33 @@ def test_indices_to_positions():
 
 def test_count():
     vd = test_module.VoxelData(np.array([0, 1, 1, 2]), voxel_dimensions=(2,))
-    assert_equal(vd.count(7), 0)
-    assert_equal(vd.count(1), 2)
-    assert_equal(vd.count([0, 2]), 2)
-    assert_equal(vd.count(set([0, 2])), 2)
+    assert vd.count(7) == 0
+    assert vd.count(1) == 2
+    assert vd.count([0, 2]) == 2
+    assert vd.count(set([0, 2])) == 2
 
 
 def test_volume():
     vd = test_module.VoxelData(np.array([[0, 1], [1, 2]]), voxel_dimensions=(2, -3))
-    assert_equal(vd.volume(1), 12)
-    assert_equal(vd.volume(13), 0)
+    assert vd.volume(1) == 12
+    assert vd.volume(13) == 0
 
 
 def test_clip():
     raw = np.array([1, 2, 3])
     original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
     clipped = original.clip(bbox=((11,), (15,)), na_value=-1)
-    assert_equal(original.raw, raw)
-    assert_equal(clipped.raw, [-1, 2, -1])
-    assert_equal(clipped.voxel_dimensions, original.voxel_dimensions)
-    assert_equal(clipped.offset, original.offset)
+    assert_array_equal(original.raw, raw)
+    assert_array_equal(clipped.raw, [-1, 2, -1])
+    assert clipped.voxel_dimensions == original.voxel_dimensions
+    assert clipped.offset == original.offset
 
 
 def test_clip_inplace():
     raw = np.array([1, 2, 3])
     original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
     original.clip(bbox=((11,), (15,)), na_value=-1, inplace=True)
-    assert_equal(original.raw, [-1, 2, -1])
+    assert_array_equal(original.raw, [-1, 2, -1])
 
 
 def test_clip_empty():
@@ -189,42 +186,42 @@ def test_clip_out_of_bounds():
     raw = np.array([1, 2, 3])
     original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
     clipped = original.clip(bbox=((-1000,), (1000,)))
-    assert_equal(clipped.raw, original.raw)
+    assert_array_equal(clipped.raw, original.raw)
 
 
 def test_filter():
     raw = np.array([[[11], [12]], [[21], [22]]])
     original = test_module.VoxelData(raw, voxel_dimensions=(2, 6, 10), offset=(10, 20, 30))
     filtered = original.filter(lambda p: np.logical_and(p[:, 0] > 12, p[:, 1] > 26))
-    assert_equal(original.raw, raw)
-    assert_equal(filtered.raw, [[[0], [0]], [[0], [22]]])
-    assert_equal(filtered.offset, original.offset)
-    assert_equal(filtered.voxel_dimensions, original.voxel_dimensions)
+    assert_array_equal(original.raw, raw)
+    assert_array_equal(filtered.raw, [[[0], [0]], [[0], [22]]])
+    assert_array_equal(filtered.offset, original.offset)
+    assert_array_equal(filtered.voxel_dimensions, original.voxel_dimensions)
 
 
 def test_filter_inplace():
     original = test_module.VoxelData(np.array([[[11], [12]], [[21], [22]]]), (2, 6, 10), offset=(10, 20, 30))
     original.filter(lambda p: np.logical_and(p[:, 0] > 12, p[:, 1] > 26), inplace=True)
-    assert_equal(original.raw, [[[0], [0]], [[0], [22]]])
+    assert_array_equal(original.raw, [[[0], [0]], [[0], [22]]])
 
 
 def test_compact():
     raw = np.array([0, 42, -1])
     original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
     compact = original.compact(na_values=(0, -1))
-    assert_equal(original.raw, raw)
-    assert_equal(original.offset, 10)
-    assert_equal(compact.raw, raw[1:2])
-    assert_equal(compact.voxel_dimensions, original.voxel_dimensions)
-    assert_equal(compact.offset, 12)
+    assert_array_equal(original.raw, raw)
+    assert original.offset == 10
+    assert compact.raw == raw[1:2]
+    assert compact.voxel_dimensions == original.voxel_dimensions
+    assert compact.offset == 12
 
 
 def test_compact_inplace():
     raw = np.array([0, 42, -1])
     original = test_module.VoxelData(raw, voxel_dimensions=(2,), offset=(10,))
     original.compact(na_values=(0, -1), inplace=True)
-    assert_equal(original.raw, raw[1:2])
-    assert_equal(original.offset, 12)
+    assert original.raw == raw[1:2]
+    assert original.offset == 12
 
 
 def test_orientation_field():
@@ -242,26 +239,20 @@ def test_orientation_field_compact():
     )
 
 def test_orientation_field_raises():
-    nt.assert_raises(
-        VoxcellError,
-        test_module.OrientationField, np.zeros(4), voxel_dimensions=(1,)
-    )
-    nt.assert_raises(
-        VoxcellError,
-        test_module.OrientationField, np.zeros((3, 3)), voxel_dimensions=(1,)
-    )
+    with pytest.raises(VoxcellError):
+        test_module.OrientationField(np.zeros(4), voxel_dimensions=(1,))
+    with pytest.raises(VoxcellError):
+        test_module.OrientationField(np.zeros((3, 3)), voxel_dimensions=(1,))
 
 def test_roi_mask():
     field = test_module.ROIMask(np.array([1, 0, 0, 0], dtype=np.uint8), voxel_dimensions=(2,))
     actual = field.lookup([[1.], [3]])
-    nt.assert_equal(actual.dtype, 'bool')
-    npt.assert_equal(actual, [True, False])
+    assert actual.dtype == 'bool'
+    assert_array_equal(actual, [True, False])
 
 def test_test_roi_mask_raises():
-    nt.assert_raises(
-        VoxcellError,
-        test_module.ROIMask, np.zeros(4, dtype=np.int64), voxel_dimensions=(1,)
-    )
+    with pytest.raises(VoxcellError):
+        test_module.ROIMask(np.zeros(4, dtype=np.int64), voxel_dimensions=(1,))
 
 
 def test_reduce():

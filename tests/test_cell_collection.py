@@ -2,19 +2,22 @@ import tempfile
 import os
 import shutil
 from contextlib import contextmanager
-from nose.tools import ok_, eq_, assert_raises, assert_is_none, raises
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+from numpy.testing import assert_almost_equal, assert_array_equal
+from pandas.api.types import CategoricalDtype, is_categorical_dtype as is_cat
+from pandas.testing import assert_frame_equal, assert_series_equal
+
 
 import voxcell.cell_collection as test_module
 from voxcell import VoxcellError
 
-import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal, assert_array_equal
-import pandas as pd
-from pandas.api.types import CategoricalDtype, is_categorical_dtype as is_cat
-from pandas.testing import assert_frame_equal, assert_series_equal
 
-DATA_PATH = os.path.join(os.path.dirname(__file__), 'data/')
-SONATA_DATA_PATH = os.path.join(DATA_PATH, 'sonata/')
+DATA_PATH = Path(__file__).parent / 'data'
+SONATA_DATA_PATH = DATA_PATH / 'sonata'
 
 
 def euler_to_matrix(bank, attitude, heading):
@@ -43,7 +46,7 @@ def euler_to_matrix(bank, attitude, heading):
 def test_euler_to_matrix():  # testing the test
     n = 2
 
-    assert_equal(
+    assert_array_equal(
         euler_to_matrix([0] * n, [0] * n, [0] * n),
         np.array([np.diag([1, 1, 1])] * n))
 
@@ -90,9 +93,12 @@ def tempcwd():
 
 
 def assert_equal_cells(c0, c1):
-    assert_equal(c0.positions, c1.positions)
+    if c0.positions is None:
+        assert c1.positions is None
+    else:
+        assert_almost_equal(c0.positions, c1.positions)
     if c0.orientations is None:
-        eq_(c0.orientations, c1.orientations)
+        assert c1.orientations is None
     else:
         assert_almost_equal(c0.orientations, c1.orientations)
     sorted_c0 = c0.properties.sort_index(axis=1)
@@ -132,13 +138,13 @@ def test_is_string_enum():
 
 
 def test_load_mvd2():
-    cells_mvd3 = test_module.CellCollection.load_mvd3(os.path.join(DATA_PATH, 'mvd2_mvd3/circuit.mvd3'))
-    cells_mvd2 = test_module.CellCollection.load_mvd2(os.path.join(DATA_PATH, 'mvd2_mvd3/circuit.mvd2'))
+    cells_mvd3 = test_module.CellCollection.load_mvd3(DATA_PATH / 'mvd2_mvd3/circuit.mvd3')
+    cells_mvd2 = test_module.CellCollection.load_mvd2(DATA_PATH / 'mvd2_mvd3/circuit.mvd2')
     assert_equal_cells(cells_mvd2, cells_mvd3)
 
 
 def test_roundtrip_mvd():
-    cells = test_module.CellCollection.load_mvd2(os.path.join(DATA_PATH, 'mvd2_mvd3/circuit.mvd2'))
+    cells = test_module.CellCollection.load_mvd2(DATA_PATH / 'mvd2_mvd3/circuit.mvd2')
     check_roundtrip(cells)
 
 
@@ -150,9 +156,11 @@ def test_roundtrip_empty():
 def test_roundtrip_none():
     cells = test_module.CellCollection()
     cells.properties['y-factor'] = [0.25, np.nan, 0.75]
-    assert_raises(VoxcellError, check_roundtrip, cells)
+    with pytest.raises(VoxcellError):
+        check_roundtrip(cells)
     cells.properties['y-factor'] = [None, 0.1, 0.75]
-    assert_raises(VoxcellError, check_roundtrip, cells)
+    with pytest.raises(VoxcellError):
+        check_roundtrip(cells)
 
 
 def test_roundtrip_properties_numeric_single():
@@ -190,13 +198,13 @@ def test_roundtrip_properties_text_multiple_transform_to_categorical():
     cells.properties['y-type'] = ['ugly', 'ugly', 'ugly', 'ugly', 'pretty']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha', 'optimus_prime']
     # y-type is a string at the beginning
-    assert_equal(cells.properties['y-type'].dtypes, np.object)
-    assert_equal(cells.properties['z-type'].dtypes, np.object)
+    assert cells.properties['y-type'].dtypes == np.object
+    assert cells.properties['z-type'].dtypes == np.object
     restored = check_roundtrip(cells)
     restored.properties['y-type'].to_frame()
     # y-type should be categorical now
     assert is_cat(restored.properties['y-type'])
-    assert_equal(cells.properties['z-type'].dtypes, np.object)
+    assert cells.properties['z-type'].dtypes == np.object
     restored.properties['z-type'].to_frame()
 
 
@@ -248,8 +256,8 @@ def test_remove_unassigned_1():
         'bar': [0., None, 2., 3., 4.]
     })
     cells.remove_unassigned_cells()
-    assert_equal(cells.positions, positions[[0, 3, 4]])
-    assert_equal(cells.orientations, orientations[[0, 3, 4]])
+    assert_array_equal(cells.positions, positions[[0, 3, 4]])
+    assert_array_equal(cells.orientations, orientations[[0, 3, 4]])
     assert_frame_equal(
         cells.properties,
         pd.DataFrame({
@@ -269,9 +277,9 @@ def test_remove_unassigned_2():
         'bar': [0, 1],
     })
     cells.remove_unassigned_cells()
-    assert_equal(len(cells.positions), n)
-    assert_equal(len(cells.orientations), n)
-    assert_equal(len(cells.properties), n)
+    assert len(cells.positions) == n
+    assert len(cells.orientations) == n
+    assert len(cells.properties) == n
 
 
 def test_remove_unassigned_3():
@@ -280,8 +288,8 @@ def test_remove_unassigned_3():
         'foo': ['a', None],
     })
     cells.remove_unassigned_cells()
-    assert_is_none(cells.positions)
-    assert_is_none(cells.orientations)
+    assert cells.positions is None
+    assert cells.orientations is None
 
 
 def test_as_dataframe():
@@ -290,58 +298,59 @@ def test_as_dataframe():
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
     df = cells.as_dataframe()
-    assert_equal(sorted(df.columns), ['foo', 'orientation', 'x', 'y', 'z'])
-    assert_equal(df['x'], cells.positions[:, 0])
-    assert_equal(np.stack(df['orientation']), cells.orientations)
-    assert_equal(df['foo'].values, cells.properties['foo'].values)
+    assert sorted(df.columns) == ['foo', 'orientation', 'x', 'y', 'z']
+    assert_array_equal(df['x'], cells.positions[:, 0])
+    assert_array_equal(np.stack(df['orientation']), cells.orientations)
+    assert_array_equal(df['foo'].values, cells.properties['foo'].values)
 
     # check that dataframe is indexed by GIDs
-    assert_equal(df.index.values, [1, 2, 3])
+    assert_array_equal(df.index.values, [1, 2, 3])
 
     # check that data is copied
     df['foo'] = ['q', 'w', 'v']
-    assert_equal(cells.properties['foo'].values, ['a', 'b', 'c'])
+    assert_array_equal(cells.properties['foo'], ['a', 'b', 'c'])
 
-    ok_(df.columns.inferred_type in ('string', 'unicode'))
+    assert df.columns.inferred_type in ('string', 'unicode')
 
 
 def test_size():
     # Nothing
     cells = test_module.CellCollection()
-    assert_equal(cells.size(), 0)
-    assert_equal(len(cells), cells.size())
+    assert cells.size() == 0
+    assert len(cells) == cells.size()
 
     # positions only
     cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
-    assert_equal(cells.size(), 3)
-    assert_equal(len(cells), cells.size())
+    assert cells.size() == 3
+    assert len(cells) == cells.size()
 
     # orientations only
     cells = test_module.CellCollection()
     cells.orientations = random_orientations(3)
-    assert_equal(cells.size(), 3)
-    assert_equal(len(cells), cells.size())
+    assert cells.size() == 3
+    assert len(cells) == cells.size()
 
     # properties only
     cells = test_module.CellCollection()
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
-    assert_equal(cells.size(), 3)
-    assert_equal(len(cells), cells.size())
+    assert cells.size() == 3
+    assert len(cells) == cells.size()
 
     cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
-    assert_equal(cells.size(), 3)
-    assert_equal(len(cells), cells.size())
+    assert cells.size() == 3
+    assert len(cells) == cells.size()
 
     # bad sizes : properties too small
     cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b'])
-    assert_raises(VoxcellError, cells.size)
+    with pytest.raises(VoxcellError):
+        cells.size()
 
 
 def test_add_properties():
@@ -368,18 +377,16 @@ def test_add_properties():
     assert_frame_equal(cells.properties, combined)
 
     # no overwriting => exception should be raised if column already exists
-    assert_raises(
-        VoxcellError,
-        cells.add_properties, properties1, overwrite=False
-    )
+    with pytest.raises(VoxcellError):
+        cells.add_properties(properties1, overwrite=False)
 
 
-@raises(VoxcellError)
 def test_from_dataframe_invalid_index():
     df = pd.DataFrame({
         'prop-a': ['a', 'b'],
     })
-    test_module.CellCollection.from_dataframe(df)
+    with pytest.raises(VoxcellError):
+        test_module.CellCollection.from_dataframe(df)
 
 
 def test_from_dataframe_no_positions():
@@ -388,8 +395,8 @@ def test_from_dataframe_no_positions():
     }, index=[1, 2])
 
     cells = test_module.CellCollection.from_dataframe(df)
-    assert_is_none(cells.positions)
-    assert_is_none(cells.orientations)
+    assert cells.positions is None
+    assert cells.orientations is None
     assert_frame_equal(cells.properties, df.reset_index(drop=True))
 
 
@@ -409,7 +416,7 @@ def test_to_from_dataframe():
 
 def assert_sonata_rotation(filename, good_orientation_type):
     cells = test_module.CellCollection.load_sonata(filename)
-    assert_equal(cells.orientation_format, good_orientation_type)
+    assert cells.orientation_format == good_orientation_type
     check_roundtrip(cells)
     # cannot be included in the roundtrip because the mvd3 conversion will potentially break
     # the format
@@ -417,7 +424,7 @@ def assert_sonata_rotation(filename, good_orientation_type):
         original = test_module.CellCollection.load_sonata(filename)
         original.save_sonata("nodes_.h5")
         restored = test_module.CellCollection.load_sonata("nodes_.h5")
-        assert_equal(original.orientation_format, restored.orientation_format)
+        assert original.orientation_format == restored.orientation_format
         for axis in ["x", "y", "z", "w"]:
             assert "rotation_angle_{}axis".format(axis) not in restored.properties
             assert "rotation_angle_{}axis".format(axis) not in original.properties
@@ -426,35 +433,34 @@ def assert_sonata_rotation(filename, good_orientation_type):
 
 
 def test_load_sonata_orientations():
-    assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_eulers.h5"), "eulers")
-    assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions.h5"), "quaternions")
-    assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_no_rotation.h5"), "quaternions")
-    with assert_raises(VoxcellError):
-        assert_sonata_rotation(os.path.join(SONATA_DATA_PATH, "nodes_quaternions_w_missing.h5"),
-                               "quaternions")
+    assert_sonata_rotation(SONATA_DATA_PATH / "nodes_eulers.h5", "eulers")
+    assert_sonata_rotation(SONATA_DATA_PATH / "nodes_quaternions.h5", "quaternions")
+    assert_sonata_rotation(SONATA_DATA_PATH / "nodes_no_rotation.h5", "quaternions")
+    with pytest.raises(VoxcellError):
+        assert_sonata_rotation(SONATA_DATA_PATH / "nodes_quaternions_w_missing.h5", "quaternions")
 
 
 def test_set_orientation_type():
     with tempcwd():
-        cells = test_module.CellCollection.load_sonata(
-            os.path.join(SONATA_DATA_PATH, "nodes_eulers.h5"))
-        assert_equal(cells.orientation_format, "eulers")
+        cells = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_eulers.h5")
+        assert cells.orientation_format == "eulers"
         cells.orientation_format = "quaternions"
         cells.save_sonata("nodes_.h5")
         restored = test_module.CellCollection.load_sonata("nodes_.h5")
-        assert_equal(restored.orientation_format, "quaternions")
+        assert restored.orientation_format == "quaternions"
         for axis in ["x", "y", "z"]:
             assert "rotation_angle_{}axis".format(axis) not in restored.properties
 
-        with assert_raises(VoxcellError):
+        with pytest.raises(VoxcellError):
             cells.orientation_format = "unknown"
 
 
 def test_check_types():
     # this is a sanity check for the h5py>3.0.0 and the string types
-    cells = test_module.CellCollection.load_sonata(os.path.join(SONATA_DATA_PATH, "nodes_multi_types.h5"))
-    assert_equal(cells.properties["string"].to_numpy(), np.array(['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG'], dtype=np.str))
-    assert_equal(cells.properties["categorical"].to_numpy(), np.array(['A', 'A', 'B', 'A', 'A', 'A', 'A'], dtype=np.str))
-    assert_equal(cells.properties["int"].to_numpy(), np.array([0, 0, 1, 0, 0, 0, 0], dtype=np.int))
-    assert_almost_equal(cells.properties["float"].to_numpy(), np.array([0.0, 0.0, 1.1, 0.0, 0.0, 0.0, 0.0]))
+    cells = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_multi_types.h5")
+    assert_array_equal(cells.properties["string"],
+                       ['AA', 'BB', 'CC', 'DD', 'EE', 'FF', 'GG'])
+    assert_array_equal(cells.properties["categorical"], ['A', 'A', 'B', 'A', 'A', 'A', 'A'])
+    assert_array_equal(cells.properties["int"], [0, 0, 1, 0, 0, 0, 0])
+    assert_almost_equal(cells.properties["float"], [0.0, 0.0, 1.1, 0.0, 0.0, 0.0, 0.0])
     assert cells.properties["float"].to_numpy().dtype == np.float32

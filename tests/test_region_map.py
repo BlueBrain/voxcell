@@ -1,6 +1,6 @@
 import json
 
-from nose.tools import eq_, raises
+import pytest
 from mock import mock_open, patch
 
 from voxcell.exceptions import VoxcellError
@@ -34,61 +34,61 @@ TEST_RMAP = test_module.RegionMap.from_dict({
 
 
 def test_find_basic():
-    eq_(TEST_RMAP.find('B', 'name'), set([2, 4]))
-    eq_(TEST_RMAP.find('C', 'name'), set([3]))
-    eq_(TEST_RMAP.find('cC', attr='fullname'), set([3]))
+    assert TEST_RMAP.find('B', 'name') == {2, 4}
+    assert TEST_RMAP.find('C', 'name') == {3}
+    assert TEST_RMAP.find('cC', attr='fullname') == {3}
 
 
 def test_find_regex():
-    eq_(TEST_RMAP.find('B', attr='fullname'), set())
-    eq_(TEST_RMAP.find('@B', attr='fullname'), set([2, 4]))
-    eq_(TEST_RMAP.find('@^B', attr='fullname'), set([2]))
-    eq_(TEST_RMAP.find('@B$', attr='fullname'), set([4]))
+    assert TEST_RMAP.find('B', attr='fullname') == set()
+    assert TEST_RMAP.find('@B', attr='fullname') == {2, 4}
+    assert TEST_RMAP.find('@^B', attr='fullname') == {2}
+    assert TEST_RMAP.find('@B$', attr='fullname') == {4}
 
 
 def test_find_with_descendants():
-    eq_(TEST_RMAP.find('B', 'name', with_descendants=True), set([2, 4]))
-    eq_(TEST_RMAP.find('C', 'name', with_descendants=True), set([3, 4]))
+    assert TEST_RMAP.find('B', 'name', with_descendants=True) == {2, 4}
+    assert TEST_RMAP.find('C', 'name', with_descendants=True) == {3, 4}
 
 
 def test_find_ignore_case():
-    eq_(TEST_RMAP.find('cc', attr='fullname'), set())
-    eq_(TEST_RMAP.find('cc', attr='fullname', ignore_case=True), set([3]))
-    eq_(TEST_RMAP.find('CC', attr='fullname', ignore_case=True), set([3]))
+    assert TEST_RMAP.find('cc', attr='fullname') == set()
+    assert TEST_RMAP.find('cc', attr='fullname', ignore_case=True) == {3}
+    assert TEST_RMAP.find('CC', attr='fullname', ignore_case=True) == {3}
 
 def test_find_regex_ignore_case():
-    eq_(TEST_RMAP.find('@^B', attr='fullname'), set([2]))
-    eq_(TEST_RMAP.find('@^B', attr='fullname', ignore_case=True), set([2, 4]))
+    assert TEST_RMAP.find('@^B', attr='fullname') == {2}
+    assert TEST_RMAP.find('@^B', attr='fullname', ignore_case=True) == {2, 4}
 
 
 def test_find_id():
-    eq_(TEST_RMAP.find(1, attr='id', with_descendants=True), set([1, 2, 3, 4]))
-    eq_(TEST_RMAP.find(1, attr='id', ignore_case=True), set([1]))
-    eq_(TEST_RMAP.find(999, attr='id'), set())
+    assert TEST_RMAP.find(1, attr='id', with_descendants=True) == {1, 2, 3, 4}
+    assert TEST_RMAP.find(1, attr='id', ignore_case=True) == {1}
+    assert TEST_RMAP.find(999, attr='id') == set()
 
 
-@raises(VoxcellError)
 def test_find_missing_attribute():
-    TEST_RMAP.find(1, attr='no-such-attribute')
+    with pytest.raises(VoxcellError):
+        TEST_RMAP.find(1, attr='no-such-attribute')
 
 
 def test_get_basic():
-    eq_(TEST_RMAP.get(4, 'name'), 'B')
-    eq_(TEST_RMAP.get(4, attr='fullname'), 'bB')
+    assert TEST_RMAP.get(4, 'name') == 'B'
+    assert TEST_RMAP.get(4, attr='fullname') == 'bB'
 
 
 def test_get_with_ascendants():
-    eq_(TEST_RMAP.get(4, 'name', with_ascendants=True), ['B', 'C', 'A'])
+    assert TEST_RMAP.get(4, 'name', with_ascendants=True) == ['B', 'C', 'A']
 
 
-@raises(VoxcellError)
 def test_get_missing_attribute():
-    TEST_RMAP.get(4, 'no-such-attribute')
+    with pytest.raises(VoxcellError):
+        TEST_RMAP.get(4, 'no-such-attribute')
 
 
-@raises(VoxcellError)
 def test_get_missing_id():
-    TEST_RMAP.get(999, 'name')
+    with pytest.raises(VoxcellError):
+        TEST_RMAP.get(999, 'name')
 
 
 def _patch_open_json(data):
@@ -102,7 +102,7 @@ def test_load_json_basic():
     }
     with _patch_open_json(data):
         rmap = test_module.RegionMap.load_json('mock-file')
-    eq_(rmap.get(42, 'name'), "foo")
+    assert rmap.get(42, 'name') == "foo"
 
 
 def test_load_json_aibs():
@@ -116,10 +116,9 @@ def test_load_json_aibs():
     }
     with _patch_open_json(data):
         rmap = test_module.RegionMap.load_json('mock-file')
-    eq_(rmap.get(42, 'name'), "foo")
+    assert rmap.get(42, 'name') == "foo"
 
 
-@raises(VoxcellError)
 def test_load_json_aibs_raises():
     data = {
         'msg': [
@@ -133,32 +132,32 @@ def test_load_json_aibs_raises():
             }
         ]
     }
-    with _patch_open_json(data):
+    with _patch_open_json(data), pytest.raises(VoxcellError):
         test_module.RegionMap.load_json('mock-file')
 
 
-@raises(VoxcellError)
 def test_from_dict_duplicate_id():
-    test_module.RegionMap.from_dict({
-        'id': 1,
-        'children': [
-            {
-                'id': 2
-            },
-            {
-                'id': 1
-            }
-        ]
-    })
+    with pytest.raises(VoxcellError):
+        test_module.RegionMap.from_dict({
+            'id': 1,
+            'children': [
+                {
+                    'id': 2
+                },
+                {
+                    'id': 1
+                }
+            ]
+        })
 
 
 def test_is_leaf_id():
-    eq_(TEST_RMAP.is_leaf_id(1), False)
-    eq_(TEST_RMAP.is_leaf_id(2), True)
-    eq_(TEST_RMAP.is_leaf_id(3), False)
-    eq_(TEST_RMAP.is_leaf_id(4), True)
+    assert TEST_RMAP.is_leaf_id(1) is False
+    assert TEST_RMAP.is_leaf_id(2) is True
+    assert TEST_RMAP.is_leaf_id(3) is False
+    assert TEST_RMAP.is_leaf_id(4) is True
 
 
-@raises(VoxcellError)
 def test_is_leaf_id_non_existing_id():
-    TEST_RMAP.is_leaf_id(0)  # non-existing id
+    with pytest.raises(VoxcellError):
+        TEST_RMAP.is_leaf_id(0)  # non-existing id

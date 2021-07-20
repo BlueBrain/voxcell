@@ -1,7 +1,7 @@
 import voxcell.quaternion as test_module
 
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_array_equal
 
 
 def check_normalized(mat):
@@ -21,7 +21,7 @@ def check_quaternions_to_matrices(count, matrix, quaternion):
 
 def test_quaternion_empty():
     quat = test_module.matrices_to_quaternions(np.empty((0, 3, 3)))
-    assert_equal(quat, np.empty((0, 4)))
+    assert_array_equal(quat, np.empty((0, 4)))
 
 
 def test_quaternion_identity():
@@ -80,7 +80,7 @@ def test_quaternion_180_heading_90_attitude():
 
 def test_matrix_empty():
     quat = test_module.quaternions_to_matrices(np.empty((0, 4)))
-    assert_equal(quat, np.empty((0, 3, 3)))
+    assert_array_equal(quat, np.empty((0, 3, 3)))
 
 
 def test_matrix_identity():

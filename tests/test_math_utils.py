@@ -1,8 +1,7 @@
 import numpy as np
 import numpy.testing as npt
 
-import nose.tools as nt
-
+import pytest
 import voxcell.math_utils as test_module
 
 
@@ -23,7 +22,7 @@ def test_is_diagonal_true():
         [2, 0],
         [0, 3]
     ])
-    nt.assert_true(test_module.is_diagonal(A))
+    assert test_module.is_diagonal(A)
 
 
 def test_is_diagonal_false():
@@ -31,7 +30,7 @@ def test_is_diagonal_false():
         [2, 0],
         [1, 3]
     ])
-    nt.assert_false(test_module.is_diagonal(A))
+    assert not test_module.is_diagonal(A)
 
 
 def test_lcmm():
@@ -193,20 +192,20 @@ def test_mat2euler_roundtrip_random():
     )
 
 
-@nt.raises(AssertionError)
 def test_mat2euler_raises_1():
-    test_module.mat2euler(np.asarray([
-        [0., -1.,  0.],
-        [0.,  0., -1.],
-        [1.,  0.,  0.],
-    ]))
+    with pytest.raises(AssertionError):
+        test_module.mat2euler(np.asarray([
+            [0., -1.,  0.],
+            [0.,  0., -1.],
+            [1.,  0.,  0.],
+        ]))
 
 
-@nt.raises(AssertionError)
 def test_mat2euler_raises_2():
-    test_module.mat2euler(np.asarray([
-        [
-            [0., -1.],
-            [1.,  0.],
-        ]
-    ]))
+    with pytest.raises(AssertionError):
+        test_module.mat2euler(np.asarray([
+            [
+                [0., -1.],
+                [1.,  0.],
+            ]
+        ]))

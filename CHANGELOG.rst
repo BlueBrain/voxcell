@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Version 3.0.2
+-------------
+- Use pytest for tests instead of nosetests
+
 Version 3.0.1
 -------------
 

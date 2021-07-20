@@ -1,19 +1,17 @@
-from nose.tools import eq_
-
-from numpy.testing import assert_equal
 from voxcell import vector_fields as vf
 import numpy as np
+from numpy.testing import assert_array_equal
 
 
 def test_combine_vector_fields_empty():
-    assert_equal(vf.combine_vector_fields([]), np.empty((0,)))
+    assert_array_equal(vf.combine_vector_fields([]), np.empty((0,)))
 
 
 def test_combine_vector_fields_low_dim_2():
     r = vf.combine_vector_fields([np.ones((2, 2)) * 1,
                                   np.ones((2, 2)) * 2])
 
-    eq_(r.shape, (2, 2, 2))
+    assert r.shape == (2, 2, 2)
 
 
 def test_combine_vector_fields_simple_0():
@@ -28,13 +26,13 @@ def test_combine_vector_fields_simple_0():
             np.array(fwd * np.prod((2, 2, 2))).reshape((2, 2, 2, 3))
         ])
 
-    eq_(r.shape, (2, 2, 2, 3, 3))
+    assert r.shape == (2, 2, 2, 3, 3)
 
-    assert_equal(r[1, 1, 1], np.array([[1, 0, 0],
-                                       [0, 1, 0],
-                                       [0, 0, 1]]))
+    assert_array_equal(r[1, 1, 1], np.array([[1, 0, 0],
+                                             [0, 1, 0],
+                                             [0, 0, 1]]))
 
-    assert_equal(np.dot(r[0, 0, 0], np.array([1, 0, 0])), np.array([1, 0, 0]))
+    assert_array_equal(np.dot(r[0, 0, 0], np.array([1, 0, 0])), np.array([1, 0, 0]))
 
 
 def test_combine_vector_fields_simple_1():
@@ -49,13 +47,13 @@ def test_combine_vector_fields_simple_1():
             np.array(fwd * np.prod((2, 2, 2))).reshape((2, 2, 2, 3))
         ])
 
-    eq_(r.shape, (2, 2, 2, 3, 3))
+    assert r.shape == (2, 2, 2, 3, 3)
 
-    assert_equal(r[1, 1, 1], np.array([[0, 0, 1],
-                                       [0, 1, 0],
-                                       [-1, 0, 0]]))
+    assert_array_equal(r[1, 1, 1], np.array([[0, 0, 1],
+                                             [0, 1, 0],
+                                             [-1, 0, 0]]))
 
-    assert_equal(np.dot(r[1, 1, 1], np.array([1, 0, 0])), np.array([0, 0, -1]))
+    assert_array_equal(np.dot(r[1, 1, 1], np.array([1, 0, 0])), np.array([0, 0, -1]))
 
 
 def test_combine_vector_fields_high_dim():
@@ -64,37 +62,37 @@ def test_combine_vector_fields_high_dim():
                                   np.ones((2, 2, 2, 2, 4)) * 3,
                                   np.ones((2, 2, 2, 2, 4)) * 4])
 
-    eq_(r.shape, (2, 2, 2, 2, 4, 4))
+    assert r.shape == (2, 2, 2, 2, 4, 4)
 
 
 def test_join_vector_fields_1_empty():
-    assert_equal(vf.join_vector_fields(np.array([[0]])),
+    assert (vf.join_vector_fields(np.array([[0]])) ==
                  np.array([[0]]))
 
 
 def test_join_vector_fields_1_full():
-    assert_equal(vf.join_vector_fields(np.array([[1]])),
+    assert (vf.join_vector_fields(np.array([[1]])) ==
                  np.array([[1]]))
 
 
 def test_join_vector_fields_2():
-    assert_equal(vf.join_vector_fields(np.array([[1]]), np.array([[0]])),
+    assert (vf.join_vector_fields(np.array([[1]]), np.array([[0]])) ==
                  np.array([[1]]))
 
-    assert_equal(vf.join_vector_fields(np.array([[0]]), np.array([[1]])),
+    assert (vf.join_vector_fields(np.array([[0]]), np.array([[1]])) ==
                  np.array([[1]]))
 
 
 def test_join_vector_fields_2_override():
-    assert_equal(vf.join_vector_fields(np.array([[1]]), np.array([[2]])),
+    assert (vf.join_vector_fields(np.array([[1]]), np.array([[2]])) ==
                  np.array([[2]]))
 
 
 def test_gaussian_filter_0():
-    assert_equal(vf.gaussian_filter(np.array([[1, 0, 0], [1, 0, 0]]), 1),
-                 np.array([[1, 0, 0], [1, 0, 0]]))
+    assert_array_equal(vf.gaussian_filter(np.array([[1, 0, 0], [1, 0, 0]]), 1),
+                       np.array([[1, 0, 0], [1, 0, 0]]))
 
 
 def test_gaussian_filter_1():
-    assert_equal(vf.gaussian_filter(np.array([[10, 0, 0], [0, 10, 0]]), 5),
-                 np.array([[5, 4, 0], [4, 5, 0]]))
+    assert_array_equal(vf.gaussian_filter(np.array([[10, 0, 0], [0, 10, 0]]), 5),
+                       np.array([[5, 4, 0], [4, 5, 0]]))
