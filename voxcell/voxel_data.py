@@ -44,7 +44,7 @@ class VoxelData(object):
         self.voxel_dimensions = voxel_dimensions
 
         if offset is None:
-            self.offset = np.zeros(self.ndim)
+            self.offset = np.zeros(self.ndim, dtype=np.float32)
         else:
             offset = np.array(offset, dtype=np.float32)
             if offset.shape != (self.ndim,):

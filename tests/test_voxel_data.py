@@ -272,3 +272,13 @@ def test_reduce():
     # 3 elements
     f = test_module.VoxelData.reduce(operator.add, [a, b, c])
     assert_almost_equal(f.raw, [[13, 12], [21, 22]])
+
+
+def test_offset_and_voxel_dimensions_type():
+    voxel_data = test_module.VoxelData(
+        np.ones((2, 2, 2)), offset=(1, 2, 3), voxel_dimensions=(1, 1, 1))
+    assert voxel_data.offset.dtype == np.float32
+    assert voxel_data.voxel_dimensions.dtype == np.float32
+
+    voxel_data = test_module.VoxelData(np.ones((2, 2, 2)), voxel_dimensions=(3, 4, 5))
+    assert voxel_data.offset.dtype == np.float32

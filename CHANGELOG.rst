@@ -3,6 +3,7 @@ Changelog
 
 Version 3.0.2
 -------------
+- Set the dtype of the default zero offset of VoxelData to np.float32 (consistent with the other assigments)
 - Use pytest for tests instead of nosetests
 
 Version 3.0.1
