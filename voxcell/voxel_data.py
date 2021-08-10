@@ -205,7 +205,7 @@ class VoxelData(object):
         result = (positions - self.offset) / self.voxel_dimensions
         result[np.abs(result) < 1e-7] = 0.  # suppress rounding errors around 0
         if not keep_fraction:
-            result = np.floor(result).astype(np.int)
+            result = np.floor(result).astype(int)
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
         result[result >= self.shape] = VoxelData.OUT_OF_BOUNDS
         if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
@@ -252,7 +252,7 @@ class VoxelData(object):
         if bbox.shape != (2, self.ndim):
             raise VoxcellError("Invalid bbox shape: {}".format(bbox.shape))
 
-        aabb = ((bbox - self.offset) / self.voxel_dimensions).astype(np.int)
+        aabb = ((bbox - self.offset) / self.voxel_dimensions).astype(int)
 
         # ensure clipped volume is inside bbox
         aa, bb = np.clip(aabb, np.full(self.ndim, -1), self.shape)
@@ -395,6 +395,6 @@ class ROIMask(VoxelData):
     """
     def __init__(self, *args, **kwargs):
         super(ROIMask, self).__init__(*args, **kwargs)
-        if self.raw.dtype not in (np.int8, np.uint8, np.bool):
+        if self.raw.dtype not in (np.int8, np.uint8, bool):
             raise VoxcellError("Invalid dtype: '%s' (expected: '(u)int8')" % self.raw.dtype)
-        self.raw = self.raw.astype(np.bool)
+        self.raw = self.raw.astype(bool)

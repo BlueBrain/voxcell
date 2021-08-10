@@ -3,8 +3,9 @@ Changelog
 
 Version 3.0.2
 -------------
-- Set the dtype of the default zero offset of VoxelData to np.float32 (consistent with the other assigments)
+- Set the dtype of the default zero offset of VoxelData to np.float32 (consistent with the other assignments)
 - Use pytest for tests instead of nosetests
+- Cleanup deprecation warnings emitted by numpy/pandas
 
 Version 3.0.1
 -------------

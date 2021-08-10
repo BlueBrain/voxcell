@@ -94,7 +94,7 @@ def join_vector_fields(vf0, *vfs):
 
     joined = np.zeros_like(vf0)
     joined_mask = np.zeros(joined.shape[:-1],  # pylint: disable=unsubscriptable-object
-                           dtype=np.bool)
+                           dtype=bool)
     for field in vfs:
         field_mask = np.any(field != 0, axis=-1)
         overlap_count = np.count_nonzero(joined_mask & field_mask)

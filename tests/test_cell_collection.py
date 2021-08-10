@@ -198,13 +198,13 @@ def test_roundtrip_properties_text_multiple_transform_to_categorical():
     cells.properties['y-type'] = ['ugly', 'ugly', 'ugly', 'ugly', 'pretty']
     cells.properties['z-type'] = ['red', 'blue', 'green', 'alpha', 'optimus_prime']
     # y-type is a string at the beginning
-    assert cells.properties['y-type'].dtypes == np.object
-    assert cells.properties['z-type'].dtypes == np.object
+    assert cells.properties['y-type'].dtypes == object
+    assert cells.properties['z-type'].dtypes == object
     restored = check_roundtrip(cells)
     restored.properties['y-type'].to_frame()
     # y-type should be categorical now
     assert is_cat(restored.properties['y-type'])
-    assert cells.properties['z-type'].dtypes == np.object
+    assert cells.properties['z-type'].dtypes == object
     restored.properties['z-type'].to_frame()
 
 

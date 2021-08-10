@@ -1,15 +1,14 @@
 '''helper mathematical functions'''
 
-import fractions
 import functools
+import math
 
 import numpy as np
 
 
 def gcd(a, b):
     '''Return greatest common divisor.'''
-    # pylint: disable=deprecated-method
-    return fractions.gcd(a, b)
+    return math.gcd(a, b)
 
 
 def lcm(a, b):
@@ -106,7 +105,7 @@ def isin(a, values):
     NumPy.isin() takes same amount of time, but is 3x more memory-hungry.
     """
     a = np.asarray(a)
-    result = np.full_like(a, False, dtype=np.bool)
+    result = np.full_like(a, False, dtype=bool)
     for v in set(values):
         result |= (a == v)
     return result

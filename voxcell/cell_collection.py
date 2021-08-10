@@ -54,11 +54,11 @@ def _load_property(properties, name, values, library_group=None):
         values (array-like): property values
         library_group (h5py.Group): library group
     """
-    if values.dtype == np.object:
+    if values.dtype == object:
         values = values.asstr()
     values = values[()]
     if library_group is not None and name in library_group:
-        if library_group[name].dtype == np.object:
+        if library_group[name].dtype == object:
             unique_values = library_group[name].asstr()[()]
         else:
             unique_values = library_group[name][()]
@@ -74,8 +74,8 @@ def _load_property(properties, name, values, library_group=None):
 def _is_string_enum(series):
     """Whether ``series`` contains enum of strings"""
     is_cat_str = pd.api.types.is_categorical_dtype(series) and \
-        series.dtype.categories.dtype == np.object
-    return series.dtype == np.object or is_cat_str
+        series.dtype.categories.dtype == object
+    return series.dtype == object or is_cat_str
 
 
 class CellCollection(object):
@@ -228,7 +228,7 @@ class CellCollection(object):
                     f.create_dataset('cells/properties/' + name, data=indices.astype(np.uint32))
                     f.create_dataset('library/' + name, data=unique_values, dtype=str_dt)
                 else:
-                    dt = str_dt if values.dtype == np.object else values.dtype
+                    dt = str_dt if values.dtype == object else values.dtype
                     f.create_dataset('cells/properties/' + name, data=values, dtype=dt)
 
     @classmethod
@@ -358,7 +358,7 @@ class CellCollection(object):
                 values = series.to_numpy()
                 if name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
-                    dt = str_dt if series.dtype == np.object else series.dtype
+                    dt = str_dt if series.dtype == object else series.dtype
                     group.create_dataset('dynamics_params/' + name, data=values, dtype=dt)
                 elif _is_string_enum(series):
                     unique_values, indices = np.unique(values, return_inverse=True)
@@ -426,7 +426,7 @@ class CellCollection(object):
                 for name, values in group['dynamics_params'].items():
                     if not isinstance(values, h5py.Dataset):
                         continue
-                    if values.dtype == np.object:
+                    if values.dtype == object:
                         values = values.asstr()
                     cells.properties[cls.SONATA_DYNAMIC_PROPERTY + name] = values[()]
 

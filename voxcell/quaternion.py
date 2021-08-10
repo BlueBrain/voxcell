@@ -21,11 +21,11 @@ def matrices_to_quaternions(matrices):
 
     # this is the same algorithm used internally by THREE.js
 
-    quat = np.zeros(shape=matrices.shape[:-2] + (4,), dtype=np.float)
+    quat = np.zeros(shape=matrices.shape[:-2] + (4,), dtype=np.float64)
 
     # using boolean array "mask" to simulate the branching
     # the boolean array "done" allows us to do the equivalent of "else"
-    done = np.zeros(shape=matrices.shape[:-2], dtype=np.bool)
+    done = np.zeros(shape=matrices.shape[:-2], dtype=bool)
 
     # branch 1
 

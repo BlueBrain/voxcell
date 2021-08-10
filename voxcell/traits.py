@@ -101,7 +101,7 @@ class SpatialDistribution(object):
         preassigned = preassigned.to_frame() if isinstance(preassigned, pd.Series) else preassigned
 
         subsections = self.split(list(preassigned.columns))
-        chosen = np.ones(shape=(len(preassigned)), dtype=np.int) * -1
+        chosen = np.ones(shape=(len(preassigned)), dtype=int) * -1
 
         unique_assigned = preassigned.drop_duplicates()
         for values_comb in unique_assigned.values:
@@ -157,7 +157,7 @@ class SpatialDistribution(object):
         '''
         names = names if names is not None else self.traits.columns
         df = self.traits[names].iloc[chosen]
-        return df.reset_index().drop('index', 1)
+        return df.reset_index().drop('index', axis=1)
 
     def split(self, attributes):
         '''split a distribution in two or more so that each one only references

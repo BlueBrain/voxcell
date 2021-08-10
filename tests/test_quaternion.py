@@ -214,7 +214,7 @@ def test_roundtrip_complex():
         [[0, 1, 0],
          [0, 0, 1],
          [1, 0, 0]]],
-        dtype=np.float)
+        dtype=np.float64)
 
     quat = test_module.matrices_to_quaternions(series)
     restored = test_module.quaternions_to_matrices(quat)
