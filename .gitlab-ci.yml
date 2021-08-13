@@ -1,0 +1,4 @@
+include:
+  - project: nse/ci
+    file: /ci/pipelines/nse.voxcell.yml
+
