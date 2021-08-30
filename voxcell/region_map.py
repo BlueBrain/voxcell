@@ -35,9 +35,9 @@ class Matcher(object):
 class RegionMap(object):
     """ Region ID <-> attribute mapping. """
     def __init__(self):
-        self._data = dict()
-        self._children = dict()
-        self._parent = dict()
+        self._data = {}
+        self._children = {}
+        self._parent = {}
 
     def get(self, _id, attr, with_ascendants=False):
         """
@@ -178,7 +178,7 @@ class RegionMap(object):
         Note:
             If top-most object contains 'msg' field, Allen Brain Institute JSON layout is assumed.
         """
-        with open(filepath, 'r') as f:
+        with open(filepath, 'r', encoding='utf-8') as f:
             content = json.load(f)
 
         if 'msg' in content:

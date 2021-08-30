@@ -188,7 +188,7 @@ class LocalAtlas(Atlas):
         """ Load brain region metadata as dict. """
 
         def _callback():
-            with open(self.fetch_metadata(), 'r') as f:
+            with open(self.fetch_metadata(), 'r', encoding='utf-8') as f:
                 return json.load(f)
 
         return self._check_cache(('metadata',), callback=_callback, memcache=memcache)
