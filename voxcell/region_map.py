@@ -122,16 +122,16 @@ class RegionMap(object):
             VoxcellError: Region ID not found: -10
         """
         if _id not in self._data:
-            raise VoxcellError("Region ID not found: %d" % _id)
+            raise VoxcellError(f"Region ID not found: {_id}")
         return not self._children[_id]
 
     def _get(self, _id, attr):
         """ Fetch attribute value for a given region ID. """
         if _id not in self._data:
-            raise VoxcellError("Region ID not found: %d" % _id)
+            raise VoxcellError(f"Region ID not found: {_id}")
         node = self._data[_id]
         if attr not in node:
-            raise VoxcellError("Attribute not found: '%s' [region ID = %d]" % (attr, _id))
+            raise VoxcellError(f"Attribute not found: '{attr}' [region ID = {_id}]")
         return node[attr]
 
     def _ascendants(self, _id):
@@ -159,7 +159,7 @@ class RegionMap(object):
             # pylint: disable=protected-access,missing-docstring
             _id = data['id']
             if _id in result._data:
-                raise VoxcellError("Duplicate id: %d" % _id)
+                raise VoxcellError(f"Duplicate id: {_id}")
             children = data.pop('children', [])
             result._data[_id] = data
             result._parent[_id] = parent_id
@@ -182,7 +182,6 @@ class RegionMap(object):
             content = json.load(f)
 
         if 'msg' in content:
-            L.warning("Top-most object contains 'msg'; assuming AIBS JSON layout")
             if len(content['msg']) > 1:
                 raise VoxcellError("Unexpected JSON layout (more than one 'msg' child)")
             content = content['msg'][0]

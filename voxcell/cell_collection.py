@@ -140,7 +140,7 @@ class CellCollection(object):
         """
         for name, prop in new_properties.items():
             if (not overwrite) and (name in self.properties):
-                raise VoxcellError("Column '{0}' already exists".format(name))
+                raise VoxcellError(f"Column '{name}' already exists")
             self.properties[name] = prop
 
     def remove_unassigned_cells(self):
@@ -173,7 +173,7 @@ class CellCollection(object):
     def from_dataframe(cls, df):
         """ return a CellCollection object from a dataframe of cell properties """
         if not (df.index == 1 + np.arange(len(df))).all():
-            raise VoxcellError("Index != 1..{0} (got: {1})".format(len(df), df.index.values))
+            raise VoxcellError(f"Index != 1..{len(df)} (got: {df.index.values})")
         result = cls()
         if 'x' in df:
             result.positions = df[['x', 'y', 'z']].values
@@ -195,7 +195,7 @@ class CellCollection(object):
         none_properties = self.properties.isnull().any(axis=0)
         if none_properties.any():
             names = none_properties.index[none_properties].to_list()
-            raise VoxcellError("Replace `None` in {} properties before saving".format(names))
+            raise VoxcellError(f"Replace `None` in {names} properties before saving")
         if str(filename).lower().endswith('mvd3'):
             self.save_mvd3(filename)
         else:
@@ -350,7 +350,7 @@ class CellCollection(object):
         # pylint: disable=too-many-locals
         self._check_sizes()
         with h5py.File(filename, 'w') as h5f:
-            population = h5f.create_group('/nodes/%s' % self.population_name)
+            population = h5f.create_group(f'/nodes/{self.population_name}')
             population.create_dataset('node_type_id', data=np.full(len(self.properties), -1))
             group = population.create_group('0')
             str_dt = h5py.special_dtype(vlen=str)
@@ -359,12 +359,12 @@ class CellCollection(object):
                 if name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
                     dt = str_dt if series.dtype == object else series.dtype
-                    group.create_dataset('dynamics_params/' + name, data=values, dtype=dt)
+                    group.create_dataset(f'dynamics_params/{name}', data=values, dtype=dt)
                 elif _is_string_enum(series):
                     unique_values, indices = np.unique(values, return_inverse=True)
                     if len(unique_values) < .5 * len(values):
                         group.create_dataset(name, data=indices.astype(np.uint32))
-                        group.create_dataset('@library/' + name, data=unique_values, dtype=str_dt)
+                        group.create_dataset(f'@library/{name}', data=unique_values, dtype=str_dt)
                     else:
                         group.create_dataset(name, data=values, dtype=str_dt)
                 else:

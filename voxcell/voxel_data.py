@@ -37,10 +37,8 @@ class VoxelData(object):
         '''
         voxel_dimensions = np.array(voxel_dimensions, dtype=np.float32)
         if len(voxel_dimensions.shape) > 1:
-            raise VoxcellError("voxel_dimensions should be a 1-d array (got: {0})".format(
-                len(voxel_dimensions.shape)
-            ))
-
+            raise VoxcellError(
+                f"voxel_dimensions should be a 1-d array (got: {len(voxel_dimensions.shape)})")
         self.voxel_dimensions = voxel_dimensions
 
         if offset is None:
@@ -48,15 +46,13 @@ class VoxelData(object):
         else:
             offset = np.array(offset, dtype=np.float32)
             if offset.shape != (self.ndim,):
-                raise VoxcellError("'offset' shape should be: {0} (got: {1})".format(
-                    (self.ndim,), offset.shape
-                ))
+                raise VoxcellError(
+                    f"'offset' shape should be: {(self.ndim,)} (got: {offset.shape})")
             self.offset = offset
 
         if len(raw.shape) < self.ndim:
-            raise VoxcellError("'raw' should have at least {0} dimensions (got: {1})".format(
-                self.ndim, len(raw.shape)
-            ))
+            raise VoxcellError(
+                f"'raw' should have at least {self.ndim} dimensions (got: {len(raw.shape)})")
         self.raw = raw
 
     @property
@@ -250,7 +246,7 @@ class VoxelData(object):
         """
         bbox = np.array(bbox)
         if bbox.shape != (2, self.ndim):
-            raise VoxcellError("Invalid bbox shape: {}".format(bbox.shape))
+            raise VoxcellError(f"Invalid bbox shape: {bbox.shape}")
 
         aabb = ((bbox - self.offset) / self.voxel_dimensions).astype(int)
 
@@ -359,7 +355,7 @@ class OrientationField(VoxelData):
     def __init__(self, *args, **kwargs):
         super(OrientationField, self).__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.float32, np.float64):
-            raise VoxcellError("Invalid volumetric data dtype: %s" % self.raw.dtype)
+            raise VoxcellError(f"Invalid volumetric data dtype: {self.raw.dtype}")
         if self.payload_shape != (4,):
             raise VoxcellError("Volumetric data should store (x, y, z, w) tuple per voxel")
 
@@ -396,5 +392,5 @@ class ROIMask(VoxelData):
     def __init__(self, *args, **kwargs):
         super(ROIMask, self).__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.uint8, bool):
-            raise VoxcellError("Invalid dtype: '%s' (expected: '(u)int8')" % self.raw.dtype)
+            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
         self.raw = self.raw.astype(bool)

@@ -53,12 +53,12 @@ class Atlas(object):
             return LocalAtlas(url)
         elif parsed.scheme in ('http', 'https'):
             if not parsed.path.startswith('/api/analytics/atlas/releases/'):
-                raise VoxcellError("Unexpected URL: '%s'" % url)
+                raise VoxcellError(f"Unexpected URL: '{url}'")
             if cache_dir is None:
                 raise VoxcellError("`cache_dir` should be specified")
             return VoxelBrainAtlas(url, cache_dir)
         else:
-            raise VoxcellError("Unexpected URL: '%s'" % url)
+            raise VoxcellError(f"Unexpected URL: '{url}'")
 
     @abc.abstractmethod
     def fetch_data(self, data_type):
@@ -110,7 +110,7 @@ class Atlas(object):
                 ignore_case=ignore_case
             )
             if not region_ids:
-                raise VoxcellError("Region not found: '%s'" % value)
+                raise VoxcellError(f"Region not found: '{value}'")
             result = math_utils.isin(brain_regions.raw, region_ids)
             return brain_regions.with_data(result)
 
@@ -146,11 +146,12 @@ class VoxelBrainAtlas(Atlas):
             data_types.append(item['data_type'])
         else:
             raise VoxcellError(
+                # pylint: disable=consider-using-f-string
                 "`data_type` should be one of ({0}), provided: {1}".format(
                     ",".join(data_types), data_type
                 )
             )
-        filepath = os.path.join(self._cache_dir, "%s.nrrd" % data_type)
+        filepath = os.path.join(self._cache_dir, f"{data_type}.nrrd")
         return _download_file(url, filepath, overwrite=False)
 
     def fetch_hierarchy(self):
@@ -169,12 +170,12 @@ class LocalAtlas(Atlas):
     def _get_filepath(self, filename):
         result = os.path.join(self.dirpath, filename)
         if not os.path.exists(result):
-            raise VoxcellError("File not found: '%s'" % result)
+            raise VoxcellError(f"File not found: '{result}'")
         return result
 
     def fetch_data(self, data_type):
         """ Return filepath to `data_type` NRRD. """
-        return self._get_filepath("%s.nrrd" % data_type)
+        return self._get_filepath(f"{data_type}.nrrd")
 
     def fetch_hierarchy(self):
         """ Return filepath to brain region hierarchy JSON. """
