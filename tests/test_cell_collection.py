@@ -4,13 +4,13 @@ import shutil
 from contextlib import contextmanager
 from pathlib import Path
 
+import h5py
 import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal, assert_array_equal
 from pandas.api.types import CategoricalDtype, is_categorical_dtype as is_cat
 from pandas.testing import assert_frame_equal, assert_series_equal
-
 
 import voxcell.cell_collection as test_module
 from voxcell import VoxcellError
@@ -464,3 +464,36 @@ def test_check_types():
     assert_array_equal(cells.properties["int"], [0, 0, 1, 0, 0, 0, 0])
     assert_almost_equal(cells.properties["float"], [0.0, 0.0, 1.1, 0.0, 0.0, 0.0, 0.0])
     assert cells.properties["float"].to_numpy().dtype == np.float32
+
+
+def test_save_sonata_forced_library():
+    with tempcwd():
+        orig = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_multi_types.h5")
+        orig.save_sonata("nodes_.h5", forced_library=["categorical", "string"])
+        with h5py.File("nodes_.h5", "r") as h5:
+            assert list(h5['/nodes/default/0/@library'].keys()) == ["categorical", "string"]
+        restored = test_module.CellCollection.load_sonata("nodes_.h5")
+        assert_equal_cells(orig, restored)
+
+
+def test_str_and_repr():
+    for op in (str, repr):
+        cc = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_quaternions.h5")
+        ret = op(cc)
+        assert 'orientation_x' in ret
+        assert 'orientation_y' in ret
+        assert 'orientation_z' in ret
+        assert 'orientation_w' in ret
+
+        cc = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_eulers.h5")
+        ret = op(cc)
+        assert 'rotation_angle_xaxis' in ret
+        assert 'rotation_angle_yaxis' in ret
+        assert 'rotation_angle_zaxis' in ret
+
+        cc = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_multi_types.h5")
+        ret = op(cc)
+        assert 'categorical' in ret
+        assert 'float' in ret
+        assert 'string' in ret
+        assert 'int' in ret

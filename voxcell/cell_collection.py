@@ -73,8 +73,8 @@ def _load_property(properties, name, values, library_group=None):
 
 def _is_string_enum(series):
     """Whether ``series`` contains enum of strings"""
-    is_cat_str = pd.api.types.is_categorical_dtype(series) and \
-        series.dtype.categories.dtype == object
+    is_cat_str = (pd.api.types.is_categorical_dtype(series) and
+                  series.dtype.categories.dtype == object)
     return series.dtype == object or is_cat_str
 
 
@@ -341,13 +341,23 @@ class CellCollection(object):
                     _load_property(cells.properties, name, values, f.get('library'))
         return cells
 
-    def save_sonata(self, filename):
+    def save_sonata(self, filename, forced_library=None):
         """Save this cell collection to sonata HDF5.
 
         Args:
             filename(str): fullpath to filename to write
+            forced_library(iterable of str): names of properties that are
+            forced to become part of the @library
+
+        Note:
+          * Only properties that contain strings can be included in the @library
+          * when forced_library is None, properties that are categorical are
+            included in the @library, unless their number of unique values is
+            more than half of all the values
         """
         # pylint: disable=too-many-locals
+        forced_library = set() if forced_library is None else set(forced_library)
+
         self._check_sizes()
         with h5py.File(filename, 'w') as h5f:
             population = h5f.create_group(f'/nodes/{self.population_name}')
@@ -360,9 +370,9 @@ class CellCollection(object):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
                     dt = str_dt if series.dtype == object else series.dtype
                     group.create_dataset(f'dynamics_params/{name}', data=values, dtype=dt)
-                elif _is_string_enum(series):
+                elif _is_string_enum(series) or (series.dtype == object and name in forced_library):
                     unique_values, indices = np.unique(values, return_inverse=True)
-                    if len(unique_values) < .5 * len(values):
+                    if name in forced_library or len(unique_values) < .5 * len(values):
                         group.create_dataset(name, data=indices.astype(np.uint32))
                         group.create_dataset(f'@library/{name}', data=unique_values, dtype=str_dt)
                     else:
@@ -431,3 +441,30 @@ class CellCollection(object):
                     cells.properties[cls.SONATA_DYNAMIC_PROPERTY + name] = values[()]
 
         return cells
+
+    def __str__(self):
+        properties = list(self.properties.columns)
+
+        if self.positions is not None:
+            properties += list('xyz')
+
+        if self.orientations is not None:
+            if self.orientation_format == "quaternions":
+                properties += ['orientation_x',
+                               'orientation_y',
+                               'orientation_z',
+                               'orientation_w',
+                               ]
+            elif self.orientation_format == "eulers":
+                properties += ['rotation_angle_xaxis',
+                               'rotation_angle_yaxis',
+                               'rotation_angle_zaxis',
+                               ]
+
+        return (f'CellCollection[population_name: {self.population_name}]: '
+                f'properties: {properties} '
+                f'orientation_format: {self.orientation_format} '
+                f'count: {len(self.properties)}'
+                )
+
+    __repr__ = __str__

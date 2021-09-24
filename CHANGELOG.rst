@@ -1,6 +1,13 @@
 Changelog
 =========
 
+
+Version 3.0.3
+-------------
+- add str/repr to CellCollection
+- CellCollection.save_sonata learned how to `force_library` so that the user
+  can control the behavior of `@library` creation
+
 Version 3.0.2
 -------------
 - Set the dtype of the default zero offset of VoxelData to np.float32 (consistent with the other assignments)
