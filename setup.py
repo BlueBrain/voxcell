@@ -2,13 +2,17 @@
 
 """ Distribution configuration """
 
-import imp
-import sys
+import importlib.util
 
 from setuptools import setup, find_packages
 
-
-VERSION = imp.load_source("voxcell.version", "voxcell/version.py").VERSION
+spec = importlib.util.spec_from_file_location(
+    "voxcell.version",
+    "voxcell/version.py",
+)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+VERSION = module.__version__
 
 # keep this to avoid breaking the pip API should be removed in 2.9.0
 SONATA_REQUIRES = [
@@ -26,17 +30,16 @@ setup(
     url='https://bbpteam.epfl.ch/documentation/projects/voxcell',
     project_urls={
         "Tracker": "https://bbpteam.epfl.ch/project/issues/projects/NSETM/issues",
-        "Source": "ssh://bbpcode.epfl.ch/nse/voxcell",
+        "Source": "https://bbpgitlab.epfl.ch/nse/voxcell.git",
     },
     license='BBP-internal-confidential',
     install_requires=[
-        'future>=0.16',
         'h5py>=3.1.0',
         'numpy>=1.9',
         'pandas>=0.24.2',
         'pynrrd>=0.4.0',
         'requests>=2.18',
-        'scipy>=0.13',
+        'scipy>=1.2.0',
     ],
     extras_require={
         'all': SONATA_REQUIRES,

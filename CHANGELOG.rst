@@ -7,6 +7,7 @@ Version 3.0.3
 - add str/repr to CellCollection
 - CellCollection.save_sonata learned how to `force_library` so that the user
   can control the behavior of `@library` creation
+- use `Rotation.from_euler` from scipy in `angles_to_matrices` (fix rotation around `x` and `z` axis)
 
 Version 3.0.2
 -------------

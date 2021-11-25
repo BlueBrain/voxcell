@@ -4,7 +4,9 @@ coverage.xml
 *.egg-info
 .coverage
 doc/build
+venv
 .tox
+.idea
 **/.mypy_cache
 **/.vscode
 .python-version

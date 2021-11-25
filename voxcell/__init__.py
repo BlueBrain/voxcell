@@ -1,6 +1,6 @@
 """ voxcell """
 
-from voxcell.version import VERSION as __version__
+from voxcell.version import __version__
 
 from voxcell.cell_collection import CellCollection
 from voxcell.exceptions import VoxcellError

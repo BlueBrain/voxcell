@@ -37,18 +37,18 @@ def test_lcmm():
     npt.assert_equal(12, test_module.lcmm([2, 3, 4]))
 
 
-def test_angles_to_matrices_1():
+def test_angles_to_matrices_x():
     angles = [np.pi / 2]
     expected = [[
         [1, 0, 0],
-        [0, 0, 1],
-        [0, -1, 0],
+        [0, 0, -1],
+        [0, 1, 0],
     ]]
     result = test_module.angles_to_matrices(angles, 'x')
     npt.assert_almost_equal(expected, result)
 
 
-def test_angles_to_matrices_2():
+def test_angles_to_matrices_y():
     angles = [np.pi / 2]
     expected = [[
         [0, 0, 1],
@@ -59,11 +59,11 @@ def test_angles_to_matrices_2():
     npt.assert_almost_equal(expected, result)
 
 
-def test_angles_to_matrices_3():
+def test_angles_to_matrices_z():
     angles = [np.pi / 2]
     expected = [[
-        [0, 1, 0],
-        [-1, 0, 0],
+        [0, -1, 0],
+        [1, 0, 0],
         [0, 0, 1],
     ]]
     result = test_module.angles_to_matrices(angles, 'z')
