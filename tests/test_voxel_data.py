@@ -343,6 +343,61 @@ def test_values_to_hemisphere_raises_invalid_value():
         test_module.values_to_hemisphere(values)
 
 
+def test_brain_region_data():
+    region_map = Mock()
+    region_map.get.side_effect = lambda _id, attr: {0: "CA1", 1: "SO", 2: "SP"}[_id]
+    data = test_module.BrainRegionData(
+        np.array([1, 0, 0, 2], dtype=np.uint8),
+        voxel_dimensions=(2,),
+        region_map=region_map,
+    )
+    assert region_map.get.call_count == 3  # called once for each different id
+
+    actual = data.lookup([[1.], [3], [2], [0]])
+    assert np.issubdtype(actual.dtype, np.str)
+    assert_array_equal(actual, ["SO", "CA1", "CA1", "SO"])
+
+
+def test_brain_region_data_raises():
+    region_map = Mock()
+    region_map.get.side_effect = lambda _id, attr: {0: "CA1", 1: "SO", 2: "SP"}[_id]
+
+    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
+        test_module.BrainRegionData(
+            np.zeros(4, dtype=np.int64),
+            voxel_dimensions=(1,),
+            region_map=region_map,
+        )
+    assert region_map.get.call_count == 0
+
+
+def test_hemisphere_data():
+    data = test_module.HemisphereData(
+        np.array([1, 2, 2, 2], dtype=np.uint8),
+        voxel_dimensions=(2,),
+    )
+
+    actual = data.lookup([[1.], [3], [2], [0]])
+    assert np.issubdtype(actual.dtype, np.str)
+    assert_array_equal(actual, ["right", "left", "left", "right"])
+
+
+def test_hemisphere_data_raises_invalid_dtype():
+    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
+        test_module.HemisphereData(
+            np.zeros(4, dtype=np.int64),
+            voxel_dimensions=(1,),
+        )
+
+
+def test_hemisphere_data_raises_invalid_value():
+    with pytest.raises(VoxcellError, match=re.escape("Invalid values, only {0, 1, 2} are allowed")):
+        test_module.HemisphereData(
+            np.array([0, 1, 2, 3], dtype=np.int8),
+            voxel_dimensions=(1,),
+        )
+
+
 def test_reduce():
     # Add 3 int arrays
     a = test_module.VoxelData(np.array([[11, 12], [21, 22]]), (2, 3))

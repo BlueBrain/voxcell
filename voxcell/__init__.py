@@ -4,6 +4,8 @@ from voxcell.cell_collection import CellCollection
 from voxcell.exceptions import VoxcellError
 from voxcell.region_map import RegionMap
 from voxcell.voxel_data import (
+    BrainRegionData,
+    HemisphereData,
     OrientationField,
     ROIMask,
     VoxelData,

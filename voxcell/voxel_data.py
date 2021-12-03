@@ -452,3 +452,44 @@ def values_to_hemisphere(values):
         raise VoxcellError(f"Invalid values, only {list(ids_map)} are allowed")
     resolved = np.array([ids_map[_id] for _id in ids])
     return resolved[idx]
+
+
+class BrainRegionData(VoxelData):
+    """Volumetric data mapped to region acronyms using the given RegionMap.
+
+    See Also:
+        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+    """
+    def __init__(self, *args, region_map, **kwargs):
+        """Init BrainRegionData.
+
+        Args:
+            region_map: RegionMap object used to map ids to region acronyms.
+        """
+        super().__init__(*args, **kwargs)
+        if self.raw.dtype not in (np.int8, np.uint8):
+            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
+
+        ids, idx = np.unique(self.raw, return_inverse=True)
+        resolved = np.array([region_map.get(_id, attr="acronym") for _id in ids])
+        self.raw = resolved[idx]
+
+
+class HemisphereData(VoxelData):
+    """Volumetric data mapped from 0, 1, 2 to "undefined", "right", "left" hemispheres.
+
+    See Also:
+        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+    """
+    def __init__(self, *args, **kwargs):
+        """Init HemisphereData."""
+        super().__init__(*args, **kwargs)
+        if self.raw.dtype not in (np.int8, np.uint8):
+            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
+
+        ids, idx = np.unique(self.raw, return_inverse=True)
+        ids_map = {0: "undefined", 1: "right", 2: "left"}
+        if not set(ids_map).issuperset(ids):
+            raise VoxcellError(f"Invalid values, only {set(ids_map)} are allowed")
+        resolved = np.array([ids_map[_id] for _id in ids])
+        self.raw = resolved[idx]
