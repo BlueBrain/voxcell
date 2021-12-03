@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" Distribution configuration """
+"""Distribution configuration."""
 
 import importlib.util
 

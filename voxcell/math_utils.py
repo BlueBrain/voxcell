@@ -1,4 +1,4 @@
-'''helper mathematical functions'''
+"""Helper mathematical functions."""
 
 import functools
 import math
@@ -8,42 +8,42 @@ from scipy.spatial.transform import Rotation
 
 
 def gcd(a, b):
-    '''Return greatest common divisor.'''
+    """Return greatest common divisor."""
     return math.gcd(a, b)
 
 
 def lcm(a, b):
-    '''Return lowest common multiple.'''
+    """Return lowest common multiple."""
     return a * b // gcd(a, b)
 
 
 # TODO consider making this a np ufunc
 def lcmm(args):
-    '''Return lcm of args.'''
+    """Return lcm of args."""
     return functools.reduce(lcm, args)
 
 
 def minimum_aabb(mask):
-    '''calculate the minimum axis-aligned bounding box for a volume mask
+    """Calculate the minimum axis-aligned bounding box for a volume mask.
 
     Returns:
         A tuple containing the minimum x,y,z and maximum x,y,z
-    '''
+    """
     idx = np.nonzero(mask)
     return np.min(idx, axis=1), np.max(idx, axis=1)
 
 
 def positions_minimum_aabb(positions):
-    '''calculate the minimum axis-aligned bounding box for a list of positions
+    """Calculate the minimum axis-aligned bounding box for a list of positions.
 
     Returns:
         A tuple containing the minimum x,y,z and maximum x,y,z
-    '''
+    """
     return np.min(positions, axis=0), np.max(positions, axis=0)
 
 
 def clip(mask, aabb):
-    '''take a numpy array and clip it to an axis-aligned bounding box
+    """Take a numpy array and clip it to an axis-aligned bounding box.
 
     Args:
         mask: numpy array
@@ -52,19 +52,18 @@ def clip(mask, aabb):
 
     Returns:
         A new numpy array containing the same values as mask for the space defined by aabb
-    '''
+    """
     idx = tuple(slice(s, e + 1) for s, e in zip(*aabb))
     return mask[idx].copy()
 
 
 def is_diagonal(matrix):
-    """ Check if the matrix is diagonal. """
+    """Check if the matrix is diagonal."""
     return np.all(matrix == np.diag(matrix.diagonal()))
 
 
 def angles_to_matrices(angles, axis):
-    """
-    Convert rotation angles around `axis` to 3x3 rotation matrices.
+    """Convert rotation angles around `axis` to 3x3 rotation matrices.
 
     Args:
         angles: (N,) array of rotation angles (radian)
@@ -77,15 +76,14 @@ def angles_to_matrices(angles, axis):
 
 
 def normalize(vs):
-    """ Normalize array along last axis. """
+    """Normalize array along last axis."""
     norm = np.linalg.norm(vs, axis=-1)
     norm = np.where(norm > 0, norm, 1.0)
     return vs / norm[..., np.newaxis]
 
 
 def isin(a, values):
-    """
-    "Naive" NumPy.isin() analogue.
+    """Naive NumPy.isin analogue.
 
     For our usecases (>10^9 non-unique elements in `a`, <10^2 unique elements in tested `values`),
     NumPy.isin() takes same amount of time, but is 3x more memory-hungry.
@@ -98,8 +96,7 @@ def isin(a, values):
 
 
 def euler2mat(az, ay, ax):
-    """
-    Build 3x3 rotation matrices from az, ay, ax rotation angles (in that order).
+    """Build 3x3 rotation matrices from az, ay, ax rotation angles (in that order).
 
     Args:
         az: rotation angles around Z (Nx1 NumPy array; radians)
@@ -109,10 +106,9 @@ def euler2mat(az, ay, ax):
     Returns:
         List with 3x3 rotation matrices corresponding to each of N angle triplets.
 
-    See also:
+    See Also:
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (R = X1 * Y2 * Z3)
     """
-
     c1, s1 = np.cos(ax), np.sin(ax)
     c2, s2 = np.cos(ay), np.sin(ay)
     c3, s3 = np.cos(az), np.sin(az)
@@ -127,8 +123,7 @@ def euler2mat(az, ay, ax):
 
 
 def mat2euler(mm):
-    """
-    Decompose 3x3 rotation matrices into az, ay, ax rotation angles (in that order).
+    """Decompose 3x3 rotation matrices into az, ay, ax rotation angles (in that order).
 
     Args:
         List with 3x3 rotation matrices.
@@ -138,7 +133,7 @@ def mat2euler(mm):
         ay: rotation angles around Y (Nx1 NumPy array; radians)
         ax: rotation angles around X (Nx1 NumPy array; radians)
 
-    See also:
+    See Also:
         https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix (R = X1 * Y2 * Z3)
     """
     assert len(mm.shape) == 3

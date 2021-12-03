@@ -1,58 +1,58 @@
-'''library to handle traits fields and collections and the logic to assign them
+"""Library to handle traits fields and collections and the logic to assign them.
 
-    A "trait" is a set of properties and their values.
-    A "traits collection" is a group of traits. It's represented as a pandas
-    DataFrame object where each trait is a row and each property is a column.
-    For example::
+A "trait" is a set of properties and their values.
+A "traits collection" is a group of traits. It's represented as a pandas
+DataFrame object where each trait is a row and each property is a column.
+For example::
 
-           sclass      mtype
-        0  INH         Pyramidal
-        1  EXC         Pyramidal
-        2  INH         Martinotti
+       sclass      mtype
+    0  INH         Pyramidal
+    1  EXC         Pyramidal
+    2  INH         Martinotti
 
-    A "probability distribution" specifies the probability of each trait in a collection
-    being assigned to a given cell.
-    A "distributions collection" is a group of distributions. It's represented
-    as a pandas DataFrame object where each trait is a row and each distribution
-    is a column.
-    For example::
+A "probability distribution" specifies the probability of each trait in a collection
+being assigned to a given cell.
+A "distributions collection" is a group of distributions. It's represented
+as a pandas DataFrame object where each trait is a row and each distribution
+is a column.
+For example::
 
-            0     1    2     3
-         0  0.25  0.5  0.5   0.0
-         1  0.75  0.5  0.25  0.1
-         2  0.0   0.0  0.25  0.9
+        0     1    2     3
+     0  0.25  0.5  0.5   0.0
+     1  0.75  0.5  0.25  0.1
+     2  0.0   0.0  0.25  0.9
 
-    The distribution number 3 in the above table indicates 10% chances of picking
-    the trait 1 (an excitatory Pyramidal cell) and 90% of picking trait 2
-    (an inhibitory Martinotti cell).
-'''
+The distribution number 3 in the above table indicates 10% chances of picking
+the trait 1 (an excitatory Pyramidal cell) and 90% of picking trait 2
+(an inhibitory Martinotti cell).
+"""
 
 import logging
 
 import numpy as np
 import pandas as pd
 
-
 L = logging.getLogger(__name__)
 
 
-class SpatialDistribution(object):
-    '''encapsulates the data relative to the 3D probability distributions of traits
+class SpatialDistribution:
+    """Encapsulates the data relative to the 3D probability distributions of traits.
 
     Args:
         field: VoxelData where every voxel is an index in the distributions list
                -1 means unavailable data.
         distributions: a distributions collection, see module docstring
         traits: a traits collection, see module docstring
-    '''
+    """
 
     def __init__(self, field, distributions, traits):
+        """Init SpatialDistribution."""
         self.field = field
         self.distributions = distributions / distributions.sum()
         self.traits = traits
 
     def assign(self, positions):
-        '''for every cell in positions, chooses a property from a spatial distribution
+        """For every cell in positions, chooses a property from a spatial distribution.
 
         Args:
             positions: list of positions for soma centers (x, y, z).
@@ -60,7 +60,7 @@ class SpatialDistribution(object):
         Returns:
             An array with the same length as positions where each value
             is an index into spatial_dist.traits
-        '''
+        """
         dist_id_per_position = self.field.lookup(positions)
 
         unknown_count = np.count_nonzero(dist_id_per_position == -1)
@@ -82,9 +82,10 @@ class SpatialDistribution(object):
         return chosen_trait_indices
 
     def assign_conditional(self, positions, preassigned):
-        '''for every cell in positions, chooses a property from a spatial distribution
-        but taking into account a pre-assigned values of related properties.
+        """For every cell in positions, choose a property from a spatial distribution.
 
+        For every cell in positions, choose a property from a spatial distribution,
+        but taking into account a pre-assigned values of related properties.
 
         Args:
             positions: list of positions for soma centers (x, y, z).
@@ -95,9 +96,8 @@ class SpatialDistribution(object):
             is an index into spatial_dist.traits
 
             For those positions whose value could not be determined, -1 is used.
-        '''
+        """
         # No need to apply offset here because it's applied inside subdist.assign
-
         preassigned = preassigned.to_frame() if isinstance(preassigned, pd.Series) else preassigned
 
         subsections = self.split(list(preassigned.columns))
@@ -129,7 +129,9 @@ class SpatialDistribution(object):
         return chosen
 
     def collect(self, positions, preassigned=None, names=None):
-        '''for every cell in positions, chose trait values from a spatial distribution
+        """For every cell in positions, chose trait values from a spatial distribution.
+
+        For every cell in positions, chose trait values from a spatial distribution,
         taking into account a pre-assigned values of related properties (if specified).
 
         Args:
@@ -139,14 +141,14 @@ class SpatialDistribution(object):
 
         Returns:
             A pandas DataFrame with one row for each index and one column for each value of names
-        '''
+        """
         if preassigned is None:
             return self.collect_traits(self.assign(positions), names)
         else:
             return self.collect_traits(self.assign_conditional(positions, preassigned), names)
 
     def collect_traits(self, chosen, names=None):
-        '''return the trait values corresponding to an array of indices
+        """Return the trait values corresponding to an array of indices.
 
         Args:
             chosen: array of indices into the traits dataframe
@@ -154,13 +156,15 @@ class SpatialDistribution(object):
 
         Returns:
             A pandas DataFrame with one row for each index and one column for each value of names
-        '''
+        """
         names = names if names is not None else self.traits.columns
         df = self.traits[names].iloc[chosen]
         return df.reset_index().drop('index', axis=1)
 
     def split(self, attributes):
-        '''split a distribution in two or more so that each one only references
+        """Split a distribution in two or more.
+
+        Split a distribution in two or more so that each one only references
         traits with the same value for certain attributes.
         Each resulting distribution is renormalised.
 
@@ -172,7 +176,7 @@ class SpatialDistribution(object):
         Returns:
             A dictionary where the keys are tuples with the values of the attributes found
             in the traits_collection and the values are the resulting SpatialDistribution objects.
-        '''
+        """
         grouped_distributions = {}
         for attr_values, traits in self.traits.groupby(attributes):
 
@@ -187,7 +191,9 @@ class SpatialDistribution(object):
         return grouped_distributions
 
     def reduce(self, attribute):
-        '''given a spatial distribution, extract an equivalent one where all of the properties
+        """Return a SpatialDistribution with only the given attribute.
+
+        Given a spatial distribution, extract an equivalent one where all of the properties
         of the traits collection have been removed except for a specific one.
 
         For example, taking the traits collection::
@@ -221,7 +227,7 @@ class SpatialDistribution(object):
 
         Returns:
             An SpatialDistribution object
-        '''
+        """
         traits, distributions = [], []
         for value, data in self.traits.groupby(attribute):
             traits.append(value)
@@ -237,7 +243,7 @@ class SpatialDistribution(object):
         return SpatialDistribution(self.field, distributions, traits)
 
     def get_probability_field(self, attribute, value):
-        '''extract the probability of a particular attribute value from a spatial distribution
+        """Extract the probability of a particular attribute value from a spatial distribution.
 
         Voxels where the probability is missing will contain a probability value of -1.
 
@@ -245,7 +251,7 @@ class SpatialDistribution(object):
             A VoxelData with the same shape as sdist.field where every voxel is a float
             representing the probability of an attribute value being assigned to a cell
             in that voxel. For voxels with unknown values -1 is used.
-        '''
+        """
         probs = self.distributions[self.traits[attribute] == value].sum()
         probs_field = probs.reindex(self.field.raw.flatten())
         probs_field = probs_field.fillna(-1)
@@ -253,7 +259,7 @@ class SpatialDistribution(object):
 
     @classmethod
     def from_probability_field(cls, probs_field, name, positive_value, negative_value):
-        '''creates a binary SpatialDistribution object from a single probability field
+        """Creates a binary SpatialDistribution object from a single probability field.
 
         Args:
             probs_field: A VoxelData where every voxel is a float representing the probability
@@ -266,7 +272,7 @@ class SpatialDistribution(object):
 
         Returns:
             A SpatialDistribution object
-        '''
+        """
         valid = probs_field.raw != -1
 
         probs_field_complete = probs_field.raw.copy()
@@ -284,11 +290,11 @@ class SpatialDistribution(object):
         return cls(field, distributions, traits)
 
     def drop_duplicates(self, decimals=None):
-        '''return a new SpatialDistribution with duplicate distributions removed
+        """Return a new SpatialDistribution with duplicate distributions removed.
 
         Args:
             decimals: Number of decimal places to round each column to beforehand.
-        '''
+        """
         dists, inverse = _drop_duplicate_columns(self.distributions, decimals)
 
         field = np.ones_like(self.field.raw) * -1
@@ -299,13 +305,15 @@ class SpatialDistribution(object):
 
 
 def _drop_duplicate_columns(dataframe, decimals=None):
-    '''drop duplicate columns from a dataframe and return the indices of the columns
-    of the resulting dataframe that can be used to reconstruct the original one
+    """Drop duplicate columns from a dataframe and return the indices of the columns.
+
+    Drop duplicate columns from a dataframe and return the indices of the columns
+    of the resulting dataframe that can be used to reconstruct the original one.
 
     Args:
         dataframe: pandas.Dataframe object
         decimals: Number of decimal places to round each column to beforehand.
-    '''
+    """
     df = dataframe.transpose()
 
     if decimals is not None:

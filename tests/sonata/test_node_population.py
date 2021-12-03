@@ -1,7 +1,7 @@
 import pytest
 
-from voxcell.utils import deprecate
 from voxcell.sonata import NodePopulation
+from voxcell.utils import deprecate
 
 
 def test_init():

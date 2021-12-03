@@ -1,11 +1,10 @@
-import pandas as pd
 import numpy as np
-from pandas.testing import assert_frame_equal
+import pandas as pd
 from numpy.testing import assert_array_equal
+from pandas.testing import assert_frame_equal
 
 from voxcell.traits import SpatialDistribution, _drop_duplicate_columns
 from voxcell.voxel_data import VoxelData
-
 
 NOFIELD = np.array([])
 

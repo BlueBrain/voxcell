@@ -1,9 +1,9 @@
-""" Access to volumetric data. """
+"""Access to volumetric data."""
 from functools import reduce
 
+import nrrd
 import numpy as np
 from numpy.testing import assert_array_equal
-import nrrd
 
 from voxcell import math_utils
 from voxcell.exceptions import VoxcellError
@@ -11,8 +11,7 @@ from voxcell.quaternion import quaternions_to_matrices
 
 
 def _pivot_axes(a, k):
-    """
-    Move `k` first dimensions of `a` to the end, preserving their order.
+    """Move `k` first dimensions of `a` to the end, preserving their order.
 
     I.e., _pivot_axes(A x B x C x D x E, 2) -> C x D x E x A x B
     """
@@ -21,20 +20,19 @@ def _pivot_axes(a, k):
     return np.moveaxis(a, np.arange(k), np.arange(n - k, n))
 
 
-class VoxelData(object):
-    '''wrap volumetric data and some basic metadata'''
+class VoxelData:
+    """Wrap volumetric data and some basic metadata."""
 
     OUT_OF_BOUNDS = -1
 
     def __init__(self, raw, voxel_dimensions, offset=None):
-        '''
-        Note that he units for the metadata will depend on the atlas being used.
+        """Note that he units for the metadata will depend on the atlas being used.
 
         Args:
             raw(numpy.ndarray): actual voxel values
             voxel_dimensions(tuple of numbers): size of each voxel in space.
             offset(tuple of numbers): offset from an external atlas origin
-        '''
+        """
         voxel_dimensions = np.array(voxel_dimensions, dtype=np.float32)
         if len(voxel_dimensions.shape) > 1:
             raise VoxcellError(
@@ -57,33 +55,33 @@ class VoxelData(object):
 
     @property
     def voxel_volume(self):
-        """ Voxel volume. """
+        """Voxel volume."""
         return abs(np.product(self.voxel_dimensions))
 
     @property
     def ndim(self):
-        """ Number of dimensions. """
+        """Number of dimensions."""
         return len(self.voxel_dimensions)
 
     @property
     def shape(self):
-        """ Number of voxels in each dimension. """
+        """Number of voxels in each dimension."""
         return self.raw.shape[:self.ndim]
 
     @property
     def payload_shape(self):
-        """ Shape of the data stored per voxel. """
+        """Shape of the data stored per voxel."""
         return self.raw.shape[self.ndim:]
 
     @property
     def bbox(self):
-        """ Bounding box. """
+        """Bounding box."""
         return np.array([self.offset,
                          self.offset + self.voxel_dimensions * self.shape])
 
     @classmethod
     def load_nrrd(cls, nrrd_path):
-        ''' read volumetric data from a nrrd file '''
+        """Read volumetric data from a nrrd file."""
         data, header = nrrd.read(nrrd_path)
 
         # According to http://teem.sourceforge.net/nrrd/format.html#spacedirections,
@@ -123,12 +121,12 @@ class VoxelData(object):
         return cls(raw, spacings, offset)
 
     def save_nrrd(self, nrrd_path, encoding=None):
-        '''save a VoxelData to an nrrd file
+        """Save a VoxelData to an nrrd file.
 
         Args:
             nrrd_path(string): full path to nrrd file
             encoding(string): encoding option to save as
-        '''
+        """
         # from http://teem.sourceforge.net/nrrd/format.html#space
         space_directions = np.diag(self.voxel_dimensions)
         dim_defect = len(self.raw.shape) - self.ndim
@@ -161,7 +159,7 @@ class VoxelData(object):
         nrrd.write(nrrd_path, nrrd_data, header=header)
 
     def lookup(self, positions, outer_value=None):
-        '''find the values in raw corresponding to the given positions
+        """Find the values in raw corresponding to the given positions.
 
         Args:
             positions: list of positions (x, y, z).
@@ -170,7 +168,7 @@ class VoxelData(object):
             Numpy array with the values of the voxels corresponding to each position.
             For positions outside of the atlas space `outer_value` is used if specified
             (otherwise a VoxcellError would be raised).
-        '''
+        """
         voxel_idx = self.positions_to_indices(positions, outer_value is None)
         outer_mask = np.any(voxel_idx == VoxelData.OUT_OF_BOUNDS, axis=-1)
         if np.any(outer_mask):
@@ -182,12 +180,12 @@ class VoxelData(object):
         return result
 
     def _lookup_by_indices(self, voxel_idx):
-        '''values for the given voxels'''
+        """Values for the given voxels."""
         voxel_idx_tuple = tuple(voxel_idx.transpose())
         return self.raw[voxel_idx_tuple]
 
     def positions_to_indices(self, positions, strict=True, keep_fraction=False):
-        '''take positions, and the index of the voxel to which they belong
+        """Take positions, and the index of the voxel to which they belong.
 
         Args:
             positions(np.array of Nx3): positions in voxel volume
@@ -197,7 +195,7 @@ class VoxelData(object):
         Returns:
             np.array(Nx3) with the voxels coordinates corresponding to each position.
 
-        '''
+        """
         result = (positions - self.offset) / self.voxel_dimensions
         result[np.abs(result) < 1e-7] = 0.  # suppress rounding errors around 0
         if not keep_fraction:
@@ -209,40 +207,40 @@ class VoxelData(object):
         return result
 
     def indices_to_positions(self, indices):
-        ''' Return positions within given voxels
+        """Return positions within given voxels.
 
-            Use fractional indices to obtain positions within voxels
-            (for example, index (0.5, 0.5) would give the center of voxel (0, 0)).
-        '''
+        Use fractional indices to obtain positions within voxels
+        (for example, index (0.5, 0.5) would give the center of voxel (0, 0)).
+        """
         return indices * self.voxel_dimensions + self.offset
 
     def count(self, values):
-        ''' Number of voxels with value from the given list.
+        """Number of voxels with value from the given list.
 
-            `values` could be a single value or an iterable.
-        '''
+        `values` could be a single value or an iterable.
+        """
         if isinstance(values, set):
             # numpy.in1d expects an array-like object as second parameter
             values = list(values)
         return np.count_nonzero(np.in1d(self.raw, values))
 
     def volume(self, values):
-        ''' Total volume of voxels with value from the given list.
+        """Total volume of voxels with value from the given list.
 
-            `values` could be a single value or an iterable.
-        '''
+        `values` could be a single value or an iterable.
+        """
         return self.count(values) * self.voxel_volume
 
     def clip(self, bbox, na_value=0, inplace=False):
-        """ Assign `na_value` to voxels outside of axis-aligned bounding box.
+        """Assign `na_value` to voxels outside of axis-aligned bounding box.
 
-            Args:
-                bbox: bounding box in real-world coordinates
-                na_value: value to use for voxels outside of bbox
-                inplace(bool): modify data inplace
+        Args:
+            bbox: bounding box in real-world coordinates
+            na_value: value to use for voxels outside of bbox
+            inplace(bool): modify data inplace
 
-            Returns:
-                None if `inplace` is True, new VoxelData otherwise
+        Returns:
+            None if `inplace` is True, new VoxelData otherwise
         """
         bbox = np.array(bbox)
         if bbox.shape != (2, self.ndim):
@@ -270,14 +268,14 @@ class VoxelData(object):
             return VoxelData(raw, self.voxel_dimensions, self.offset)
 
     def filter(self, predicate, inplace=False):
-        """ Set values for voxel positions not satisfying `predicate` to zero.
+        """Set values for voxel positions not satisfying `predicate` to zero.
 
-            Args:
-                predicate: N x k [float] -> N x 1 [bool]
-                inplace(bool): modify data inplace
+        Args:
+            predicate: N x k [float] -> N x 1 [bool]
+            inplace(bool): modify data inplace
 
-            Returns:
-                None if `inplace` is True, new VoxelData otherwise
+        Returns:
+            None if `inplace` is True, new VoxelData otherwise
         """
         ijk = np.stack(np.mgrid[[slice(0, d) for d in self.shape]], axis=-1)
         xyz = self.indices_to_positions(0.5 + ijk)
@@ -291,8 +289,7 @@ class VoxelData(object):
             return VoxelData(raw, self.voxel_dimensions, self.offset)
 
     def compact(self, na_values=(0,), inplace=False):
-        """
-        Reduce size of raw data by clipping N/A values.
+        """Reduce size of raw data by clipping N/A values.
 
         Args:
             na_values(tuple): values to clip
@@ -317,13 +314,12 @@ class VoxelData(object):
             return VoxelData(raw, self.voxel_dimensions, offset)
 
     def with_data(self, raw):
-        '''return VoxelData of the same shape with different data'''
+        """Return VoxelData of the same shape with different data."""
         return VoxelData(raw, self.voxel_dimensions, self.offset)
 
     @staticmethod
     def reduce(function, iterable):
-        '''Returns a VoxelData object by reducing the raw contents of
-        the VoxelData objects in iterable
+        """Return a VoxelData by reducing the raw contents of the VoxelData objects in iterable.
 
         Note: if iterable contains only one item, a copy is returned (but function
         is not applied)
@@ -332,7 +328,7 @@ class VoxelData(object):
             function (Callable[[np.array, np.array], np.array]): the function to be
                 applied to numpy arrays
             iterable (Sequence[VoxelData]): a sequence of VoxelData objects
-        '''
+        """
         iterable = list(iterable)
         if not iterable:
             raise TypeError('Attempting to reduce an empty sequence')
@@ -346,14 +342,14 @@ class VoxelData(object):
 
 
 class OrientationField(VoxelData):
-    """
-    Volumetric data with rotation per voxel.
+    """Volumetric data with rotation per voxel.
 
-    See also:
+    See Also:
         https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field
     """
     def __init__(self, *args, **kwargs):
-        super(OrientationField, self).__init__(*args, **kwargs)
+        """Init OrientationField."""
+        super().__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.float32, np.float64):
             raise VoxcellError(f"Invalid volumetric data dtype: {self.raw.dtype}")
         if self.payload_shape != (4,):
@@ -361,8 +357,7 @@ class OrientationField(VoxelData):
 
     # pylint: disable=arguments-differ
     def lookup(self, positions):
-        """
-        Orientations corresponding to the given positions.
+        """Orientations corresponding to the given positions.
 
         Args:
             positions: list of positions (x, y, z).
@@ -370,7 +365,7 @@ class OrientationField(VoxelData):
         Returns:
             Numpy array with the rotation matrices corresponding to each position.
         """
-        result = super(OrientationField, self).lookup(positions, outer_value=None)
+        result = super().lookup(positions, outer_value=None)
 
         # normalize int8 data
         if result.dtype == np.int8:
@@ -383,14 +378,14 @@ class OrientationField(VoxelData):
 
 
 class ROIMask(VoxelData):
-    """
-    Volumetric data defining 0/1 mask.
+    """Volumetric data defining 0/1 mask.
 
-    See also:
+    See Also:
         https://bbpteam.epfl.ch/project/spaces/pages/viewpage.action?pageId=27234876
     """
     def __init__(self, *args, **kwargs):
-        super(ROIMask, self).__init__(*args, **kwargs)
+        """Init ROIMask."""
+        super().__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.uint8, bool):
             raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
         self.raw = self.raw.astype(bool)

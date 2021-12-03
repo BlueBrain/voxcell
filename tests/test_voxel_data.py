@@ -1,16 +1,15 @@
-import os
 import operator
+import os
 import tempfile
-import pytest
 
+import nrrd
 import numpy as np
 import numpy.testing as npt
-from numpy.testing import assert_almost_equal, assert_raises, assert_array_equal
-import nrrd
+import pytest
+from numpy.testing import assert_almost_equal, assert_array_equal, assert_raises
 
 import voxcell.voxel_data as test_module
 from voxcell.exceptions import VoxcellError
-
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -68,7 +67,7 @@ def test_load_nrrd_fail():
     assert_raises(NotImplementedError, test_module.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'space_directions_fail.nrrd'))
 
 def test_save_nrrd():
-    ''' test saving a test nrrd file and check basic attributes '''
+    """Test saving a test nrrd file and check basic attributes."""
     vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
     with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
         vd.save_nrrd(f.name)
@@ -86,7 +85,7 @@ def test_save_nrrd():
         assert np.allclose(vd.raw, new.raw)
 
 def test_save_nrrd_with_extra_axes():
-    ''' test saving a numpy array with more than 3 dimensions '''
+    """Test saving a numpy array with more than 3 dimensions."""
     raw = np.zeros((6,7,8,4,3)) # two extra dimensions
     vd = test_module.VoxelData(raw, (1.0, 2.0, 3.0))
     with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
@@ -102,7 +101,7 @@ def test_save_nrrd_with_extra_axes():
         assert 'kinds' not in header
 
 def test_save_nrrd_vector_field():
-    ''' test saving a numpy array with exactly 4 dimensions and a numeric dtype '''
+    """Test saving a numpy array with exactly 4 dimensions and a numeric dtype."""
     raw = np.zeros((6, 7, 8, 5)) # one extra dimension
     vd = test_module.VoxelData(raw, (1.0, 2.0, 3.0))
     with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:

@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.testing as npt
-
 import pytest
+
 import voxcell.math_utils as test_module
 
 

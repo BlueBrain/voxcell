@@ -1,4 +1,4 @@
-'''library to build, transform and handle fields of vectors and orientations
+"""Library to build, transform and handle fields of vectors and orientations.
 
 A vector field is a volumetric dataset that expresses a 3D vector for each voxel.
 Vector fields are represented as 4D numpy arrays. The first three dimensions of
@@ -12,19 +12,18 @@ represent space, the fourth and fifth dimensions contain a 3x3 rotation matrix.
 
 Note that although 3D is our main target, most of these functions should behave correctly for lower
 and higher dimensionality levels.
-'''
+"""
 
 import logging
 
 import numpy as np
 import scipy.ndimage
 
-
 L = logging.getLogger(__name__)
 
 
 def gaussian_filter(vf, sigma):
-    '''apply a gaussian filter to a vector field
+    """Apply a gaussian filter to a vector field.
 
     Note that filter is applied without normalizing the input or output.
 
@@ -34,7 +33,7 @@ def gaussian_filter(vf, sigma):
 
     Returns:
         The resulting vector field not normalized.
-    '''
+    """
     filtered = vf.copy()
     mask = np.any(vf != 0, axis=-1)
 
@@ -46,7 +45,7 @@ def gaussian_filter(vf, sigma):
 
 
 def combine_vector_fields(fields):
-    '''given a list of vector fields return an orientation field
+    """Given a list of vector fields return an orientation field.
 
     The vectors from the fields are treated as a new base and will be stored as column vectors so
     that the matrices of the resulting field (one per voxel) can be used to premultiply vectors
@@ -58,8 +57,7 @@ def combine_vector_fields(fields):
 
     Returns:
         A 5D numpy array representing an orientation field
-    '''
-
+    """
     if fields:
         shape = fields[0].shape
 
@@ -77,18 +75,19 @@ def combine_vector_fields(fields):
 
 
 def split_orientation_field(field):
-    '''given an orientation field return a list of vector fields'''
+    """Given an orientation field return a list of vector fields."""
     return [field[..., i] for i in range(field.shape[-2])]
 
 
 def join_vector_fields(vf0, *vfs):
-    '''performs an union of several vector fields.
+    """Performs an union of several vector fields.
+
     A voxel on a vector field is considered "empty" if all of its components are zero.
 
     Args:
         vf0: first vector field.
         vfs: rest of vector fields. All of them must have the same shape.
-    '''
+    """
     vfs = (vf0,) + vfs
     assert all(v.shape == vf0.shape for v in vfs)  # pylint: disable=no-member
 

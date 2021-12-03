@@ -1,4 +1,4 @@
-''' Quaternions to matrices and vice versa. '''
+"""Quaternions to matrices and vice versa."""
 
 import numpy as np
 
@@ -6,7 +6,7 @@ from voxcell.math_utils import normalize
 
 
 def matrices_to_quaternions(matrices):
-    '''build quaternions from an array of 3x3 rotation matrices
+    """Build quaternions from an array of 3x3 rotation matrices.
 
     Based on multibranch algorithm described here:
     http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
@@ -17,10 +17,8 @@ def matrices_to_quaternions(matrices):
     Returns:
         A Nx4 numpy array containing a unit quaternion for each rotation matrix.
         The quaternion components are stored as (x, y, z, w)
-    '''
-
+    """
     # this is the same algorithm used internally by THREE.js
-
     quat = np.zeros(shape=matrices.shape[:-2] + (4,), dtype=np.float64)
 
     # using boolean array "mask" to simulate the branching
@@ -85,7 +83,7 @@ def matrices_to_quaternions(matrices):
 
 
 def quaternions_to_matrices(q):
-    '''build 3x3 rotation matrices from an array of quaternions.
+    """Build 3x3 rotation matrices from an array of quaternions.
 
     Based on algorigthm described here:
     http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm
@@ -96,8 +94,7 @@ def quaternions_to_matrices(q):
 
     Returns:
         A Nx3x3 numpy array containing N rotation matrices.
-    '''
-
+    """
     q = normalize(q.astype(float))
 
     m11 = 1 - 2 * np.square(q[..., 1]) - 2 * np.square(q[..., 2])

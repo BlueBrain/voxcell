@@ -1,19 +1,19 @@
-""" Region hierarchy tree. """
+"""Region hierarchy tree."""
 
 import copy
 import json
-import re
 import logging
+import re
 
 from voxcell.exceptions import VoxcellError
-
 
 L = logging.getLogger(__name__)
 
 
-class Matcher(object):
-    """ Helper class for value search. """
+class Matcher:
+    """Helper class for value search."""
     def __init__(self, value, ignore_case=False):
+        """Init Matcher."""
         self.value = value
         if isinstance(value, str):
             self.ignore_case = ignore_case
@@ -24,6 +24,7 @@ class Matcher(object):
                 L.warning("Not a string value; ignoring 'ignore_case' flag")
 
     def __call__(self, value):
+        """Return True if the given value matches."""
         if hasattr(self.value, 'match'):
             return bool(self.value.search(value))
         elif isinstance(value, str) and self.ignore_case:
@@ -32,16 +33,16 @@ class Matcher(object):
             return self.value == value
 
 
-class RegionMap(object):
-    """ Region ID <-> attribute mapping. """
+class RegionMap:
+    """Region ID <-> attribute mapping."""
     def __init__(self):
+        """Init RegionMap."""
         self._data = {}
         self._children = {}
         self._parent = {}
 
     def get(self, _id, attr, with_ascendants=False):
-        """
-        Get attribute value associated with region ID.
+        """Get attribute value associated with region ID.
 
         Args:
             _id (int): region ID of interest
@@ -65,8 +66,7 @@ class RegionMap(object):
             return self._get(_id, attr)
 
     def find(self, value, attr, ignore_case=False, with_descendants=False):
-        """
-        Find IDs of the regions matching a given attribute.
+        """Find IDs of the regions matching a given attribute.
 
         Args:
             value: attribute value to match
@@ -101,8 +101,7 @@ class RegionMap(object):
         return result
 
     def is_leaf_id(self, _id):
-        """
-        Indicate whether or not the input identifier is a leaf of the hierarchy tree.
+        """Indicate whether or not the input identifier is a leaf of the hierarchy tree.
 
         A leaf identifier is the identifier of a region with no children.
 
@@ -126,7 +125,7 @@ class RegionMap(object):
         return not self._children[_id]
 
     def _get(self, _id, attr):
-        """ Fetch attribute value for a given region ID. """
+        """Fetch attribute value for a given region ID."""
         if _id not in self._data:
             raise VoxcellError(f"Region ID not found: {_id}")
         node = self._data[_id]
@@ -135,7 +134,7 @@ class RegionMap(object):
         return node[attr]
 
     def _ascendants(self, _id):
-        """ List of ascendants for a given region ID (itself included; sorted "upwards"). """
+        """List of ascendants for a given region ID (itself included; sorted "upwards")."""
         x = _id
         result = []
         while x is not None:
@@ -144,7 +143,7 @@ class RegionMap(object):
         return result
 
     def _descendants(self, _id):
-        """ Set of descendants for a given region ID (itself included). """
+        """Set of descendants for a given region ID (itself included)."""
         result = set([_id])
         for c in self._children[_id]:
             result.update(self._descendants(c))
@@ -152,9 +151,7 @@ class RegionMap(object):
 
     @classmethod
     def from_dict(cls, d):
-        """
-        Construct RegionMap from a hierarchical dictionary.
-        """
+        """Construct RegionMap from a hierarchical dictionary."""
         def include(data, parent_id):
             # pylint: disable=protected-access,missing-docstring
             _id = data['id']
@@ -172,8 +169,7 @@ class RegionMap(object):
 
     @classmethod
     def load_json(cls, filepath):
-        """
-        Construct RegionMap from JSON file.
+        """Construct RegionMap from JSON file.
 
         Note:
             If top-most object contains 'msg' field, Allen Brain Institute JSON layout is assumed.

@@ -1,11 +1,10 @@
 import json
+from unittest.mock import mock_open, patch
 
 import pytest
-from mock import mock_open, patch
 
-from voxcell.exceptions import VoxcellError
 import voxcell.region_map as test_module
-
+from voxcell.exceptions import VoxcellError
 
 TEST_RMAP = test_module.RegionMap.from_dict({
     'id': 1,

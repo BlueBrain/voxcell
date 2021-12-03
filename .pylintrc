@@ -1,11 +1,9 @@
 [MESSAGES CONTROL]
-disable=bad-continuation,fixme,invalid-name,len-as-condition,no-else-return,useless-object-inheritance, super-with-arguments
-
-# Note: As long as python2 is used, we cannot use the new Super of python3,
-# see https://www.python.org/dev/peps/pep-3135/.
-# This is why `pylint: disable=super-with-arguments` is required above.
+disable=bad-continuation,fixme,invalid-name,len-as-condition,no-else-return
 
 [FORMAT]
+# Regexp for a line that is allowed to be longer than the limit.
+ignore-long-lines=\bhttps?://\S
 # Maximum number of characters on a single line.
 max-line-length=100
 
@@ -48,7 +46,6 @@ ignore-docstrings=yes
 # List of classes names for which member attributes should not be checked
 # (useful for classes with attributes dynamically set).
 
-#as of numpy 1.8.0, name resolution seems to be a problem.  Ignore lookups in numpy
-ignored-classes=numpy,list
+ignored-classes=
 
-extension-pkg-whitelist=numpy,lxml
+extension-pkg-whitelist=

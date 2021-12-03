@@ -1,4 +1,4 @@
-""" Cell collection access / writer. """
+"""Cell collection access / writer."""
 import collections
 
 import h5py
@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 
 from voxcell.exceptions import VoxcellError
+from voxcell.math_utils import angles_to_matrices, euler2mat, mat2euler
 from voxcell.quaternion import matrices_to_quaternions, quaternions_to_matrices
-from voxcell.math_utils import euler2mat, mat2euler, angles_to_matrices
 
 
 def _load_sonata_orientations(group, cells):
@@ -72,13 +72,13 @@ def _load_property(properties, name, values, library_group=None):
 
 
 def _is_string_enum(series):
-    """Whether ``series`` contains enum of strings"""
+    """Whether ``series`` contains enum of strings."""
     is_cat_str = (pd.api.types.is_categorical_dtype(series) and
                   series.dtype.categories.dtype == object)
     return series.dtype == object or is_cat_str
 
 
-class CellCollection(object):
+class CellCollection:
     """Encapsulates all the data related to a collection of cells that compose a circuit.
 
     Multi-dimensional properties (such as positions and orientations) are attributes.
@@ -90,7 +90,12 @@ class CellCollection(object):
     SONATA_DYNAMIC_PROPERTY = '@dynamics:'
 
     def __init__(self, population_name='default', orientation_format="quaternions"):
-        # SONATA population name, currently assume a single population collection
+        """Init CellCollection.
+
+        Args:
+            population_name: SONATA population name, currently assume a single population collection
+            orientation_format: quaternions or eulers.
+        """
         self.population_name = population_name
         self.positions = None
         self.orientations = None
@@ -116,6 +121,7 @@ class CellCollection(object):
         return sizes[0] if sizes else 0
 
     def __len__(self):
+        """Return the length of the CellCollection."""
         return self.size()
 
     @property
@@ -131,7 +137,7 @@ class CellCollection(object):
         self._orientation_format = val
 
     def add_properties(self, new_properties, overwrite=True):
-        """adds new columns to the properties DataFrame
+        """Adds new columns to the properties DataFrame.
 
         Args:
             new_properties: a pandas DataFrame object
@@ -144,7 +150,7 @@ class CellCollection(object):
             self.properties[name] = prop
 
     def remove_unassigned_cells(self):
-        """ remove cells with one or more unassigned property """
+        """Remove cells with one or more unassigned property."""
         idx_unassigned = self.properties[self.properties.isnull().any(axis=1)].index
         self.properties = self.properties.drop(idx_unassigned)
         self.properties.reset_index(inplace=True, drop=True)
@@ -154,7 +160,7 @@ class CellCollection(object):
             self.positions = np.delete(self.positions, idx_unassigned, 0)
 
     def as_dataframe(self):
-        """ return a dataframe with all cell properties """
+        """Return a dataframe with all cell properties."""
         result = self.properties.copy()
         if self.positions is not None:
             result['x'] = self.positions[:, 0]
@@ -171,7 +177,7 @@ class CellCollection(object):
 
     @classmethod
     def from_dataframe(cls, df):
-        """ return a CellCollection object from a dataframe of cell properties """
+        """Return a CellCollection object from a dataframe of cell properties."""
         if not (df.index == 1 + np.arange(len(df))).all():
             raise VoxcellError(f"Index != 1..{len(df)} (got: {df.index.values})")
         result = cls()
@@ -202,7 +208,7 @@ class CellCollection(object):
             self.save_sonata(filename)
 
     def save_mvd3(self, filename):
-        """save this cell collection to mvd3 HDF5
+        """Save this cell collection to mvd3 HDF5.
 
         Args:
             filename(str): fullpath to filename to write
@@ -248,7 +254,7 @@ class CellCollection(object):
 
     @classmethod
     def load_mvd2(cls, filename):
-        """load a cell collection from mvd2 HDF5
+        """Load a cell collection from mvd2 HDF5.
 
         This method is a copy of `loadMVD2` from bluepy/v2/impl/cells_mvd.py
 
@@ -260,7 +266,7 @@ class CellCollection(object):
         """
 
         def parse_neuron_line(line):
-            """ Parser for neurons """
+            """Parser for neurons."""
             tokens = line.split()
             return {
                 'morphology': tokens[0],
@@ -316,7 +322,7 @@ class CellCollection(object):
 
     @classmethod
     def load_mvd3(cls, filename):
-        """load a cell collection from mvd3 HDF5
+        """Load a cell collection from mvd3 HDF5.
 
         Args:
             filename(str): fullpath to filename to read
@@ -324,7 +330,6 @@ class CellCollection(object):
         Returns:
             CellCollection object
         """
-
         cells = cls()
 
         with h5py.File(filename, 'r') as f:
@@ -443,6 +448,7 @@ class CellCollection(object):
         return cells
 
     def __str__(self):
+        """Return the string describing the CellCollection."""
         properties = list(self.properties.columns)
 
         if self.positions is not None:

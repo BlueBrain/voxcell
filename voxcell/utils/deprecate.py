@@ -1,4 +1,4 @@
-""" Deprecation utilities. """
+"""Deprecation utilities."""
 
 import warnings
 
@@ -6,18 +6,18 @@ from voxcell.exceptions import VoxcellError
 
 
 class VoxcellDeprecationWarning(UserWarning):
-    """ voxcell deprecation warning. """
+    """Voxcell deprecation warning."""
 
 
 class VoxcellDeprecationError(VoxcellError):
-    """ voxcell deprecation error. """
+    """Voxcell deprecation error."""
 
 
 def fail(msg=None):
-    """ Raise a deprecation exception. """
+    """Raise a deprecation exception."""
     raise VoxcellDeprecationError(msg)
 
 
 def warn(msg=None):
-    """ Issue a deprecation warning. """
+    """Issue a deprecation warning."""
     warnings.warn(msg, VoxcellDeprecationWarning)

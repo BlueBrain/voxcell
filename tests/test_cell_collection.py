@@ -1,6 +1,6 @@
-import tempfile
 import os
 import shutil
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -9,19 +9,19 @@ import numpy as np
 import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal, assert_array_equal
-from pandas.api.types import CategoricalDtype, is_categorical_dtype as is_cat
+from pandas.api.types import CategoricalDtype
+from pandas.api.types import is_categorical_dtype as is_cat
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 import voxcell.cell_collection as test_module
 from voxcell import VoxcellError
-
 
 DATA_PATH = Path(__file__).parent / 'data'
 SONATA_DATA_PATH = DATA_PATH / 'sonata'
 
 
 def euler_to_matrix(bank, attitude, heading):
-    '''build 3x3 rotation matrices from arrays of euler angles
+    """Build 3x3 rotation matrices from arrays of euler angles.
 
     Based on algorigthm described here:
     http://www.euclideanspace.com/maths/geometry/rotations/conversions/eulerToMatrix/index.htm
@@ -30,7 +30,7 @@ def euler_to_matrix(bank, attitude, heading):
         bank: rotation around X
         attitude: rotation around Z
         heading: rotation around Y
-    '''
+    """
 
     sa, ca = np.sin(attitude), np.cos(attitude)
     sb, cb = np.sin(bank), np.cos(bank)
@@ -81,7 +81,7 @@ def random_positions(n):
 
 @contextmanager
 def tempcwd():
-    '''timer contextmanager'''
+    """Tempdir contextmanager."""
     cwd = os.getcwd()
     dirname = tempfile.mkdtemp(prefix='bbtests_')
     os.chdir(dirname)

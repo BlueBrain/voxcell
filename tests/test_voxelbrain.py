@@ -1,15 +1,13 @@
 from pathlib import Path
-import json
+from unittest.mock import patch
+
 import numpy as np
 import numpy.testing as npt
-
-from mock import patch
 import pytest
 
-from voxcell import OrientationField, VoxelData, RegionMap
-from voxcell.exceptions import VoxcellError
 import voxcell.nexus.voxelbrain as test_module
-
+from voxcell import OrientationField, RegionMap, VoxelData
+from voxcell.exceptions import VoxcellError
 
 DATA_PATH = Path(__file__).parent / 'data'
 DUMMY_ATLAS = test_module.Atlas.open('/foo')
