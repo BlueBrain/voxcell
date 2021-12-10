@@ -80,12 +80,11 @@ class VoxelData:
                          self.offset + self.voxel_dimensions * self.shape])
 
     @classmethod
-    def load_nrrd(cls, nrrd_path, **kwargs):
+    def load_nrrd(cls, nrrd_path):
         """Read volumetric data from a nrrd file.
 
         Args:
             nrrd_path (str): path to the nrrd file.
-            **kwargs: optional parameters to be passed to the constructor.
         """
         data, header = nrrd.read(nrrd_path)
 
@@ -123,7 +122,7 @@ class VoxelData:
         # In NRRD 'payload' axes go first, move them to the end
         raw = _pivot_axes(data, len(data.shape) - len(spacings))
 
-        return cls(raw, spacings, offset, **kwargs)
+        return cls(raw, spacings, offset)
 
     def save_nrrd(self, nrrd_path, encoding=None):
         """Save a VoxelData to an nrrd file.
@@ -456,38 +455,37 @@ def values_to_hemisphere(values):
 
 
 class BrainRegionData(VoxelData):
-    """Volumetric data mapped to region acronyms using the given RegionMap.
+    """Volumetric data mapped to region acronyms.
 
     See Also:
         https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
     """
-    def __init__(self, *args, region_map, **kwargs):
-        """Init BrainRegionData.
-
-        Args:
-            region_map: RegionMap object used to map ids to region acronyms.
-        """
+    def __init__(self, *args, **kwargs):
+        """Init BrainRegionData."""
         super().__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.uint8):
             raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
-        self._region_map = region_map
 
-    def lookup(self, positions, outer_value=None):
+    # pylint: disable=arguments-differ
+    def lookup(self, positions, outer_value=None, *, region_map=None):
         """Find the values corresponding to the given positions.
 
-        The returned values are mapped to the region acronym.
+        The returned values are mapped to the region acronyms.
 
         Args:
             positions: list of positions (x, y, z).
             outer_value: value to be returned for positions outside the atlas space.
                 If `None`, a VoxcellError is raised in that case.
+            region_map: RegionMap instance used to map values to region acronyms.
 
         Returns:
             Numpy array with the string values corresponding to each position.
         """
+        if not region_map:
+            raise ValueError("A RegionMap instance must be provided to map values to acronyms")
         values = super().lookup(positions, outer_value=outer_value)
         ids, idx = np.unique(values, return_inverse=True)
-        resolved = np.array([self._region_map.get(_id, attr="acronym") for _id in ids])
+        resolved = np.array([region_map.get(_id, attr="acronym") for _id in ids])
         return resolved[idx]
 
 
@@ -503,7 +501,6 @@ class HemisphereData(VoxelData):
         super().__init__(*args, **kwargs)
         if self.raw.dtype not in (np.int8, np.uint8):
             raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
-        self._ids_map = {0: "undefined", 1: "right", 2: "left"}
 
     def lookup(self, positions, outer_value=None):
         """Find the values corresponding to the given positions.
@@ -518,9 +515,10 @@ class HemisphereData(VoxelData):
         Returns:
             Numpy array with the string values corresponding to each position.
         """
+        ids_map = {0: "undefined", 1: "right", 2: "left"}
         values = super().lookup(positions, outer_value=outer_value)
         ids, idx = np.unique(values, return_inverse=True)
-        if not set(self._ids_map).issuperset(ids):
-            raise VoxcellError(f"Invalid values, only {list(self._ids_map)} are allowed")
-        resolved = np.array([self._ids_map[_id] for _id in ids])
+        if not set(ids_map).issuperset(ids):
+            raise VoxcellError(f"Invalid values, only {list(ids_map)} are allowed")
+        resolved = np.array([ids_map[_id] for _id in ids])
         return resolved[idx]

@@ -96,8 +96,8 @@ Thus, given an NRRD of the specific `format <https://bbpteam.epfl.ch/project/spa
 .. code-block:: python
 
     >> from voxcell import BrainRegionData
-    >> data = BrainRegionData.load_nrrd(<path-to-NRRD>, region_map=<region-map-instance>)
-    >> data.lookup(xyz)  # returns `xyz.shape` x 3 x 3 array with string values
+    >> data = BrainRegionData.load_nrrd(<path-to-NRRD>)
+    >> data.lookup(xyz, region_map=<region-map-instance>)  # returns `xyz.shape` x 3 x 3 array with string values
 
 
 HemisphereData

@@ -349,10 +349,9 @@ def test_brain_region_data():
     data = test_module.BrainRegionData(
         np.array([1, 0, 0, 2], dtype=np.uint8),
         voxel_dimensions=(2,),
-        region_map=region_map,
     )
     assert region_map.get.call_count == 0
-    actual = data.lookup([[1.], [3], [2], [0]])
+    actual = data.lookup([[1.], [3], [2], [0]], region_map=region_map)
     assert region_map.get.call_count == 2  # called once for each different looked up id
     assert region_map.get.call_args_list == [call(0, attr='acronym'), call(1, attr='acronym')]
     assert np.issubdtype(actual.dtype, np.str)
@@ -361,13 +360,10 @@ def test_brain_region_data():
 
 def test_brain_region_data_raises():
     region_map = Mock()
-    region_map.get.side_effect = lambda _id, attr: {0: "CA1", 1: "SO", 2: "SP"}[_id]
-
     with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
         test_module.BrainRegionData(
             np.zeros(4, dtype=np.int64),
             voxel_dimensions=(1,),
-            region_map=region_map,
         )
     assert region_map.get.call_count == 0
 
