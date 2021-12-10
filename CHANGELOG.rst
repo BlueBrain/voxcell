@@ -23,7 +23,7 @@ Version 3.1.0
   can control the behavior of `@library` creation.
 - Use `Rotation.from_euler` from scipy in `angles_to_matrices` (fix rotation around `x` and `z` axis).
 - Add `values_to_region_attribute` and `values_to_hemisphere` to convert values returned by `VoxelData.lookup()`.
-- Add `BrainRegionData` and `HemisphereData` classes that can be used with `Atlas.load_data`.
+- Add `BrainRegionData` and `HemisphereData` subclasses of ``VoxelData``.
 
 Version 3.0.2
 -------------
