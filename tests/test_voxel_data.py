@@ -360,9 +360,9 @@ def test_brain_region_data():
 
 def test_brain_region_data_raises():
     region_map = Mock()
-    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
+    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'float64' (expected: 'int')")):
         test_module.BrainRegionData(
-            np.zeros(4, dtype=np.int64),
+            np.zeros(4, dtype=float),
             voxel_dimensions=(1,),
         )
     assert region_map.get.call_count == 0
@@ -380,9 +380,9 @@ def test_hemisphere_data():
 
 
 def test_hemisphere_data_init_raises_invalid_dtype():
-    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
+    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'float64' (expected: 'int')")):
         test_module.HemisphereData(
-            np.zeros(4, dtype=np.int64),
+            np.zeros(4, dtype=float),
             voxel_dimensions=(1,),
         )
 

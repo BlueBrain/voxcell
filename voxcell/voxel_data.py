@@ -463,8 +463,8 @@ class BrainRegionData(VoxelData):
     def __init__(self, *args, **kwargs):
         """Init BrainRegionData."""
         super().__init__(*args, **kwargs)
-        if self.raw.dtype not in (np.int8, np.uint8):
-            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
+        if not np.issubdtype(self.raw.dtype, np.integer):
+            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: 'int')")
 
     # pylint: disable=arguments-differ
     def lookup(self, positions, outer_value=None, *, region_map=None):
@@ -499,8 +499,8 @@ class HemisphereData(VoxelData):
     def __init__(self, *args, **kwargs):
         """Init HemisphereData."""
         super().__init__(*args, **kwargs)
-        if self.raw.dtype not in (np.int8, np.uint8):
-            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
+        if not np.issubdtype(self.raw.dtype, np.integer):
+            raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: 'int')")
 
     def lookup(self, positions, outer_value=None):
         """Find the values corresponding to the given positions.
