@@ -351,9 +351,10 @@ def test_brain_region_data():
         voxel_dimensions=(2,),
         region_map=region_map,
     )
-    assert region_map.get.call_count == 3  # called once for each different id
-
+    assert region_map.get.call_count == 0
     actual = data.lookup([[1.], [3], [2], [0]])
+    assert region_map.get.call_count == 2  # called once for each different looked up id
+    assert region_map.get.call_args_list == [call(0, attr='acronym'), call(1, attr='acronym')]
     assert np.issubdtype(actual.dtype, np.str)
     assert_array_equal(actual, ["SO", "CA1", "CA1", "SO"])
 
@@ -382,7 +383,7 @@ def test_hemisphere_data():
     assert_array_equal(actual, ["right", "left", "left", "right"])
 
 
-def test_hemisphere_data_raises_invalid_dtype():
+def test_hemisphere_data_init_raises_invalid_dtype():
     with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
         test_module.HemisphereData(
             np.zeros(4, dtype=np.int64),
@@ -390,12 +391,13 @@ def test_hemisphere_data_raises_invalid_dtype():
         )
 
 
-def test_hemisphere_data_raises_invalid_value():
-    with pytest.raises(VoxcellError, match=re.escape("Invalid values, only {0, 1, 2} are allowed")):
-        test_module.HemisphereData(
-            np.array([0, 1, 2, 3], dtype=np.int8),
-            voxel_dimensions=(1,),
-        )
+def test_hemisphere_data_lookup_raises_invalid_value():
+    data = test_module.HemisphereData(
+        np.array([0, 1, 2, 99], dtype=np.int8),
+        voxel_dimensions=(1,),
+    )
+    with pytest.raises(VoxcellError, match=re.escape("Invalid values, only [0, 1, 2] are allowed")):
+        data.lookup([[3]])
 
 
 def test_reduce():

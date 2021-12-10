@@ -63,7 +63,7 @@ OrientationField
 
 |name| provides this subclass of ``VoxelData`` for transparently converting quaternions stored in orientation fields to rotation matrices form.
 
-Thus, given a NRRD in the :ref:`Orientation Field File Format`, one can:
+Thus, given an NRRD of the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field>`__, one can:
 
 .. code-block:: python
 
@@ -77,13 +77,41 @@ ROIMask
 
 |name| provides this subclass of ``VoxelData`` for transparently loading masks and converting values from ``int8`` or ``uint8`` to ``bool``.
 
-Thus, given a NRRD in the specific :ref:`Mask Image for Region of Interest (ROI)`, one can:
+Thus, given an NRRD of the specific `format <https://bbpteam.epfl.ch/project/spaces/pages/viewpage.action?pageId=27234876>`__, one can:
 
 .. code-block:: python
 
     >> from voxcell import ROIMask
     >> data = ROIMask.load_nrrd(<path-to-NRRD>)
-    >> data.lookup(xyz)  # return array with boolean values
+    >> data.lookup(xyz)  # returns `xyz.shape` x 3 x 3 array with boolean values
+
+
+BrainRegionData
+^^^^^^^^^^^^^^^
+
+|name| provides this subclass of ``VoxelData`` for transparently loading brain region data and converting values from ``int8`` or ``unit8`` to strings representing the region acronyms.
+
+Thus, given an NRRD of the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image>`__ and a ``RegionMap`` instance (see `Brain region hierarchy`_), one can:
+
+.. code-block:: python
+
+    >> from voxcell import BrainRegionData
+    >> data = BrainRegionData.load_nrrd(<path-to-NRRD>, region_map=<region-map-instance>)
+    >> data.lookup(xyz)  # returns `xyz.shape` x 3 x 3 array with string values
+
+
+HemisphereData
+^^^^^^^^^^^^^^
+
+|name| provides this subclass of ``VoxelData`` for transparently loading hemisphere data and converting values from ``0``, ``1``, ``2`` to the respective strings ``undefined``, ``right``, ``left``.
+
+Thus, given an NRRD of the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image>`__ containing only valid values, one can:
+
+.. code-block:: python
+
+    >> from voxcell import HemisphereData
+    >> data = HemisphereData.load_nrrd(<path-to-NRRD>)
+    >> data.lookup(xyz)  # returns `xyz.shape` x 3 x 3 array with string values
 
 
 Brain region hierarchy
