@@ -1,5 +1,5 @@
 """Access to volumetric data."""
-from functools import partial, reduce
+from functools import reduce
 
 import nrrd
 import numpy as np
