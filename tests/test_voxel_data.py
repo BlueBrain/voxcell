@@ -1,6 +1,8 @@
 import operator
 import os
+import re
 import tempfile
+from unittest.mock import Mock, call
 
 import nrrd
 import numpy as np
@@ -40,12 +42,14 @@ def test_positions_to_indices():
     assert v.positions_to_indices([9.9999999]) == [0]
     assert v.positions_to_indices([19.9999999]) == [0]
 
+
 def test_load_nrrd_scalar_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'scalar.nrrd'))
     assert actual.raw.shape == (1, 2)
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
     assert_almost_equal(actual.bbox, np.array([[100, 200], [110, 240]]))
+
 
 def test_load_nrrd_vector_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
@@ -54,17 +58,28 @@ def test_load_nrrd_vector_payload():
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
 
+
 def test_load_nrrd_with_space_directions():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'space_directions.nrrd'))
     assert actual.raw.shape == (1, 2, 3)
     assert_almost_equal(actual.voxel_dimensions, [10, 20])
     assert_almost_equal(actual.offset, [100, 200])
 
+
 def test_load_nrrd_fail():
     # no spacing information
-    assert_raises(VoxcellError, test_module.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'no_spacings_fail.nrrd'))
+    assert_raises(
+        VoxcellError,
+        test_module.VoxelData.load_nrrd,
+        os.path.join(DATA_PATH, 'no_spacings_fail.nrrd'),
+    )
     # space directions is non-diagonal
-    assert_raises(NotImplementedError, test_module.VoxelData.load_nrrd, os.path.join(DATA_PATH, 'space_directions_fail.nrrd'))
+    assert_raises(
+        NotImplementedError,
+        test_module.VoxelData.load_nrrd,
+        os.path.join(DATA_PATH, 'space_directions_fail.nrrd'),
+    )
+
 
 def test_save_nrrd():
     """Test saving a test nrrd file and check basic attributes."""
@@ -84,6 +99,7 @@ def test_save_nrrd():
         new = test_module.VoxelData.load_nrrd(f.name)
         assert np.allclose(vd.raw, new.raw)
 
+
 def test_save_nrrd_with_extra_axes():
     """Test saving a numpy array with more than 3 dimensions."""
     raw = np.zeros((6,7,8,4,3)) # two extra dimensions
@@ -100,6 +116,7 @@ def test_save_nrrd_with_extra_axes():
             ])
         assert 'kinds' not in header
 
+
 def test_save_nrrd_vector_field():
     """Test saving a numpy array with exactly 4 dimensions and a numeric dtype."""
     raw = np.zeros((6, 7, 8, 5)) # one extra dimension
@@ -115,8 +132,6 @@ def test_save_nrrd_vector_field():
                 [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
             ])
         assert_array_equal(header['kinds'], ['vector', 'domain', 'domain', 'domain'])
-
-
 
 
 def test_shape_checks():
@@ -230,6 +245,7 @@ def test_orientation_field():
         [np.identity(3)]
     )
 
+
 def test_orientation_field_compact():
     field = test_module.OrientationField(np.array([[127, 0, 0, 0]], dtype=np.int8), voxel_dimensions=(2,))
     npt.assert_almost_equal(
@@ -237,11 +253,13 @@ def test_orientation_field_compact():
         [np.identity(3)]
     )
 
+
 def test_orientation_field_raises():
     with pytest.raises(VoxcellError):
         test_module.OrientationField(np.zeros(4), voxel_dimensions=(1,))
     with pytest.raises(VoxcellError):
         test_module.OrientationField(np.zeros((3, 3)), voxel_dimensions=(1,))
+
 
 def test_roi_mask():
     field = test_module.ROIMask(np.array([1, 0, 0, 0], dtype=np.uint8), voxel_dimensions=(2,))
@@ -249,9 +267,34 @@ def test_roi_mask():
     assert actual.dtype == 'bool'
     assert_array_equal(actual, [True, False])
 
-def test_test_roi_mask_raises():
-    with pytest.raises(VoxcellError):
+
+def test_roi_mask_raises():
+    with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
         test_module.ROIMask(np.zeros(4, dtype=np.int64), voxel_dimensions=(1,))
+
+
+def test_values_to_region_attribute():
+    region_map = Mock()
+    region_map.get.side_effect = lambda _id, attr: {0: "CA1", 1: "SO", 2: "SP"}[_id]
+    values = np.array([1, 0, 0, 1])
+    actual = test_module.values_to_region_attribute(values, region_map)
+    assert region_map.get.call_count == 2  # called once for each different looked up id
+    assert region_map.get.call_args_list == [call(0, attr='acronym'), call(1, attr='acronym')]
+    assert np.issubdtype(actual.dtype, np.str)
+    assert_array_equal(actual, ["SO", "CA1", "CA1", "SO"])
+
+
+def test_values_to_hemisphere():
+    values = np.array([2, 1, 1, 2])
+    actual = test_module.values_to_hemisphere(values)
+    assert np.issubdtype(actual.dtype, np.str)
+    assert_array_equal(actual, ["left", "right", "right", "left"])
+
+
+def test_values_to_hemisphere_raises_invalid_value():
+    values = np.array([2, 1, 1, 99])
+    with pytest.raises(VoxcellError, match=re.escape("Invalid values, only [0, 1, 2] are allowed")):
+        test_module.values_to_hemisphere(values)
 
 
 def test_reduce():

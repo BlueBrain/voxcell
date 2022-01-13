@@ -1,0 +1,11 @@
+[tool.black]
+line-length = 100
+target-version = [
+    'py37',
+    'py38',
+]
+include = 'voxcell\/.*\.py$|tests\/.*\.py$|doc\/source\/conf\.py$|setup\.py$'
+
+[tool.isort]
+profile = "black"
+line_length = 100

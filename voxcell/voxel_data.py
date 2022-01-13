@@ -81,7 +81,11 @@ class VoxelData:
 
     @classmethod
     def load_nrrd(cls, nrrd_path):
-        """Read volumetric data from a nrrd file."""
+        """Read volumetric data from a nrrd file.
+
+        Args:
+            nrrd_path (str): path to the nrrd file.
+        """
         data, header = nrrd.read(nrrd_path)
 
         # According to http://teem.sourceforge.net/nrrd/format.html#spacedirections,
@@ -163,13 +167,13 @@ class VoxelData:
 
         Args:
             positions: list of positions (x, y, z).
+            outer_value: value to be returned for positions outside the atlas space.
+                If `None`, a VoxcellError is raised in that case.
 
         Returns:
             Numpy array with the values of the voxels corresponding to each position.
-            For positions outside of the atlas space `outer_value` is used if specified
-            (otherwise a VoxcellError would be raised).
         """
-        voxel_idx = self.positions_to_indices(positions, outer_value is None)
+        voxel_idx = self.positions_to_indices(positions, strict=outer_value is None)
         outer_mask = np.any(voxel_idx == VoxelData.OUT_OF_BOUNDS, axis=-1)
         if np.any(outer_mask):
             result = np.full(voxel_idx.shape[:-1], outer_value)
@@ -389,3 +393,52 @@ class ROIMask(VoxelData):
         if self.raw.dtype not in (np.int8, np.uint8, bool):
             raise VoxcellError(f"Invalid dtype: '{self.raw.dtype}' (expected: '(u)int8')")
         self.raw = self.raw.astype(bool)
+
+
+def values_to_region_attribute(values, region_map, attr="acronym"):
+    """Convert region ids to the corresponding region attribute.
+
+    It can be used to convert the values retrieved with `VoxelData.lookup()`.
+
+    Args:
+        values (np.array): array containing the values to be converted.
+        region_map (RegionMap): instance used to map values to region acronyms.
+        attr (str): attribute name to lookup.
+
+    Returns:
+        Numpy array with the converted values.
+
+    Raises:
+        VoxcellError: if the attribute or any region id is not found.
+
+    See Also:
+        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+    """
+    ids, idx = np.unique(values, return_inverse=True)
+    resolved = np.array([region_map.get(_id, attr=attr) for _id in ids])
+    return resolved[idx]
+
+
+def values_to_hemisphere(values):
+    """Convert integer values 0, 1, 2 to "undefined", "right", "left" hemisphere labels.
+
+    It can be used to convert the values retrieved with VoxelData.lookup.
+
+    Args:
+        values: numpy array containing the values to be converted.
+
+    Returns:
+        Numpy array with the converted values.
+
+    Raises:
+        VoxcellError: if any of the values is invalid.
+
+    See Also:
+        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+    """
+    ids_map = {0: "undefined", 1: "right", 2: "left"}
+    ids, idx = np.unique(values, return_inverse=True)
+    if not set(ids_map).issuperset(ids):
+        raise VoxcellError(f"Invalid values, only {list(ids_map)} are allowed")
+    resolved = np.array([ids_map[_id] for _id in ids])
+    return resolved[idx]

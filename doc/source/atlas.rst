@@ -67,15 +67,29 @@ TODO: document other methods
 OrientationField
 ^^^^^^^^^^^^^^^^
 
-|name| provides also a subclass of ``VoxelData`` for transparently converting quaternions stored in orientation fields to rotation matrices form.
+|name| provides this subclass of ``VoxelData`` for transparently converting quaternions stored in orientation fields to rotation matrices form.
 
-Thus, given an NRRD of the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field>`_, one can:
+Thus, given a NRRD in the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field>`__, one can:
 
 .. code-block:: python
 
     >> from voxcell import OrientationField
     >> of = OrientationField.load_nrrd(<path-to-NRRD>)
     >> of.lookup(xyz)  # returns `xyz.shape` x 3 x 3 array with orientation matrices
+
+
+ROIMask
+^^^^^^^
+
+|name| provides this subclass of ``VoxelData`` for transparently loading masks and converting values from ``int8`` or ``uint8`` to ``bool``.
+
+Thus, given a NRRD in the specific `format <https://bbpteam.epfl.ch/project/spaces/pages/viewpage.action?pageId=27234876>`__, one can:
+
+.. code-block:: python
+
+    >> from voxcell import ROIMask
+    >> data = ROIMask.load_nrrd(<path-to-NRRD>)
+    >> data.lookup(xyz)  # return array with boolean values
 
 
 Brain region hierarchy
