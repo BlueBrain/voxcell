@@ -1,6 +1,9 @@
 Changelog
 =========
 
+Version 3.1.1
+-------------
+- Add documentation for ROI Mask, Orientation and scalar file formats
 
 Version 3.1.0
 -------------

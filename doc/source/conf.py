@@ -12,12 +12,18 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import os
+import sys
+
 import voxcell
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
+
+local_path = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(local_path, 'extensions'))
 
 # -- General configuration ------------------------------------------------
 
@@ -29,13 +35,20 @@ import voxcell
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.graphviz',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx.ext.autosummary',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
+    'bbp-table',
 ]
+
+# because we ..include CHANGELOG, the sections get included twice
+suppress_warnings = ['autosectionlabel.*',
+                     ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['']

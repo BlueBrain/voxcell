@@ -21,6 +21,7 @@ Contents
    aibs
    atlas
    extras
+   formats
    api
    changelog
 
