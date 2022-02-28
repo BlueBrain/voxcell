@@ -1,0 +1,23 @@
+Maintainer
+----------
+* BBP/NSE
+
+Authors
+-------
+Aleksei Sanin
+Antonel Stefano
+Arseny V. Povolotsky
+Benoît Coste
+Christian O'Reilly
+Eilif Muller
+Genrich Ivaska
+Gianluca Ficarelli
+Hugo Dictus
+James Dynes
+Jean-Denis Courcol
+Liesbeth Vanherpe
+Luc Guyot
+Luis Riquelme
+Michael Gevaert
+Mike Gevaert
+Tom Delemontex

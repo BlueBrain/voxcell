@@ -3,7 +3,7 @@
 Welcome to |name|'s documentation!
 ===================================
 
-|name| is a library aimed to provide an access to brain atlases stored in `VoxelBrain <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Voxel+Brain+REST+API>`_.
+|name| is a library aimed to provide an access to brain atlases.
 
 In addition, it could be used for:
 
