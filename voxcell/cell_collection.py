@@ -212,6 +212,7 @@ class CellCollection:
 
         Args:
             filename(str): fullpath to filename to write
+            mode(str): mode used to create/open file; passed directly to h5py.File
         """
         self._check_sizes()
         with h5py.File(filename, 'w') as f:
@@ -346,13 +347,14 @@ class CellCollection:
                     _load_property(cells.properties, name, values, f.get('library'))
         return cells
 
-    def save_sonata(self, filename, forced_library=None):
+    def save_sonata(self, filename, forced_library=None, mode='w'):
         """Save this cell collection to sonata HDF5.
 
         Args:
             filename(str): fullpath to filename to write
             forced_library(iterable of str): names of properties that are
             forced to become part of the @library
+            mode(str): mode used to create/open file; passed directly to h5py.File
 
         Note:
           * Only properties that contain strings can be included in the @library
@@ -364,7 +366,7 @@ class CellCollection:
         forced_library = set() if forced_library is None else set(forced_library)
 
         self._check_sizes()
-        with h5py.File(filename, 'w') as h5f:
+        with h5py.File(filename, mode) as h5f:
             population = h5f.create_group(f'/nodes/{self.population_name}')
             population.create_dataset('node_type_id', data=np.full(len(self.properties), -1))
             group = population.create_group('0')
@@ -404,7 +406,7 @@ class CellCollection:
                 group.create_dataset('z', data=self.positions[:, 2])
 
     @classmethod
-    def load_sonata(cls, filename):
+    def load_sonata(cls, filename, population_name=None):
         """Loads a cell collection from sonata HDF5.
 
         Args:
@@ -416,12 +418,17 @@ class CellCollection:
         cells = cls()
 
         with h5py.File(filename, 'r') as h5f:
-            population_names = list(h5f['/nodes'].keys())
-            assert len(population_names) == 1, 'Single population is supported only'
-            cells.population_name = population_names[0]
-            population = h5f['/nodes/' + population_names[0]]
+            if population_name is None:
+                population_names = list(h5f['/nodes'].keys())
+                assert len(population_names) == 1, 'Single population is supported only'
+                population_name = population_names[0]
+
+            population = h5f[f'/nodes/{population_name}']
+            cells.population_name = population_name
+
             assert '0' in population, 'Single group "0" is supported only'
             group = population['0']
+
             keys = set(group.keys())
             if 'x' in group:
                 cells.positions = np.vstack((group['x'], group['y'], group['z'])).T

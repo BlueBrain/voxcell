@@ -455,6 +455,23 @@ def test_set_orientation_type():
             cells.orientation_format = "unknown"
 
 
+def test_sonata_multipopulation():
+    with tempcwd():
+        orig = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_eulers.h5")
+
+        orig.population_name = 'A'
+        orig.save_sonata("nodes.h5")
+
+        orig.population_name = 'B'
+        # this tests that `mode` is used, otherwise the file would be overwritten, and population
+        # A wouldn't be accessible below
+        orig.save_sonata("nodes.h5", mode='a')
+
+        A = test_module.CellCollection.load_sonata("nodes.h5", population_name="A")
+        B = test_module.CellCollection.load_sonata("nodes.h5", population_name="B")
+        assert_frame_equal(A.as_dataframe(), B.as_dataframe())
+
+
 def test_check_types():
     # this is a sanity check for the h5py>3.0.0 and the string types
     cells = test_module.CellCollection.load_sonata(SONATA_DATA_PATH / "nodes_multi_types.h5")
