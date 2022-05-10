@@ -266,10 +266,10 @@ class VoxelData:
             mask[indices] = True
             self.raw[np.logical_not(mask)] = na_value
             return None
-        else:
-            raw = np.full_like(self.raw, na_value)
-            raw[indices] = self.raw[indices]
-            return VoxelData(raw, self.voxel_dimensions, self.offset)
+
+        raw = np.full_like(self.raw, na_value)
+        raw[indices] = self.raw[indices]
+        return VoxelData(raw, self.voxel_dimensions, self.offset)
 
     def filter(self, predicate, inplace=False):
         """Set values for voxel positions not satisfying `predicate` to zero.
@@ -284,13 +284,14 @@ class VoxelData:
         ijk = np.stack(np.mgrid[[slice(0, d) for d in self.shape]], axis=-1)
         xyz = self.indices_to_positions(0.5 + ijk)
         mask = predicate(xyz.reshape(-1, self.ndim)).reshape(self.shape)
+
         if inplace:
             self.raw[np.invert(mask)] = 0
             return None
-        else:
-            raw = np.zeros_like(self.raw)
-            raw[mask] = self.raw[mask]
-            return VoxelData(raw, self.voxel_dimensions, self.offset)
+
+        raw = np.zeros_like(self.raw)
+        raw[mask] = self.raw[mask]
+        return VoxelData(raw, self.voxel_dimensions, self.offset)
 
     def compact(self, na_values=(0,), inplace=False):
         """Reduce size of raw data by clipping N/A values.
@@ -314,8 +315,8 @@ class VoxelData:
             self.raw = raw
             self.offset = offset
             return None
-        else:
-            return VoxelData(raw, self.voxel_dimensions, offset)
+
+        return VoxelData(raw, self.voxel_dimensions, offset)
 
     def with_data(self, raw):
         """Return VoxelData of the same shape with different data."""

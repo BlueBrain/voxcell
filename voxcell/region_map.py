@@ -27,10 +27,11 @@ class Matcher:
         """Return True if the given value matches."""
         if hasattr(self.value, 'match'):
             return bool(self.value.search(value))
-        elif isinstance(value, str) and self.ignore_case:
+
+        if isinstance(value, str) and self.ignore_case:
             return self.value.upper() == value.upper()
-        else:
-            return self.value == value
+
+        return self.value == value
 
 
 class RegionMap:
@@ -62,8 +63,8 @@ class RegionMap:
         """
         if with_ascendants:
             return [self._get(k, attr) for k in self._ascendants(_id)]
-        else:
-            return self._get(_id, attr)
+
+        return self._get(_id, attr)
 
     def find(self, value, attr, ignore_case=False, with_descendants=False):
         """Find IDs of the regions matching a given attribute.

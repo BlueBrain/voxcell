@@ -52,14 +52,17 @@ class Atlas:
         parsed = urllib.parse.urlsplit(url)
         if parsed.scheme in ('', 'file'):
             return LocalAtlas(url)
-        elif parsed.scheme in ('http', 'https'):
+
+        if parsed.scheme in ('http', 'https'):
             if not parsed.path.startswith('/api/analytics/atlas/releases/'):
                 raise VoxcellError(f"Unexpected URL: '{url}'")
+
             if cache_dir is None:
                 raise VoxcellError("`cache_dir` should be specified")
+
             return VoxelBrainAtlas(url, cache_dir)
-        else:
-            raise VoxcellError(f"Unexpected URL: '{url}'")
+
+        raise VoxcellError(f"Unexpected URL: '{url}'")
 
     @abc.abstractmethod
     def fetch_data(self, data_type):
