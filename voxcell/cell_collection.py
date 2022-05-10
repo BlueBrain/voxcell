@@ -212,7 +212,6 @@ class CellCollection:
 
         Args:
             filename(str): fullpath to filename to write
-            mode(str): mode used to create/open file; passed directly to h5py.File
         """
         self._check_sizes()
         with h5py.File(filename, 'w') as f:
@@ -354,7 +353,8 @@ class CellCollection:
             filename(str): fullpath to filename to write
             forced_library(iterable of str): names of properties that are
             forced to become part of the @library
-            mode(str): mode used to create/open file; passed directly to h5py.File
+            mode(str): mode used to create/open file; passed directly to h5py.File:
+                'w' overwrites, 'a' appends
 
         Note:
           * Only properties that contain strings can be included in the @library
