@@ -58,20 +58,19 @@ def combine_vector_fields(fields):
     Returns:
         A 5D numpy array representing an orientation field
     """
-    if fields:
-        shape = fields[0].shape
-
-        # add a second-to-last dimension: the number of fields
-        result = np.zeros(shape=shape[:-1] + (len(fields),) + (shape[-1],), dtype=fields[0].dtype)
-
-        # abusing numpy broadcasting here saves us having to do an explicit transpose afterwards
-        for i, f in enumerate(fields):
-            result[..., i] = f
-
-        return result
-
-    else:
+    if not fields:
         return np.empty((0,))
+
+    shape = fields[0].shape
+
+    # add a second-to-last dimension: the number of fields
+    result = np.zeros(shape=shape[:-1] + (len(fields),) + (shape[-1],), dtype=fields[0].dtype)
+
+    # abusing numpy broadcasting here saves us having to do an explicit transpose afterwards
+    for i, f in enumerate(fields):
+        result[..., i] = f
+
+    return result
 
 
 def split_orientation_field(field):

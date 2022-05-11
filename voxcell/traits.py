@@ -144,8 +144,8 @@ class SpatialDistribution:
         """
         if preassigned is None:
             return self.collect_traits(self.assign(positions), names)
-        else:
-            return self.collect_traits(self.assign_conditional(positions, preassigned), names)
+
+        return self.collect_traits(self.assign_conditional(positions, preassigned), names)
 
     def collect_traits(self, chosen, names=None):
         """Return the trait values corresponding to an array of indices.
