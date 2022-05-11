@@ -4,6 +4,8 @@ Changelog
 Version 3.1.1
 -------------
 - Add documentation for ROI Mask, Orientation and scalar file formats
+- CellCollection::save_sonata allows for a `mode`; output file can be appended to, or overwritten.
+- CellCollection can now read multiple SONATA popluations.
 
 Version 3.1.0
 -------------
