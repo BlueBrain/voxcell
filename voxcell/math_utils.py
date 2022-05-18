@@ -4,6 +4,7 @@ import functools
 import math
 
 import numpy as np
+import pandas as pd
 from scipy.spatial.transform import Rotation
 
 
@@ -165,3 +166,150 @@ def mat2euler(mm):
     assert not np.any(np.isnan(ax))
 
     return (az, ay, ax)
+
+
+def voxel_intersection(seg, data, return_sub_segments=False):
+    """Find voxels intersected by a given segment and cut the segment according to these voxels.
+
+    .. note::
+
+        A point is considered as intersecting a voxel using the follozing rules:
+            x >= x_min
+            x < x_max
+            y >= y_min
+            y < y_max
+            z >= z_min
+            z < z_max
+
+    Args:
+        seg: The segment.
+        data: The VoxelData object.
+        return_sub_segments: If est to `True`, the sub segments are also returned with the voxel
+            indices.
+
+    Returns:
+        List of 3D indices.
+        If `return_sub_segments` is set to `True`, the list of coordinates of the sub-segment
+        points is also returned.
+    """
+    # If the segment is outside the bounding box, then it does not intersect any voxel.
+    if (seg < data.bbox).all() or (seg >= data.bbox).all():
+        indices = np.zeros((0, 3), dtype=np.result_type(0))
+        if return_sub_segments:
+            return indices, np.reshape(seg, (1, -1))
+        return indices
+
+    # The segment is clipped inside the global bbox.
+    cut_seg = np.clip(
+        seg,
+        a_min=data.bbox[0],
+        a_max=(
+            data.bbox[1]
+            - max(
+                np.finfo(data.offset.dtype).resolution,
+                np.finfo(data.voxel_dimensions.dtype).resolution,
+            )
+        ),
+    )
+
+    # Compute the actual bbox of the segment
+    bbox = np.sort(data.positions_to_indices(cut_seg), axis=0)
+
+    # Unpack input data.
+    start_pt, end_pt = cut_seg
+    [start_x, start_y, start_z], [end_x, end_y, end_z] = cut_seg
+
+    # Build the grid of all voxels included in the bbox.
+    i_planes, j_planes, k_planes = [
+        np.arange(bbox[0, i], bbox[1, i] + 1) for i in range(3)
+    ]
+    sub_grid = np.array(np.meshgrid(i_planes, j_planes, k_planes)).T
+
+    # Compute the boundary planes of each voxel.
+    lower_left_corners = data.indices_to_positions(sub_grid)
+
+    # Compute the vector of the segment.
+    seg_vector = np.array(
+        [end_x - start_x, end_y - start_y, end_z - start_z], dtype=float
+    )
+
+    def get_intersections(dst1, dst2, start_pt, seg_vector):
+        """Compute intersection point."""
+        same_sign = (dst1 * dst2) > 0
+        coplanar = (dst1 == 0) & (dst2 == 0)
+        denomimator = dst2 - dst1
+        denomimator = np.where(denomimator == 0, np.nan, denomimator)
+        f = np.where(same_sign | coplanar, np.nan, -dst1 / denomimator)
+
+        # Multiply vector by factor.
+        result = seg_vector * f[:, np.newaxis]
+
+        # Return the hit position.
+        return start_pt + result
+
+    # Get the coordinates of the planes between voxels
+    x_planes = lower_left_corners[0, :, 0, 0]
+    y_planes = lower_left_corners[0, 0, :, 1]
+    z_planes = lower_left_corners[:, 0, 0, 2]
+
+    # Get the coordinates of the intersection points
+    x_hits = get_intersections(
+        start_x - x_planes, end_x - x_planes, start_pt, seg_vector
+    )
+    y_hits = get_intersections(
+        start_y - y_planes, end_y - y_planes, start_pt, seg_vector
+    )
+    z_hits = get_intersections(
+        start_z - z_planes, end_z - z_planes, start_pt, seg_vector
+    )
+
+    # Check how the points are ordered along each axis
+    x_ascending = end_x >= start_x
+    x_ascending_strict = end_x > start_x
+    y_ascending = end_y >= start_y
+    y_ascending_strict = end_y > start_y
+    z_ascending = end_z >= start_z
+    z_ascending_strict = end_z > start_z
+
+    # Build the sub-segment coordinate DF
+    seg_points = np.vstack([x_hits, y_hits, z_hits])
+    seg_points = seg_points[~np.isnan(seg_points).all(axis=1)]
+    seg_points = np.unique(seg_points, axis=0)
+
+    # Remove duplicated points when the extremities of the segment are on a voxel boundary, except
+    # if they are in the ascending quadrant.
+    if any([not x_ascending, not y_ascending, not z_ascending]):
+        seg_pt_end = (seg_points == end_pt).all(axis=1)
+        if seg_pt_end.any():
+            seg_points = seg_points[~seg_pt_end]
+
+    if all([x_ascending, y_ascending, z_ascending]):
+        seg_pt_start = (seg_points == start_pt).all(axis=1)
+        if seg_pt_start.any():
+            seg_points = seg_points[~seg_pt_start]
+
+    # Build and sort the sub-segment points
+    seg_points = np.vstack([start_pt, seg_points, end_pt])
+    df_seg_points = pd.DataFrame(seg_points, columns=["x", "y", "z"])
+    if (
+        x_ascending_strict
+        or (start_x == end_x and y_ascending_strict)
+        or (start_x == end_x and start_y == end_y and z_ascending_strict)
+    ):
+        ascending = True
+    else:
+        ascending = False
+    df_seg_points.sort_values(["x", "y", "z"], ascending=ascending, inplace=True)
+
+    # Find the intersection indices
+    seg_point_indices = data.positions_to_indices(
+        df_seg_points.rolling(2, center=True, min_periods=2).mean().dropna().values
+    )
+
+    if return_sub_segments:
+        # Return the indices of the intersected voxels and the sub-segments.
+        sub_segments = np.hstack([df_seg_points.values[:-1], df_seg_points.values[1:]])
+        return seg_point_indices, sub_segments
+
+    # Return the indices of the intersected voxels.
+    return seg_point_indices
