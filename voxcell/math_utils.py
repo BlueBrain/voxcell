@@ -168,7 +168,7 @@ def mat2euler(mm):
     return (az, ay, ax)
 
 
-def voxel_intersection(seg, data, return_sub_segments=False):
+def voxel_intersection(seg, data, return_sub_segments=False):  # pylint: disable=too-many-locals
     """Find voxels intersected by a given segment and cut the segment according to these voxels.
 
     .. note::
@@ -194,10 +194,10 @@ def voxel_intersection(seg, data, return_sub_segments=False):
     """
     # If the segment is outside the bounding box, then it does not intersect any voxel.
     if (seg < data.bbox).all() or (seg >= data.bbox).all():
-        indices = np.zeros((0, 3), dtype=np.result_type(0))
+        seg_point_indices = np.zeros((0, 3), dtype=np.result_type(0))
         if return_sub_segments:
-            return indices, np.reshape(seg, (1, -1))
-        return indices
+            return seg_point_indices, np.reshape(seg, (1, -1))
+        return seg_point_indices
 
     # The segment is clipped inside the global bbox.
     cut_seg = np.clip(
@@ -206,8 +206,8 @@ def voxel_intersection(seg, data, return_sub_segments=False):
         a_max=(
             data.bbox[1]
             - max(
-                np.finfo(data.offset.dtype).resolution,
-                np.finfo(data.voxel_dimensions.dtype).resolution,
+                np.finfo(data.offset.dtype).resolution,  # pylint: disable=no-member
+                np.finfo(data.voxel_dimensions.dtype).resolution,  # pylint: disable=no-member
             )
         ),
     )
@@ -265,11 +265,8 @@ def voxel_intersection(seg, data, return_sub_segments=False):
 
     # Check how the points are ordered along each axis
     x_ascending = end_x >= start_x
-    x_ascending_strict = end_x > start_x
     y_ascending = end_y >= start_y
-    y_ascending_strict = end_y > start_y
     z_ascending = end_z >= start_z
-    z_ascending_strict = end_z > start_z
 
     # Build the sub-segment coordinate DF
     seg_points = np.vstack([x_hits, y_hits, z_hits])
@@ -291,10 +288,11 @@ def voxel_intersection(seg, data, return_sub_segments=False):
     # Build and sort the sub-segment points
     seg_points = np.vstack([start_pt, seg_points, end_pt])
     df_seg_points = pd.DataFrame(seg_points, columns=["x", "y", "z"])
-    if (
-        x_ascending_strict
-        or (start_x == end_x and y_ascending_strict)
-        or (start_x == end_x and start_y == end_y and z_ascending_strict)
+    if (  # pylint: disable=simplifiable-if-statement
+        # pylint: disable=too-many-boolean-expressions
+        end_x > start_x
+        or (start_x == end_x and end_y > start_y)
+        or (start_x == end_x and start_y == end_y and end_z > start_z)
     ):
         ascending = True
     else:
