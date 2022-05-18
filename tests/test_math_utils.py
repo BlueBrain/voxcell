@@ -3,6 +3,7 @@ import numpy.testing as npt
 import pytest
 
 import voxcell.math_utils as test_module
+from voxcell.voxel_data import VoxelData
 
 
 def test_clip():
@@ -209,3 +210,310 @@ def test_mat2euler_raises_2():
                 [1.,  0.],
             ]
         ]))
+
+
+@pytest.fixture
+def simple_voxel_data():
+    return VoxelData(np.ones((3, 4, 5)), [1, 1, 1], [0, 0, 0])
+
+
+@pytest.mark.parametrize(
+    "with_sub_segments",
+    [
+        pytest.param(True, id="Get indices and cut the segment according to voxel planes"),
+        pytest.param(False, id="Get indices only"),
+    ],
+)
+@pytest.mark.parametrize(
+    "segment, expected_indices, expected_sub_segments",
+    [
+        pytest.param(
+            [[-1, -1, -1], [-2, -2, -2]],
+            np.zeros((0, 3)),
+            [[-1, -1, -1, -2, -2, -2]],
+            id="The segment does not intersect any voxel",
+        ),
+        pytest.param(
+            [[1.5, 0, 3], [0, 2.5, 0]],
+            [
+                [1, 0, 3],
+                [1, 0, 2],
+                [0, 0, 1],
+                [0, 1, 1],
+                [0, 1, 0],
+                [0, 2, 0],
+            ],
+            [
+                [1.5, 0.0, 3.0, 1.5, 0.0, 3.0],
+                [1.5, 0.0, 3.0, 1.0, 0.83333333, 2.0],
+                [1.0, 0.83333333, 2.0, 0.9, 1.0, 1.8],
+                [0.9, 1.0, 1.8, 0.5, 1.66666667, 1.0],
+                [0.5, 1.66666667, 1.0, 0.3, 2.0, 0.6],
+                [0.3, 2.0, 0.6, 0.0, 2.5, 0.0],
+            ],
+            id="The segment intersects several voxels",
+        ),
+        pytest.param(
+            [[0.25, 0.25, 0.25], [0.75, 0.75, 0.75]],
+            [[0, 0, 0]],
+            [
+                [0.25, 0.25, 0.25, 0.75, 0.75, 0.75],
+            ],
+            id="The segment is entirely inside the voxel",
+        ),
+        pytest.param(
+            [[0, 0.5, 0.5], [0.5, 0.5, 0.5]],
+            [[0, 0, 0]],
+            [
+                [0.0, 0.5, 0.5, 0.5, 0.5, 0.5],
+            ],
+            id="The segment touches the xmin plane and is inside the first voxel",
+        ),
+        pytest.param(
+            [[1, 0.25, 0.25], [1, 0.75, 0.75]],
+            [[1, 0, 0]],
+            [
+                [1, 0.25, 0.25, 1, 0.75, 0.75],
+            ],
+            id="The segment is contained in the xmin plane",
+        ),
+        pytest.param(
+            [[1, 0.5, 0.5], [1.5, 0.5, 0.5]],
+            [[1, 0, 0]],
+            [
+                [1.0, 0.5, 0.5, 1.5, 0.5, 0.5],
+            ],
+            id="The segment touches the xmin plane and is inside the second voxel",
+        ),
+        pytest.param(
+            [[0.5, 0.5, 0.5], [1, 0.5, 0.5]],
+            [[0, 0, 0], [1, 0, 0]],
+            [
+                [0.5, 0.5, 0.5, 1, 0.5, 0.5],
+                [1, 0.5, 0.5, 1, 0.5, 0.5],
+            ],
+            id="The segment touches the xmax plane and is inside the voxel",
+        ),
+        pytest.param(
+            [[0.5, 0, 0.5], [0.5, 0.5, 0.5]],
+            [[0, 0, 0]],
+            [
+                [0.5, 0.0, 0.5, 0.5, 0.5, 0.5],
+            ],
+            id="The segment touches the ymin plane and is inside the first voxel",
+        ),
+        pytest.param(
+            [[0.5, 1, 0.5], [0.5, 1.5, 0.5]],
+            [[0, 1, 0]],
+            [
+                [0.5, 1.0, 0.5, 0.5, 1.5, 0.5],
+            ],
+            id="The segment touches the ymin plane and is inside the second voxel",
+        ),
+        pytest.param(
+            [[0.5, 0.5, 0.5], [0.5, 1, 0.5]],
+            [[0, 0, 0], [0, 1, 0]],
+            [
+                [0.5, 0.5, 0.5, 0.5, 1.0, 0.5],
+                [0.5, 1.0, 0.5, 0.5, 1.0, 0.5],
+            ],
+            id="The segment touches the ymax plane and is inside the voxel",
+        ),
+        pytest.param(
+            [[0.25, 1, 0.25], [0.75, 1, 0.75]],
+            [[0, 1, 0]],
+            [
+                [0.25, 1.0, 0.25, 0.75, 1.0, 0.75],
+            ],
+            id="The segment is contained in the ymin plane",
+        ),
+        pytest.param(
+            [[0.5, 0.5, 0], [0.5, 0.5, 0.5]],
+            [[0, 0, 0]],
+            [
+                [0.5, 0.5, 0.0, 0.5, 0.5, 0.5],
+            ],
+            id="The segment touches the zmin plane and is inside the first voxel",
+        ),
+        pytest.param(
+            [[0.5, 0.5, 1], [0.5, 0.5, 1.5]],
+            [[0, 0, 1]],
+            [
+                [0.5, 0.5, 1.0, 0.5, 0.5, 1.5],
+            ],
+            id="The segment touches the zmin plane and is inside the second voxel",
+        ),
+        pytest.param(
+            [[0.5, 0.5, 0.5], [0.5, 0.5, 1]],
+            [[0, 0, 0], [0, 0, 1]],
+            [
+                [0.5, 0.5, 0.5, 0.5, 0.5, 1.0],
+                [0.5, 0.5, 1.0, 0.5, 0.5, 1.0],
+            ],
+            id="The segment touches the zmax plane and is inside the voxel",
+        ),
+        pytest.param(
+            [[0.25, 0.25, 1], [0.75, 0.75, 1]],
+            [[0, 0, 1]],
+            [
+                [0.25, 0.25, 1.0, 0.75, 0.75, 1.0],
+            ],
+            id="The segment is contained in the zmin plane",
+        ),
+        pytest.param(
+            [[0.25, 0.25, 0.25], [1, 1, 1]],
+            [[0, 0, 0], [1, 1, 1]],
+            [
+                [0.25, 0.25, 0.25, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+            ],
+            id="The segment touches the corner of several voxels and is inside one voxel",
+        ),
+        pytest.param(
+            [[0.25, 0.25, 0.25], [2.25, 0.25, 0.25]],
+            [[0, 0, 0], [1, 0, 0], [2, 0, 0]],
+            [
+                [0.25, 0.25, 0.25, 1.0, 0.25, 0.25],
+                [1.0, 0.25, 0.25, 2.0, 0.25, 0.25],
+                [2.0, 0.25, 0.25, 2.25, 0.25, 0.25],
+            ],
+            id="The segment crosses several voxels along X",
+        ),
+        pytest.param(
+            [[0.25, 0.25, 0.25], [0.25, 2.25, 0.25]],
+            [[0, 0, 0], [0, 1, 0], [0, 2, 0]],
+            [
+                [0.25, 0.25, 0.25, 0.25, 1.0, 0.25],
+                [0.25, 1.0, 0.25, 0.25, 2.0, 0.25],
+                [0.25, 2.0, 0.25, 0.25, 2.25, 0.25],
+            ],
+            id="The segment crosses several voxels along Y",
+        ),
+        pytest.param(
+            [[0.25, 0.25, 0.25], [0.25, 0.25, 2.25]],
+            [[0, 0, 0], [0, 0, 1], [0, 0, 2]],
+            [
+                [0.25, 0.25, 0.25, 0.25, 0.25, 1.0],
+                [0.25, 0.25, 1.0, 0.25, 0.25, 2.0],
+                [0.25, 0.25, 2.0, 0.25, 0.25, 2.25],
+            ],
+            id="The segment crosses several voxels along Z",
+        ),
+        pytest.param(
+            [[0, 1, 1], [3, 1, 1]],
+            [
+                [0, 1, 1],
+                [1, 1, 1],
+                [2, 1, 1],
+            ],
+            [
+                [0.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 2.0, 1.0, 1.0],
+                [2.0, 1.0, 1.0, 3.0, 1.0, 1.0],
+            ],
+            id="The segment touches the boundaries of several voxels along X",
+        ),
+        pytest.param(
+            [[3, 1, 1], [0, 1, 1]],
+            [
+                [2, 1, 1],
+                [1, 1, 1],
+                [0, 1, 1],
+            ],
+            [
+                [3.0, 1.0, 1.0, 2.0, 1.0, 1.0],
+                [2.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 0.0, 1.0, 1.0],
+            ],
+            id="The segment touches the boundaries of several voxels along X and is reversed",
+        ),
+        pytest.param(
+            [[1, 0, 1], [1, 3, 1]],
+            [
+                [1, 0, 1],
+                [1, 1, 1],
+                [1, 2, 1],
+                [1, 3, 1],
+            ],
+            [
+                [1.0, 0.0, 1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0, 2.0, 1.0],
+                [1.0, 2.0, 1.0, 1.0, 3.0, 1.0],
+                [1.0, 3.0, 1.0, 1.0, 3.0, 1.0],
+            ],
+            id="The segment touches the boundaries of several voxels along Y",
+        ),
+        pytest.param(
+            [[1, 3, 1], [1, 0, 1]],
+            [
+                [1, 3, 1],
+                [1, 2, 1],
+                [1, 1, 1],
+                [1, 0, 1],
+            ],
+            [
+                [1.0, 3.0, 1.0, 1.0, 3.0, 1.0],
+                [1.0, 3.0, 1.0, 1.0, 2.0, 1.0],
+                [1.0, 2.0, 1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0, 0.0, 1.0],
+            ],
+            id="The segment touches the boundaries of several voxels along Y and is reversed",
+        ),
+        pytest.param(
+            [[1, 1, 0], [1, 1, 3]],
+            [
+                [1, 1, 0],
+                [1, 1, 1],
+                [1, 1, 2],
+                [1, 1, 3],
+            ],
+            [
+                [1.0, 1.0, 0.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0, 1.0, 2.0],
+                [1.0, 1.0, 2.0, 1.0, 1.0, 3.0],
+                [1.0, 1.0, 3.0, 1.0, 1.0, 3.0],
+            ],
+            id="The segment touches the boundaries of several voxels along Z",
+        ),
+        pytest.param(
+            [[1, 1, 3], [1, 1, 0]],
+            [
+                [1, 1, 3],
+                [1, 1, 2],
+                [1, 1, 1],
+                [1, 1, 0],
+            ],
+            [
+                [1.0, 1.0, 3.0, 1.0, 1.0, 3.0],
+                [1.0, 1.0, 3.0, 1.0, 1.0, 2.0],
+                [1.0, 1.0, 2.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0, 1.0, 0.0],
+            ],
+            id="The segment touches the boundaries of several voxels along Z and is reversed",
+        ),
+        pytest.param(
+            [[1.5, 1.5, 1.5], [0.5, 0.5, 0.5]],
+            [
+                [1, 1, 1],
+                [0, 0, 0],
+            ],
+            [
+                [1.5, 1.5, 1.5, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 0.5, 0.5, 0.5],
+            ],
+            id="The segment is oblique and passes only in the upper right corner of the voxel",
+        ),
+    ],
+)
+def test_voxel_intersection(
+    simple_voxel_data, segment, expected_indices, expected_sub_segments, with_sub_segments
+):
+    result = test_module.voxel_intersection(
+        segment, simple_voxel_data, return_sub_segments=with_sub_segments
+    )
+    if with_sub_segments:
+        indices, sub_segments = result
+        np.testing.assert_array_almost_equal(sub_segments, expected_sub_segments)
+    else:
+        indices = result
+    np.testing.assert_array_equal(indices, expected_indices)
