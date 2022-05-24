@@ -5,6 +5,8 @@ import json
 import logging
 import re
 
+import pandas as pd
+
 from voxcell.exceptions import VoxcellError
 
 L = logging.getLogger(__name__)
@@ -124,6 +126,20 @@ class RegionMap:
         if _id not in self._data:
             raise VoxcellError(f"Region ID not found: {_id}")
         return not self._children[_id]
+
+    def as_dataframe(self):
+        """Converts a region_map to a dataframe.
+
+        Returns:
+            pd.DataFrame with an index of the id of the node,
+            and columns based on the data within the map, and a parent_id
+
+        Note: the 'root' node should have a parent value of -1
+        """
+        ret = pd.DataFrame.from_dict(self._data, orient='index').set_index('id')
+        parents = {k: v if v is not None else -1 for k, v in self._parent.items()}
+        ret['parent_id'] = pd.DataFrame.from_dict(parents, orient='index')
+        return ret
 
     def _get(self, _id, attr):
         """Fetch attribute value for a given region ID."""
