@@ -3,7 +3,7 @@ import numpy.testing as npt
 import pytest
 
 import voxcell.math_utils as test_module
-from voxcell.voxel_data import VoxelData
+from voxcell import VoxelData
 
 
 def test_clip():
