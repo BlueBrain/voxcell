@@ -18,6 +18,24 @@ Installation
     cd voxcell
     pip install -e .
 
+Examples
+========
+
+One can open NRRD files, and perform operations on them:
+
+.. code-block:: python
+
+    import voxcell
+    voxels = voxcell.VoxelData.load_nrrd('path/to/file.nrrd')
+    print(voxels)
+
+One can load the `Allen Institute for Brain Science (AIBS)`_ `Mouse Brain Atlas Ontology's StructureGraph`_:
+
+.. code-block:: python
+
+    from voxcell.nexus.voxelbrain import Atlas
+    hierarchy = Atlas.open('/path/to/atlas').load_region_map()
+
 
 Acknowledgements
 ================

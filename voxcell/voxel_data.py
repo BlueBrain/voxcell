@@ -350,7 +350,7 @@ class OrientationField(VoxelData):
     """Volumetric data with rotation per voxel.
 
     See Also:
-        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field
+        Orientation Field File Format in the documentation
     """
     def __init__(self, *args, **kwargs):
         """Init OrientationField."""
@@ -386,7 +386,7 @@ class ROIMask(VoxelData):
     """Volumetric data defining 0/1 mask.
 
     See Also:
-        https://bbpteam.epfl.ch/project/spaces/pages/viewpage.action?pageId=27234876
+        Mask Image for Region of Interest (ROI) in the documentation
     """
     def __init__(self, *args, **kwargs):
         """Init ROIMask."""
@@ -413,7 +413,7 @@ def values_to_region_attribute(values, region_map, attr="acronym"):
         VoxcellError: if the attribute or any region id is not found.
 
     See Also:
-        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+        Scalar Image File Format in the documentation
     """
     ids, idx = np.unique(values, return_inverse=True)
     resolved = np.array([region_map.get(_id, attr=attr) for _id in ids])
@@ -435,7 +435,7 @@ def values_to_hemisphere(values):
         VoxcellError: if any of the values is invalid.
 
     See Also:
-        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+        Scalar Image File Format in the documentation
     """
     ids_map = {0: "undefined", 1: "right", 2: "left"}
     ids, idx = np.unique(values, return_inverse=True)
