@@ -8,4 +8,4 @@ pip install
 
 .. code-block:: console
 
-    $ pip install -i voxcell
+    $ pip install voxcell

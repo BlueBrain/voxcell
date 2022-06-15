@@ -35,6 +35,12 @@ setup(
         "local_scheme": "no-local-version",
     },
 
+    extras_require={
+        'docs': [
+            'sphinx-bluebrain-theme',
+        ],
+    },
+
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Programming Language :: Python",
