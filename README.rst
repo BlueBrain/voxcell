@@ -1,9 +1,9 @@
 Overview
 ========
 
-Libraries for:
+This is a library to build circuits and atlases. It contains tools to handle
 
-* handling "traits fields" and collections and the logic to assign them.
+* "traits fields" and collections and the logic to assign them.
 * volumetric data within NRRD files
 * Cell collection access / writer.
 * to build, transform and handle fields of vectors and orientations.
