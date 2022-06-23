@@ -2,6 +2,7 @@ import operator
 import os
 import re
 import tempfile
+from pathlib import Path
 from unittest.mock import Mock, call
 
 import nrrd
@@ -98,6 +99,21 @@ def test_save_nrrd():
         f.seek(0)
         new = test_module.VoxelData.load_nrrd(f.name)
         assert np.allclose(vd.raw, new.raw)
+
+
+def test_save_nrrd_load_nrrd_str_Path():
+    """Test saving and loading as string and pathlib.Path"""
+    path = os.path.join(DATA_PATH, 'scalar.nrrd')
+
+    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+
+        string = str(f.name)
+        vd.save_nrrd(string)
+
+        path = Path(f.name)
+        vd.save_nrrd(path)
+        test_module.VoxelData.load_nrrd(path)
 
 
 def test_save_nrrd_with_extra_axes():
