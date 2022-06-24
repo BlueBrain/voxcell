@@ -121,19 +121,6 @@ def test_save_load_nrrd_as_path():
         test_module.VoxelData.load_nrrd(path)
 
 
-def test_save_nrrd_load_nrrd_str_Path():
-
-    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
-    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
-
-        string = str(f.name)
-        vd.save_nrrd(string)
-
-        path = Path(f.name)
-        vd.save_nrrd(path)
-        test_module.VoxelData.load_nrrd(path)
-
-
 def test_save_nrrd_with_extra_axes():
     """Test saving a numpy array with more than 3 dimensions."""
     raw = np.zeros((6,7,8,4,3)) # two extra dimensions
