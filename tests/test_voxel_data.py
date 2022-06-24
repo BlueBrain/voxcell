@@ -101,9 +101,27 @@ def test_save_nrrd():
         assert np.allclose(vd.raw, new.raw)
 
 
+def test_save_load_nrrd_as_str():
+    """Test saving and loading using a string file path"""
+    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+
+        string = str(f.name)
+        vd.save_nrrd(string)
+        test_module.VoxelData.load_nrrd(string)
+
+
+def test_save_load_nrrd_as_path():
+    """Test saving and loading using a pathlib.Path"""
+    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+
+        path = Path(f.name)
+        vd.save_nrrd(path)
+        test_module.VoxelData.load_nrrd(path)
+
+
 def test_save_nrrd_load_nrrd_str_Path():
-    """Test saving and loading as string and pathlib.Path"""
-    path = os.path.join(DATA_PATH, 'scalar.nrrd')
 
     vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
     with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:

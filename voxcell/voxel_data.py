@@ -84,7 +84,7 @@ class VoxelData:
         """Read volumetric data from a nrrd file.
 
         Args:
-            nrrd_path (str): path to the nrrd file.
+            nrrd_path (str|pathlib.Path): path to the nrrd file.
         """
         data, header = nrrd.read(nrrd_path)
 
