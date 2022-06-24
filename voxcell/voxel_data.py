@@ -86,7 +86,7 @@ class VoxelData:
         Args:
             nrrd_path (str|pathlib.Path): path to the nrrd file.
         """
-        data, header = nrrd.read(nrrd_path)
+        data, header = nrrd.read(str(nrrd_path))
 
         # According to http://teem.sourceforge.net/nrrd/format.html#spacedirections,
         # 'space directions' could use 'none' for "payload" axes.
