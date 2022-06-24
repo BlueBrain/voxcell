@@ -84,9 +84,9 @@ class VoxelData:
         """Read volumetric data from a nrrd file.
 
         Args:
-            nrrd_path (str): path to the nrrd file.
+            nrrd_path (str|pathlib.Path): path to the nrrd file.
         """
-        data, header = nrrd.read(nrrd_path)
+        data, header = nrrd.read(str(nrrd_path))
 
         # According to http://teem.sourceforge.net/nrrd/format.html#spacedirections,
         # 'space directions' could use 'none' for "payload" axes.
@@ -128,7 +128,7 @@ class VoxelData:
         """Save a VoxelData to an nrrd file.
 
         Args:
-            nrrd_path(string): full path to nrrd file
+            nrrd_path(string|pathlib.Path): full path to nrrd file
             encoding(string): encoding option to save as
         """
         # from http://teem.sourceforge.net/nrrd/format.html#space
@@ -160,7 +160,7 @@ class VoxelData:
 
         # In NRRD 'payload' axes should go first, move them to the beginning
         nrrd_data = _pivot_axes(self.raw, self.ndim)
-        nrrd.write(nrrd_path, nrrd_data, header=header)
+        nrrd.write(str(nrrd_path), nrrd_data, header=header)
 
     def lookup(self, positions, outer_value=None):
         """Find the values in raw corresponding to the given positions.

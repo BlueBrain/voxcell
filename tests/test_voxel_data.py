@@ -2,6 +2,7 @@ import operator
 import os
 import re
 import tempfile
+from pathlib import Path
 from unittest.mock import Mock, call
 
 import nrrd
@@ -98,6 +99,26 @@ def test_save_nrrd():
         f.seek(0)
         new = test_module.VoxelData.load_nrrd(f.name)
         assert np.allclose(vd.raw, new.raw)
+
+
+def test_save_load_nrrd_as_str():
+    """Test saving and loading using a string file path"""
+    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+
+        string = str(f.name)
+        vd.save_nrrd(string)
+        test_module.VoxelData.load_nrrd(string)
+
+
+def test_save_load_nrrd_as_path():
+    """Test saving and loading using a pathlib.Path"""
+    vd = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'vector.nrrd'))
+    with tempfile.NamedTemporaryFile(suffix='.nrrd') as f:
+
+        path = Path(f.name)
+        vd.save_nrrd(path)
+        test_module.VoxelData.load_nrrd(path)
 
 
 def test_save_nrrd_with_extra_axes():
@@ -280,14 +301,14 @@ def test_values_to_region_attribute():
     actual = test_module.values_to_region_attribute(values, region_map)
     assert region_map.get.call_count == 2  # called once for each different looked up id
     assert region_map.get.call_args_list == [call(0, attr='acronym'), call(1, attr='acronym')]
-    assert np.issubdtype(actual.dtype, np.str)
+    assert np.issubdtype(actual.dtype, str)
     assert_array_equal(actual, ["SO", "CA1", "CA1", "SO"])
 
 
 def test_values_to_hemisphere():
     values = np.array([2, 1, 1, 2])
     actual = test_module.values_to_hemisphere(values)
-    assert np.issubdtype(actual.dtype, np.str)
+    assert np.issubdtype(actual.dtype, str)
     assert_array_equal(actual, ["left", "right", "right", "left"])
 
 
