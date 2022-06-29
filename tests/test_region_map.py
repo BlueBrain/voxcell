@@ -160,3 +160,14 @@ def test_is_leaf_id():
 def test_is_leaf_id_non_existing_id():
     with pytest.raises(VoxcellError):
         TEST_RMAP.is_leaf_id(0)  # non-existing id
+
+
+def test_as_datafram():
+    df = TEST_RMAP.as_dataframe()
+    assert df.loc[1].parent_id == -1
+    assert df.loc[2].parent_id == 1
+    assert df.loc[3].parent_id == 1
+    assert df.loc[4].parent_id == 3
+
+    assert df.loc[1]['name'] == 'A'
+    assert df.loc[1]['fullname'] == 'aA'
