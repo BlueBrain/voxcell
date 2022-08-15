@@ -275,9 +275,12 @@ def voxel_intersection(seg, data, return_sub_segments=False):  # pylint: disable
         if seg_pt_end.any():
             seg_points = seg_points[~seg_pt_end]
 
-    # Build and sort the sub-segment points
+    # Build the sub-segment points
     seg_points = np.vstack([start_pt, seg_points, end_pt])
     df_seg_points = pd.DataFrame(seg_points, columns=["x", "y", "z"])
+
+    # Sort the sub-segment points so their order is consistent with the given segment, i.e. the
+    # first point is the start point, the second pt is the closest to the start pt, etc.
     ascending = bool(
         xyz_ascending[0] == 1
         or (xyz_ascending[0] == 0 and xyz_ascending[1] == 1)
