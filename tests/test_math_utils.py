@@ -214,11 +214,9 @@ def test_mat2euler_raises_2():
 
 @pytest.fixture
 def simple_voxel_data():
-    return VoxelData(
-        raw=np.ones((3, 4, 5)),
-        voxel_dimensions=[1, 1, 1],
-        #offset=[1, 1.5, 2.5])
-        offset=[0, 0, 0])
+    return VoxelData(np.ones((3, 4, 5)),
+                     voxel_dimensions=[1, 1, 1],
+                     offset=[0, 0, 0])
 
 
 @pytest.mark.parametrize(

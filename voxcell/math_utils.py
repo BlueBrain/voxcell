@@ -196,42 +196,31 @@ def voxel_intersection(line_segment, data, return_sub_segments=False):
         a_max=np.nextafter(data.bbox[1], -1),
     )
 
-    # Compute the actual bbox of the segment
-    bbox = np.sort(data.positions_to_indices(clipped_line_segment), axis=0)
-
     start_pt, end_pt = clipped_line_segment
 
-    # Build the grid of all voxels included in the bbox.
-    i_planes, j_planes, k_planes = [
-        np.arange(bbox[0, i], bbox[1, i] + 1) for i in range(3)
-    ]
-    sub_grid = np.array(np.meshgrid(i_planes, j_planes, k_planes)).T
-
-    # Compute the boundary planes of each voxel.
-    lower_left_corners = data.indices_to_positions(sub_grid)
-
     def get_intersections(dst1, dst2):
-        """Compute intersection points."""
+        """Compute intersection point."""
         same_sign = np.sign(dst1) == np.sign(dst2)
         coplanar = (dst1 == 0) & (dst2 == 0)
         denomimator = dst2 - dst1
         denomimator = np.where(denomimator == 0, np.nan, denomimator)
-        t = np.where(same_sign | coplanar, np.nan, -dst1 / denomimator)
+        f = np.where(same_sign | coplanar, np.nan, -dst1 / denomimator)
 
         # Return the hit position.
-        return start_pt + (end_pt - start_pt) * t[:, np.newaxis]
+        return start_pt + (end_pt - start_pt) * f[:, np.newaxis]
+
+    # Compute the actual bbox of the segment
+    bbox = np.sort(data.positions_to_indices(clipped_line_segment), axis=0)
 
     # Get the coordinates of the planes between voxels
-    x_planes = lower_left_corners[0, :, 0, 0]
-    y_planes = lower_left_corners[0, 0, :, 1]
-    z_planes = lower_left_corners[:, 0, 0, 2]
+    planes = [data.offset[i] + np.arange(bbox[0, i], bbox[1, i] + 1) * data.voxel_dimensions[i]
+              for i in range(3)]
 
     # Get the coordinates of the intersection points
-    seg_points = np.vstack([
-        get_intersections(start_pt[0] - x_planes, end_pt[0] - x_planes),
-        get_intersections(start_pt[1] - y_planes, end_pt[1] - y_planes),
-        get_intersections(start_pt[2] - z_planes, end_pt[2] - z_planes),
-    ])
+    seg_points = np.vstack(
+        [get_intersections(start_pt[i] - planes[i], end_pt[i] - planes[i])
+         for i in range(3)]
+    )
 
     # Build the sub-segment coordinate DF
     seg_points = seg_points[~np.isnan(seg_points).all(axis=1)]
@@ -239,11 +228,10 @@ def voxel_intersection(line_segment, data, return_sub_segments=False):
 
     # Check how the points are ordered along each axis
     xyz_ascending = np.sign(end_pt - start_pt)
-    xyz_ascending_sum = xyz_ascending.sum()
 
     # Remove duplicated points when the extremities of the segment are on a voxel boundary, except
     # if they are in the ascending quadrant.
-    if xyz_ascending_sum >= 0:
+    if xyz_ascending.sum() >= 0:
         seg_pt_start = (seg_points == start_pt).all(axis=1)
         if seg_pt_start.any():
             seg_points = seg_points[~seg_pt_start]
