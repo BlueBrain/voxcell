@@ -4,7 +4,6 @@ import functools
 import math
 
 import numpy as np
-import pandas as pd
 from scipy.spatial.transform import Rotation
 
 
@@ -245,21 +244,22 @@ def voxel_intersection(line_segment, data, return_sub_segments=False):
 
     # Sort the sub-segment points so their order is consistent with the given segment, i.e. the
     # first point is the start point, the second pt is the closest to the start pt, etc.
-    df_seg_points = pd.DataFrame(seg_points, columns=list("xyz"))
-    ascending = bool(
+    ind = np.lexsort((seg_points[:, 0], seg_points[:, 1], seg_points[:, 2]))
+
+    if not (
         xyz_ascending[0] == 1
         or (xyz_ascending[0] == 0 and xyz_ascending[1] == 1)
         or (xyz_ascending[0] == 0 and xyz_ascending[1] == 0 and xyz_ascending[2] == 1)
-    )
-    df_seg_points.sort_values(list("xyz"), ascending=ascending, inplace=True)
+    ):
+        ind = ind[::-1]
+
+    seg_points = seg_points[ind, :]
 
     # Find the intersection indices
-    seg_point_indices = data.positions_to_indices(
-        df_seg_points.rolling(2, center=True, min_periods=2).mean().dropna().values
-    )
+    seg_point_indices = data.positions_to_indices((seg_points[:-1, :] + seg_points[1:, :]) / 2.)
 
     if return_sub_segments:
-        sub_segments = np.hstack([df_seg_points.values[:-1], df_seg_points.values[1:]])
+        sub_segments = np.hstack([seg_points[:-1], seg_points[1:]])
         return seg_point_indices, sub_segments
 
     return seg_point_indices
