@@ -168,50 +168,38 @@ def mat2euler(mm):
     return (az, ay, ax)
 
 
-def voxel_intersection(seg, data, return_sub_segments=False):  # pylint: disable=too-many-locals
+def voxel_intersection(line_segment, data, return_sub_segments=False):
     """Find voxels intersected by a given segment and cut the segment according to these voxels.
 
-    .. note::
-
-        A point is considered as intersecting a voxel using the following rules:
-            x_min <= x < x_max
-            y_min <= y < y_max
-            z_min <= z < z_max
-
-        where x_min and x_max are the min and max coordinates along the X axis of the voxel, y_min
-        and y_max are the same along the Y axis, and z_min and z_max are the same along the Z axis.
-
     Args:
-        seg: The segment with the following form: [[x_min, y_min, z_min], [x_max, y_max, z_max]].
+        line_segment: The segment with the following form: [[x0, y0, z0], [x1, y1, z1]].
         data: The VoxelData object.
-        return_sub_segments: If est to `True`, the sub segments are also returned with the voxel
-            indices.
+        return_sub_segments: If true the sub segments are also returned with the voxel indices.
 
     Returns:
         List of 3D indices.
-        If `return_sub_segments` is set to `True`, the list of coordinates of the sub-segment
-        points is also returned.
+        If `return_sub_segments` is `True`, the coordinates of the sub-segment points are returned.
     """
-    # If the segment is outside the bounding box, then it does not intersect any voxel.
-    if (seg < data.bbox).all() or (seg >= data.bbox).all():
+    # pylint: disable=too-many-locals
+
+    # If the segment is outside the bounding box, then it does not intersect any voxels.
+    if (line_segment < data.bbox).all() or (line_segment >= data.bbox).all():
         seg_point_indices = np.zeros((0, 3), dtype=np.result_type(0))
         if return_sub_segments:
-            return seg_point_indices, np.reshape(seg, (1, -1))
+            return seg_point_indices, np.reshape(line_segment, (1, -1))
         return seg_point_indices
 
     # The segment is clipped inside the global bbox.
-    cut_seg = np.clip(
-        seg,
+    clipped_line_segment = np.clip(
+        line_segment,
         a_min=data.bbox[0],
-        a_max=np.nextafter(data.bbox[1], np.full_like(data.bbox[1], -1)),
+        a_max=np.nextafter(data.bbox[1], -1),
     )
 
     # Compute the actual bbox of the segment
-    bbox = np.sort(data.positions_to_indices(cut_seg), axis=0)
+    bbox = np.sort(data.positions_to_indices(clipped_line_segment), axis=0)
 
-    # Unpack input data.
-    start_pt, end_pt = cut_seg
-    [start_x, start_y, start_z], [end_x, end_y, end_z] = cut_seg
+    start_pt, end_pt = clipped_line_segment
 
     # Build the grid of all voxels included in the bbox.
     i_planes, j_planes, k_planes = [
@@ -222,22 +210,16 @@ def voxel_intersection(seg, data, return_sub_segments=False):  # pylint: disable
     # Compute the boundary planes of each voxel.
     lower_left_corners = data.indices_to_positions(sub_grid)
 
-    # Compute the vector of the segment.
-    seg_vector = (end_pt - start_pt)
-
-    def get_intersections(dst1, dst2, start_pt, seg_vector):
-        """Compute intersection point."""
+    def get_intersections(dst1, dst2):
+        """Compute intersection points."""
         same_sign = np.sign(dst1) == np.sign(dst2)
         coplanar = (dst1 == 0) & (dst2 == 0)
         denomimator = dst2 - dst1
         denomimator = np.where(denomimator == 0, np.nan, denomimator)
-        f = np.where(same_sign | coplanar, np.nan, -dst1 / denomimator)
-
-        # Multiply vector by factor.
-        result = seg_vector * f[:, np.newaxis]
+        t = np.where(same_sign | coplanar, np.nan, -dst1 / denomimator)
 
         # Return the hit position.
-        return start_pt + result
+        return start_pt + (end_pt - start_pt) * t[:, np.newaxis]
 
     # Get the coordinates of the planes between voxels
     x_planes = lower_left_corners[0, :, 0, 0]
@@ -245,24 +227,19 @@ def voxel_intersection(seg, data, return_sub_segments=False):  # pylint: disable
     z_planes = lower_left_corners[:, 0, 0, 2]
 
     # Get the coordinates of the intersection points
-    x_hits = get_intersections(
-        start_x - x_planes, end_x - x_planes, start_pt, seg_vector
-    )
-    y_hits = get_intersections(
-        start_y - y_planes, end_y - y_planes, start_pt, seg_vector
-    )
-    z_hits = get_intersections(
-        start_z - z_planes, end_z - z_planes, start_pt, seg_vector
-    )
+    seg_points = np.vstack([
+        get_intersections(start_pt[0] - x_planes, end_pt[0] - x_planes),
+        get_intersections(start_pt[1] - y_planes, end_pt[1] - y_planes),
+        get_intersections(start_pt[2] - z_planes, end_pt[2] - z_planes),
+    ])
+
+    # Build the sub-segment coordinate DF
+    seg_points = seg_points[~np.isnan(seg_points).all(axis=1)]
+    seg_points = np.unique(seg_points, axis=0)
 
     # Check how the points are ordered along each axis
     xyz_ascending = np.sign(end_pt - start_pt)
     xyz_ascending_sum = xyz_ascending.sum()
-
-    # Build the sub-segment coordinate DF
-    seg_points = np.vstack([x_hits, y_hits, z_hits])
-    seg_points = seg_points[~np.isnan(seg_points).all(axis=1)]
-    seg_points = np.unique(seg_points, axis=0)
 
     # Remove duplicated points when the extremities of the segment are on a voxel boundary, except
     # if they are in the ascending quadrant.
@@ -277,16 +254,16 @@ def voxel_intersection(seg, data, return_sub_segments=False):  # pylint: disable
 
     # Build the sub-segment points
     seg_points = np.vstack([start_pt, seg_points, end_pt])
-    df_seg_points = pd.DataFrame(seg_points, columns=["x", "y", "z"])
 
     # Sort the sub-segment points so their order is consistent with the given segment, i.e. the
     # first point is the start point, the second pt is the closest to the start pt, etc.
+    df_seg_points = pd.DataFrame(seg_points, columns=list("xyz"))
     ascending = bool(
         xyz_ascending[0] == 1
         or (xyz_ascending[0] == 0 and xyz_ascending[1] == 1)
         or (xyz_ascending[0] == 0 and xyz_ascending[1] == 0 and xyz_ascending[2] == 1)
     )
-    df_seg_points.sort_values(["x", "y", "z"], ascending=ascending, inplace=True)
+    df_seg_points.sort_values(list("xyz"), ascending=ascending, inplace=True)
 
     # Find the intersection indices
     seg_point_indices = data.positions_to_indices(
