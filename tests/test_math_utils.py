@@ -565,7 +565,10 @@ def test_voxel_intersection(
     if translation is not None:
         simple_voxel_data.offset += np.array(translation, dtype=simple_voxel_data.offset.dtype)
         segment = (np.array(segment, dtype=float) + np.array(translation, dtype=float)).tolist()
-        expected_sub_segments = (np.array(expected_sub_segments, dtype=float) + np.concatenate([translation] * 2, dtype=float)).tolist()
+        expected_sub_segments = (
+            np.array(expected_sub_segments, dtype=float)
+            + np.concatenate([translation] * 2, dtype=float)
+        ).tolist()
 
     if scale is not None:
         simple_voxel_data.voxel_dimensions *= scale
@@ -576,7 +579,8 @@ def test_voxel_intersection(
         ).tolist()
         expected_sub_segments = (
             np.concatenate([simple_voxel_data.offset] * 2) + (
-                np.array(expected_sub_segments, dtype=float) - np.concatenate([simple_voxel_data.offset] * 2)
+                np.array(expected_sub_segments, dtype=float)
+                - np.concatenate([simple_voxel_data.offset] * 2)
             ) * scale
         ).tolist()
 
