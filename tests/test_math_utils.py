@@ -507,15 +507,85 @@ def simple_voxel_data():
         ),
     ],
 )
+@pytest.mark.parametrize(
+    "translation",
+    [
+        pytest.param(
+            None,
+            id="No translation",
+        ),
+        pytest.param(
+            [-0.5, -0.5, -0.5],
+            id="Slight negative translation",
+        ),
+        pytest.param(
+            [0.5, 0.5, 0.5],
+            id="Slight positive translation",
+        ),
+        pytest.param(
+            [-1.5e6, -1.5e6, -1.5e6],
+            id="Large negative translation",
+        ),
+        pytest.param(
+            [1.5e6, 1.5e6, 1.5e6],
+            id="Large positive translation",
+        ),
+    ]
+)
+@pytest.mark.parametrize(
+    "scale",
+    [
+        pytest.param(
+            None,
+            id="No rescale",
+        ),
+        pytest.param(
+            0.75,
+            id="Slight downscale",
+        ),
+        pytest.param(
+            1.5,
+            id="Slight upscale",
+        ),
+        pytest.param(
+            1.5e6,
+            id="Large upscale",
+        ),
+    ]
+)
 def test_voxel_intersection(
-    simple_voxel_data, segment, expected_indices, expected_sub_segments, with_sub_segments
+    simple_voxel_data,
+    segment,
+    expected_indices,
+    expected_sub_segments,
+    with_sub_segments,
+    translation,
+    scale,
 ):
+    if translation is not None:
+        simple_voxel_data.offset += np.array(translation, dtype=simple_voxel_data.offset.dtype)
+        segment = (np.array(segment, dtype=float) + np.array(translation, dtype=float)).tolist()
+        expected_sub_segments = (np.array(expected_sub_segments, dtype=float) + np.concatenate([translation] * 2, dtype=float)).tolist()
+
+    if scale is not None:
+        simple_voxel_data.voxel_dimensions *= scale
+        segment = (
+            simple_voxel_data.offset + (
+                np.array(segment, dtype=float) - simple_voxel_data.offset
+            ) * scale
+        ).tolist()
+        expected_sub_segments = (
+            np.concatenate([simple_voxel_data.offset] * 2) + (
+                np.array(expected_sub_segments, dtype=float) - np.concatenate([simple_voxel_data.offset] * 2)
+            ) * scale
+        ).tolist()
+
     result = test_module.voxel_intersection(
         segment, simple_voxel_data, return_sub_segments=with_sub_segments
     )
     if with_sub_segments:
         indices, sub_segments = result
-        np.testing.assert_array_almost_equal(sub_segments, expected_sub_segments)
+        np.testing.assert_allclose(sub_segments, expected_sub_segments, atol=abs((scale or 1) / 1e6))
     else:
         indices = result
     np.testing.assert_array_equal(indices, expected_indices)

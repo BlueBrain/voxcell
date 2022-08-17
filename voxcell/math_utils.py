@@ -192,7 +192,7 @@ def voxel_intersection(line_segment, data, return_sub_segments=False):
     clipped_line_segment = np.clip(
         line_segment,
         a_min=data.bbox[0],
-        a_max=np.nextafter(data.bbox[1], -1),
+        a_max=np.nextafter(data.bbox[1], data.bbox[1] - 1),
     )
 
     start_pt, end_pt = clipped_line_segment
@@ -221,7 +221,7 @@ def voxel_intersection(line_segment, data, return_sub_segments=False):
          for i in range(3)]
     )
 
-    # Build the sub-segment coordinate DF
+    # Build the sub-segment coordinate array
     seg_points = seg_points[~np.isnan(seg_points).all(axis=1)]
     seg_points = np.unique(seg_points, axis=0)
 
@@ -230,17 +230,26 @@ def voxel_intersection(line_segment, data, return_sub_segments=False):
 
     # Remove duplicated points when the extremities of the segment are on a voxel boundary, except
     # if they are in the ascending quadrant.
+    new_pts = [seg_points]
     if xyz_ascending.sum() >= 0:
+        new_pts = new_pts + [end_pt]
         seg_pt_start = (seg_points == start_pt).all(axis=1)
-        if seg_pt_start.any():
-            seg_points = seg_points[~seg_pt_start]
+        if (
+            not seg_pt_start.any()
+            and not any(len(planes[i]) > 1 and (start_pt[i] == planes[i]).any() for i in range(3))
+        ):
+            new_pts = [start_pt] + new_pts
     else:
+        new_pts = [start_pt] + new_pts
         seg_pt_end = (seg_points == end_pt).all(axis=1)
-        if seg_pt_end.any():
-            seg_points = seg_points[~seg_pt_end]
+        if (
+            not seg_pt_end.any()
+            and not any(len(planes[i]) > 1 and (end_pt[i] == planes[i]).any() for i in range(3))
+        ):
+            new_pts = new_pts + [end_pt]
 
     # Build the sub-segment points
-    seg_points = np.vstack([start_pt, seg_points, end_pt])
+    seg_points = np.vstack(new_pts)
 
     # Sort the sub-segment points so their order is consistent with the given segment, i.e. the
     # first point is the start point, the second pt is the closest to the start pt, etc.
