@@ -5,12 +5,6 @@ Atlas access
 
 Each VoxelBrain atlas is a collection of volumetric datasets defining some values in space + definition of brain regions hierarchy.
 
-VoxelBrain provides `REST API <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Voxel+Brain+REST+API>`_ for fetching and querying these data.
-
-Here is an example of such an atlas for Hippocampus:
-
-http://voxels.nexus.apps.bbp.epfl.ch/api/analytics/atlas/releases/9B1F97DD-13B8-4FCF-B9B1-59E4EBE4B5D8/
-
 Let us describe how to access these data using |name|.
 
 
@@ -20,8 +14,6 @@ Volumetric datasets
 Volumetric datasets are stored in VoxelBrain in `NRRD <http://teem.sourceforge.net/nrrd/format.html>`_ format, which is basically a grid of values for each voxel + some metadata defining voxel size and location in the global atlas space.
 
 The values stored in volumetric datasets could be :ref:`Scalar Image File Format` (e.g., brain region ID, cell density); as well as vector (e.g., morphology orientation `OrientationField`_).
-
-For the atlas mentioned above, NRRDs for each volumetric dataset available could be fetched from `<http://voxels.nexus.apps.bbp.epfl.ch/api/analytics/atlas/releases/9B1F97DD-13B8-4FCF-B9B1-59E4EBE4B5D8/data>`_.
 
 |name| provides ``VoxelData`` class for transparent access to these files.
 

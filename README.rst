@@ -1,9 +1,9 @@
 Overview
 ========
 
-Libraries for:
+This is a library to build circuits and atlases. It contains tools to handle
 
-* handling "traits fields" and collections and the logic to assign them.
+* "traits fields" and collections and the logic to assign them.
 * volumetric data within NRRD files
 * Cell collection access / writer.
 * to build, transform and handle fields of vectors and orientations.
@@ -12,12 +12,50 @@ Libraries for:
 Installation
 ============
 
+Install from PyPI:
+
+.. code-block:: bash
+
+    pip install voxcell
+
+Or an editable install:
+
 .. code-block:: bash
 
     git clone https://github.com/BlueBrain/voxcell
     cd voxcell
     pip install -e .
 
+Examples
+========
+
+To use the following examples, one must download an NRRD file and the Ontology Structure:
+
+.. code-block:: bash
+
+    curl -o brain_regions.nrrd http://download.alleninstitute.org/informatics-archive/current-release/mouse_ccf/annotation/ccf_2017/annotation_100.nrrd
+    curl -o hierarchy.json http://api.brain-map.org/api/v2/structure_graph_download/1.json
+
+One can open NRRD files, and perform operations on them:
+
+.. code-block:: python
+
+    import voxcell
+    voxels = voxcell.VoxelData.load_nrrd('brain_regions.nrrd')
+    print(voxels.voxel_dimensions)  # prints array([100., 100., 100.], dtype=float32)
+
+One can also use the `Atlas` object to load at both the atlas and the hierarchy:
+
+.. code-block:: python
+
+    import numpy as np
+    from voxcell.nexus.voxelbrain import Atlas
+    atlas = Atlas.open('.')
+    brain_regions = atlas.load_data('brain_regions')
+    rm = atlas.load_region_map()
+    # count the number of voxels in the VIS region, and all its descendents
+    ids = rm.find('VIS', 'acronym', with_descendants=True)
+    np.count_nonzero(np.isin(brain_regions.raw, list(ids)))
 
 Acknowledgements
 ================
