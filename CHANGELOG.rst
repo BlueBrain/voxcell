@@ -3,6 +3,7 @@ Changelog
 
 Version 3.1.3
 -------------
+- Add a RegionMap conversion to Pandas DataFrame (#6)
 - Add a function to compute the spatial intersection of a line-segment with a VoxelData object (#11)
 
 Version 3.1.1
