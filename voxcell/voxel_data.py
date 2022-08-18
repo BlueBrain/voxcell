@@ -202,12 +202,21 @@ class VoxelData:
         """
         result = (positions - self.offset) / self.voxel_dimensions
         result[np.abs(result) < 1e-7] = 0.  # suppress rounding errors around 0
+
         if not keep_fraction:
             result = np.floor(result).astype(int)
+
         result[result < 0] = VoxelData.OUT_OF_BOUNDS
-        result[result >= self.shape] = VoxelData.OUT_OF_BOUNDS
+        result[(result >= self.shape) & (positions >= self.bbox[1])] = VoxelData.OUT_OF_BOUNDS
+
+        if not keep_fraction:
+            result = np.clip(result, a_min=None, a_max=np.array(self.shape) - 1)
+        else:
+            result = np.clip(result, a_min=None, a_max=np.nextafter(self.shape, -1))
+
         if strict and np.any(result == VoxelData.OUT_OF_BOUNDS):
             raise VoxcellError("Out of bounds position")
+
         return result
 
     def indices_to_positions(self, indices):

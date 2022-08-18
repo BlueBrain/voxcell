@@ -43,6 +43,31 @@ def test_positions_to_indices():
     assert v.positions_to_indices([9.9999999]) == [0]
     assert v.positions_to_indices([19.9999999]) == [0]
 
+    # messing up with rounding errors
+    v = test_module.VoxelData(raw, voxel_dimensions=(1.125,), offset=(-0.5,))
+    assert_raises(VoxcellError, v.positions_to_indices, [-0.5, 1.75])
+    assert_array_equal(v.positions_to_indices([-0.5, 1.75 - 1e-15]), [0, 1])
+    assert_raises(VoxcellError, v.positions_to_indices, [-0.5, 1.75], keep_fraction=True)
+
+    assert_array_equal(
+        v.positions_to_indices([-0.5, ], keep_fraction=False),
+        [0, ],
+    )
+
+    # w/ voxel_dimensions=(1.125,), offset=(-0.5,), on_edge will IEEE 'round-to-even'
+    # which means that it is considered out of bounds, since we do exclusive ranges
+    # on the far edges, which is incorrect
+    on_edge = np.nextafter(1.75, -1, dtype=float)
+    assert_array_equal(
+        v.positions_to_indices([on_edge, ], keep_fraction=False),
+        [1, ],
+    )
+
+    assert_array_equal(
+        v.positions_to_indices([-0.5, on_edge, ], keep_fraction=True),
+        [0., np.nextafter(2, -1, dtype=float)],
+    )
+
 
 def test_load_nrrd_scalar_payload():
     actual = test_module.VoxelData.load_nrrd(os.path.join(DATA_PATH, 'scalar.nrrd'))

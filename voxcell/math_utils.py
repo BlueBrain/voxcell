@@ -165,3 +165,110 @@ def mat2euler(mm):
     assert not np.any(np.isnan(ax))
 
     return (az, ay, ax)
+
+
+def voxel_intersection(line_segment, data, return_sub_segments=False):
+    """Find voxels intersected by a given segment and cut the segment according to these voxels.
+
+    Args:
+        line_segment: The segment with the following form: [[x0, y0, z0], [x1, y1, z1]].
+        data: The VoxelData object.
+        return_sub_segments: If true the sub segments are also returned with the voxel indices.
+
+    Returns:
+        List of 3D indices.
+        If `return_sub_segments` is `True`, the coordinates of the sub-segment points are returned.
+    """
+    # pylint: disable=too-many-locals
+
+    # If the segment is outside the bounding box, then it does not intersect any voxels.
+    if (line_segment < data.bbox).all() or (line_segment >= data.bbox).all():
+        seg_point_indices = np.zeros((0, 3), dtype=np.result_type(0))
+        if return_sub_segments:
+            return seg_point_indices, np.reshape(line_segment, (1, -1))
+        return seg_point_indices
+
+    # The segment is clipped inside the global bbox.
+    clipped_line_segment = np.clip(
+        line_segment,
+        a_min=data.bbox[0],
+        a_max=np.nextafter(data.bbox[1], data.bbox[1] - 1),
+    )
+
+    start_pt, end_pt = clipped_line_segment
+
+    def get_intersections(dst1, dst2):
+        """Compute intersection point."""
+        same_sign = np.sign(dst1) == np.sign(dst2)
+        coplanar = (dst1 == 0) & (dst2 == 0)
+        denomimator = dst2 - dst1
+        denomimator = np.where(denomimator == 0, np.nan, denomimator)
+        f = np.where(same_sign | coplanar, np.nan, -dst1 / denomimator)
+
+        # Return the hit position.
+        return start_pt + (end_pt - start_pt) * f[:, np.newaxis]
+
+    # Compute the actual bbox of the segment
+    bbox = np.sort(data.positions_to_indices(clipped_line_segment), axis=0)
+
+    # Get the coordinates of the planes between voxels
+    planes = [data.offset[i] + np.arange(bbox[0, i], bbox[1, i] + 1) * data.voxel_dimensions[i]
+              for i in range(3)]
+
+    # Get the coordinates of the intersection points
+    seg_points = np.vstack(
+        [get_intersections(start_pt[i] - planes[i], end_pt[i] - planes[i])
+         for i in range(3)]
+    )
+
+    # Build the sub-segment coordinate array
+    seg_points = seg_points[~np.isnan(seg_points).all(axis=1)]
+    seg_points = np.unique(seg_points, axis=0)
+
+    # Check how the points are ordered along each axis
+    xyz_ascending = np.sign(end_pt - start_pt)
+
+    # Remove duplicated points when the extremities of the segment are on a voxel boundary, except
+    # if they are in the ascending quadrant.
+    new_pts = [seg_points]
+    if xyz_ascending.sum() >= 0:
+        new_pts = new_pts + [end_pt]
+        seg_pt_start = (seg_points == start_pt).all(axis=1)
+        if (
+            not seg_pt_start.any()
+            and not any(len(planes[i]) > 1 and (start_pt[i] == planes[i]).any() for i in range(3))
+        ):
+            new_pts = [start_pt] + new_pts
+    else:
+        new_pts = [start_pt] + new_pts
+        seg_pt_end = (seg_points == end_pt).all(axis=1)
+        if (
+            not seg_pt_end.any()
+            and not any(len(planes[i]) > 1 and (end_pt[i] == planes[i]).any() for i in range(3))
+        ):
+            new_pts = new_pts + [end_pt]
+
+    # Build the sub-segment points
+    seg_points = np.vstack(new_pts)
+
+    # Sort the sub-segment points so their order is consistent with the given segment, i.e. the
+    # first point is the start point, the second pt is the closest to the start pt, etc.
+    ind = np.lexsort((seg_points[:, 0], seg_points[:, 1], seg_points[:, 2]))
+
+    if not (
+        xyz_ascending[0] == 1
+        or (xyz_ascending[0] == 0 and xyz_ascending[1] == 1)
+        or (xyz_ascending[0] == 0 and xyz_ascending[1] == 0 and xyz_ascending[2] == 1)
+    ):
+        ind = ind[::-1]
+
+    seg_points = seg_points[ind, :]
+
+    # Find the intersection indices
+    seg_point_indices = data.positions_to_indices((seg_points[:-1, :] + seg_points[1:, :]) / 2.)
+
+    if return_sub_segments:
+        sub_segments = np.hstack([seg_points[:-1], seg_points[1:]])
+        return seg_point_indices, sub_segments
+
+    return seg_point_indices
