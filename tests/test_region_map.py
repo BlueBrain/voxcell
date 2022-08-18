@@ -7,27 +7,33 @@ import voxcell.region_map as test_module
 from voxcell.exceptions import VoxcellError
 
 TEST_RMAP = test_module.RegionMap.from_dict({
-    'id': 1,
-    'name': 'A',
-    'fullname': 'aA',
+    'id': -1,
+    'name': 'root',
+    'fullname': 'The Root Node',
     'children': [
         {
-            'id': 2,
-            'name': 'B',
-            'fullname': 'Bb',
-        },
-        {
-            'id': 3,
-            'name': 'C',
-            'fullname': 'cC',
-            'children': [
-                {
-                    'id': 4,
-                    'name': 'B',
-                    'fullname': 'bB',
-                }
-            ]
-        }
+        'id': 1,
+        'name': 'A',
+        'fullname': 'aA',
+        'children': [
+            {
+                'id': 2,
+                'name': 'B',
+                'fullname': 'Bb',
+            },
+            {
+                'id': 3,
+                'name': 'C',
+                'fullname': 'cC',
+                'children': [
+                    {
+                        'id': 4,
+                        'name': 'B',
+                        'fullname': 'bB',
+                    }
+                ]
+            }
+        ]}
     ]
 })
 
@@ -77,7 +83,7 @@ def test_get_basic():
 
 
 def test_get_with_ascendants():
-    assert TEST_RMAP.get(4, 'name', with_ascendants=True) == ['B', 'C', 'A']
+    assert TEST_RMAP.get(4, 'name', with_ascendants=True) == ['B', 'C', 'A', 'root']
 
 
 def test_get_missing_attribute():
@@ -164,6 +170,7 @@ def test_is_leaf_id_non_existing_id():
 
 def test_as_datafram():
     df = TEST_RMAP.as_dataframe()
+    assert df.loc[-1].parent_id == -1
     assert df.loc[1].parent_id == -1
     assert df.loc[2].parent_id == 1
     assert df.loc[3].parent_id == 1
