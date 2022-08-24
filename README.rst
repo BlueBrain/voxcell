@@ -57,6 +57,15 @@ One can also use the `Atlas` object to load at both the atlas and the hierarchy:
     ids = rm.find('VIS', 'acronym', with_descendants=True)
     np.count_nonzero(np.isin(brain_regions.raw, list(ids)))
 
+Citation
+========
+
+When you use this software, we kindly ask you to cite the following DOI:
+
+.. image:: https://zenodo.org/badge/451807050.svg
+   :target: https://zenodo.org/badge/latestdoi/451807050
+   
+
 Acknowledgements
 ================
 
