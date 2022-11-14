@@ -377,10 +377,7 @@ class CellCollection:
                     dt = str_dt if series.dtype == object else series.dtype
                     group.create_dataset(f'dynamics_params/{name}', data=series.to_numpy(), dtype=dt)
                 elif _is_string_enum(series) or (series.dtype == object and name in forced_library):
-
-                    indices, unique_index = series.factorize()
-                    unique_values = unique_index.to_numpy()
-
+                    indices, unique_values = series.factorize()
                     if name in forced_library or len(unique_values) < .5 * len(indices):
                         group.create_dataset(name, data=indices.astype(np.uint32))
                         group.create_dataset(f'@library/{name}', data=unique_values, dtype=str_dt)
