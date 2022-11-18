@@ -22,7 +22,7 @@ def _download_file(url, filepath, overwrite, allow_empty=False):
 
     tmp_filepath = filepath + ".download"
     try:
-        resp = requests.get(url)
+        resp = requests.get(url, timeout=None)
         resp.raise_for_status()
         if not (allow_empty or resp.content):
             raise VoxcellError("Empty content")
@@ -131,7 +131,7 @@ class VoxelBrainAtlas(Atlas):
         """Init VoxelBrainAtlas."""
         super().__init__()
         self._url = url.rstrip("/")
-        resp = requests.get(self._url)
+        resp = requests.get(self._url, timeout=None)
         resp.raise_for_status()
         atlas_id = resp.json()[0]['id']
         assert self._url.endswith(atlas_id)
@@ -141,7 +141,7 @@ class VoxelBrainAtlas(Atlas):
 
     def fetch_data(self, data_type):
         """Fetch `data_type` NRRD."""
-        resp = requests.get(self._url + "/data")
+        resp = requests.get(self._url + "/data", timeout=None)
         resp.raise_for_status()
         data_types = []
         for item in resp.json():

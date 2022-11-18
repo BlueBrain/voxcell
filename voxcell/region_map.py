@@ -138,7 +138,7 @@ class RegionMap:
         """
         ret = pd.DataFrame.from_dict(self._data, orient='index').set_index('id')
         parents = {k: v if v is not None else -1 for k, v in self._parent.items()}
-        ret['parent_id'] = pd.DataFrame.from_dict(parents, orient='index')
+        ret.loc[:, 'parent_id'] = pd.DataFrame.from_dict(parents, orient='index')
         return ret
 
     def _get(self, _id, attr):

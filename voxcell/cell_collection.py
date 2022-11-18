@@ -372,20 +372,23 @@ class CellCollection:
             group = population.create_group('0')
             str_dt = h5py.special_dtype(vlen=str)
             for name, series in self.properties.items():
-                values = series.to_numpy()
                 if name.startswith(self.SONATA_DYNAMIC_PROPERTY):
                     name = name.split(self.SONATA_DYNAMIC_PROPERTY)[1]
                     dt = str_dt if series.dtype == object else series.dtype
-                    group.create_dataset(f'dynamics_params/{name}', data=values, dtype=dt)
+                    group.create_dataset(
+                        f'dynamics_params/{name}',
+                        data=series.to_numpy(),
+                        dtype=dt,
+                    )
                 elif _is_string_enum(series) or (series.dtype == object and name in forced_library):
-                    unique_values, indices = np.unique(values, return_inverse=True)
-                    if name in forced_library or len(unique_values) < .5 * len(values):
+                    indices, unique_values = series.factorize()
+                    if name in forced_library or len(unique_values) < .5 * len(indices):
                         group.create_dataset(name, data=indices.astype(np.uint32))
                         group.create_dataset(f'@library/{name}', data=unique_values, dtype=str_dt)
                     else:
-                        group.create_dataset(name, data=values, dtype=str_dt)
+                        group.create_dataset(name, data=series.to_numpy(), dtype=str_dt)
                 else:
-                    group.create_dataset(name, data=values)
+                    group.create_dataset(name, data=series.to_numpy())
 
             if self.orientations is not None:
                 if self.orientation_format == "quaternions":
