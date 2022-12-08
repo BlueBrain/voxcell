@@ -168,7 +168,7 @@ def test_is_leaf_id_non_existing_id():
         TEST_RMAP.is_leaf_id(0)  # non-existing id
 
 
-def test_as_datafram():
+def test_as_dataframe():
     df = TEST_RMAP.as_dataframe()
     assert df.loc[-1].parent_id == -1
     assert df.loc[1].parent_id == -1
@@ -178,3 +178,10 @@ def test_as_datafram():
 
     assert df.loc[1]['name'] == 'A'
     assert df.loc[1]['fullname'] == 'aA'
+
+    assert df.loc[-1].children_count == 1
+    assert df.loc[1].children_count == 2
+    assert df.loc[2].children_count == 0
+    assert df.loc[3].children_count == 1
+    assert df.loc[4].children_count == 0
+
