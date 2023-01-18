@@ -383,4 +383,4 @@ def test_VoxelData_negative_voxel_dimensions():
 
     bbox = voxel_data.bbox
 
-    assert_array_equal(bbox, ((1., 2., 1.), (3., 4., 1.)))
+    assert_array_equal(bbox, ((1., 2., 1.), (3., 4., 3.)))

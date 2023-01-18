@@ -76,8 +76,11 @@ class VoxelData:
     @property
     def bbox(self):
         """Bounding box."""
-        return np.array([self.offset,
-                         self.offset + self.voxel_dimensions * self.shape])
+        ret = np.array([self.offset,
+                        self.offset + self.voxel_dimensions * self.shape])
+        # Sort along columns to ensure that min and max points have the
+        # correct order even in edge cases where the voxel dim is negative.
+        return np.sort(ret, axis=0)
 
     @classmethod
     def load_nrrd(cls, nrrd_path):
