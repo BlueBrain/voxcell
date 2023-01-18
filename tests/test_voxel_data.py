@@ -377,7 +377,7 @@ def test_VoxelData_negative_voxel_dimensions():
     Test VoxelData robustness when negative voxel dimensions are given.
 
     There is a use case where a different atlas coordinate system is encoded into the voxel
-    dimensions and offset using negative values. The Paxinos atlas 
+    dimensions and offset using negative values. The Paxinos atlas is such an example.
     """
     voxel_data = test_module.VoxelData(np.ones((2, 2, 2)), offset=(1, 2, 3), voxel_dimensions=(1, 1, -1))
 
