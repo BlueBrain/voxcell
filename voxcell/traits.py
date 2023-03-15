@@ -74,7 +74,7 @@ class SpatialDistribution:
         chosen_trait_indices = np.ones_like(dist_id_per_position, dtype=np.int32) * -1
 
         unique_dists = np.unique(dist_id_per_position[valid])
-        for dist_id, dist in self.distributions[unique_dists].iteritems():
+        for dist_id, dist in self.distributions[unique_dists].items():
             hit_count = np.count_nonzero(dist_id_per_position == dist_id)
             chosen = np.random.choice(dist.index, hit_count, p=dist.values)
             chosen_trait_indices[dist_id_per_position == dist_id] = chosen

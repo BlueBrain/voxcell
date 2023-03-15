@@ -334,7 +334,7 @@ def test_values_to_hemisphere():
     values = np.array([2, 1, 1, 2])
     actual = test_module.values_to_hemisphere(values)
     assert np.issubdtype(actual.dtype, str)
-    assert_array_equal(actual, ["left", "right", "right", "left"])
+    assert_array_equal(actual, ["right", "left", "left", "right"])
 
 
 def test_values_to_hemisphere_raises_invalid_value():

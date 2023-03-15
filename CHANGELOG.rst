@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Version 3.1.4
+-------------
+- switch hemisphere constants to be in line with Allen Institute
+
 Version 3.1.3
 -------------
 - Add a RegionMap conversion to Pandas DataFrame (#6)
