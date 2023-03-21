@@ -458,7 +458,7 @@ class BrainRegionData(VoxelData):
     """Volumetric data mapped to region acronyms.
 
     See Also:
-        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+        https://voxcell.readthedocs.io/en/latest/scalar.html
     """
     def __init__(self, *args, **kwargs):
         """Init BrainRegionData."""
@@ -493,7 +493,7 @@ class HemisphereData(VoxelData):
     """Volumetric data mapped from 0, 1, 2 to "undefined", "right", "left" hemispheres.
 
     See Also:
-        https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image
+        https://voxcell.readthedocs.io/en/latest/scalar.html
     """
 
     def __init__(self, *args, **kwargs):

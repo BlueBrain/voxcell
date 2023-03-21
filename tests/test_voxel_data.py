@@ -354,7 +354,7 @@ def test_brain_region_data():
     actual = data.lookup([[1.], [3], [2], [0]], region_map=region_map)
     assert region_map.get.call_count == 2  # called once for each different looked up id
     assert region_map.get.call_args_list == [call(0, attr='acronym'), call(1, attr='acronym')]
-    assert np.issubdtype(actual.dtype, np.str)
+    assert np.issubdtype(actual.dtype, str)
     assert_array_equal(actual, ["SO", "CA1", "CA1", "SO"])
 
 
@@ -375,7 +375,7 @@ def test_hemisphere_data():
     )
 
     actual = data.lookup([[1.], [3], [2], [0]])
-    assert np.issubdtype(actual.dtype, np.str)
+    assert np.issubdtype(actual.dtype, str)
     assert_array_equal(actual, ["right", "left", "left", "right"])
 
 

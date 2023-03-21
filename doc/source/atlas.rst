@@ -63,7 +63,7 @@ OrientationField
 
 |name| provides this subclass of ``VoxelData`` for transparently converting quaternions stored in orientation fields to rotation matrices form.
 
-Thus, given a NRRD in the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Orientation+Field>`__, one can:
+Thus, given a NRRD in the specific `format <https://voxcell.readthedocs.io/en/latest/orientation.html>`__, one can:
 
 .. code-block:: python
 
@@ -77,7 +77,7 @@ ROIMask
 
 |name| provides this subclass of ``VoxelData`` for transparently loading masks and converting values from ``int8`` or ``uint8`` to ``bool``.
 
-Thus, given a NRRD in the specific `format <https://bbpteam.epfl.ch/project/spaces/pages/viewpage.action?pageId=27234876>`__, one can:
+Thus, given a NRRD in the specific `format <https://voxcell.readthedocs.io/en/latest/mask.html>`__, one can:
 
 .. code-block:: python
 
@@ -91,7 +91,7 @@ BrainRegionData
 
 |name| provides this subclass of ``VoxelData`` for transparently loading brain region data and converting values from integer to strings representing the region acronyms.
 
-Thus, given a NRRD in the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image>`__ and a ``RegionMap`` instance (see `Brain region hierarchy`_), one can:
+Thus, given a NRRD in the specific `format <https://voxcell.readthedocs.io/en/latest/scalar.html>`__ and a ``RegionMap`` instance (see `Brain region hierarchy`_), one can:
 
 .. code-block:: python
 
@@ -105,7 +105,7 @@ HemisphereData
 
 |name| provides this subclass of ``VoxelData`` for transparently loading hemisphere data and converting values from ``0``, ``1``, ``2`` to the respective strings ``undefined``, ``right``, ``left``.
 
-Thus, given a NRRD in the specific `format <https://bbpteam.epfl.ch/project/spaces/display/NRINF/Scalar+Value+Image>`__ containing only valid values, one can:
+Thus, given a NRRD in the specific `format <https://voxcell.readthedocs.io/en/latest/scalar.html>`__ containing only valid values, one can:
 
 .. code-block:: python
 
