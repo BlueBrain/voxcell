@@ -7,7 +7,7 @@ Scalar value image includes the following data types:
 - brain_region: label image with integer values as voxel type
 - gray_level: raw imaging data, integer or float values as voxel type
 - longitude: computed depth information of the atlas, integer values as voxel type
-- hemisphere: hemisphere dataset with int8 or uint8 values as voxel type (0: undefined, 1: right, 2: left)
+- hemisphere: hemisphere dataset with int8 or uint8 values as voxel type (0: undefined, 1: left, 2: right)
 
 .. bbp_table_section:: Specification
     :description:

@@ -430,7 +430,7 @@ def values_to_region_attribute(values, region_map, attr="acronym"):
 
 
 def values_to_hemisphere(values):
-    """Convert integer values 0, 1, 2 to "undefined", "right", "left" hemisphere labels.
+    """Convert integer values 0, 1, 2 to "undefined", "left" and "right" hemisphere labels.
 
     It can be used to convert the values retrieved with VoxelData.lookup.
 
@@ -446,7 +446,7 @@ def values_to_hemisphere(values):
     See Also:
         Scalar Image File Format in the documentation
     """
-    ids_map = {0: "undefined", 1: "right", 2: "left"}
+    ids_map = {0: "undefined", 1: "left", 2: "right"}
     ids, idx = np.unique(values, return_inverse=True)
     if not set(ids_map).issuperset(ids):
         raise VoxcellError(f"Invalid values, only {list(ids_map)} are allowed")
