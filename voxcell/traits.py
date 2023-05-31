@@ -174,6 +174,9 @@ class SpatialDistribution:
         """
         grouped_distributions = {}
         for attr_values, traits in self.traits.groupby(attributes):
+            # this is backwards compatibility: https://github.com/pandas-dev/pandas/issues/42795
+            if len(attributes) == 1:
+                attr_values = tuple(attr_values)
 
             dists = self.distributions.iloc[traits.index]
 
