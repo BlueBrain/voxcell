@@ -314,6 +314,11 @@ def test_roi_mask():
     assert_array_equal(actual, [True, False])
 
 
+def test_lookup_non_scalar():
+    assert test_module.VoxelData(np.zeros((1,1,1,1)),(1,1,1)).lookup((-1,-1,-1),0) is not None
+    assert test_module.VoxelData(np.zeros((1,1,1,2)),(1,1,1)).lookup((-1,-1,-1),(0,0)) is not None
+
+
 def test_roi_mask_raises():
     with pytest.raises(VoxcellError, match=re.escape("Invalid dtype: 'int64' (expected: '(u)int8")):
         test_module.ROIMask(np.zeros(4, dtype=np.int64), voxel_dimensions=(1,))
