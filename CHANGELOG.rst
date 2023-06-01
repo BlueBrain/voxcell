@@ -1,6 +1,7 @@
 Changelog
 =========
 
+- Fix outer value lookup with vector data (#19)
 - Fix compatibility with pandas 2.0
 
 Version 3.1.4
