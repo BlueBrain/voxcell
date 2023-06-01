@@ -27,11 +27,49 @@ def test_lookup():
     assert_raises(VoxcellError, v.lookup, [[2, 10]])
 
 
-def test_lookup_vector_data():
-    raw = np.array([[[11, 11], [12, 12]], [[21, 21], [22, 22]]])
-    v = test_module.VoxelData(raw, (2, 2))
-    assert_array_equal(v.lookup([[1, 1], [3, 3]]), [[11, 11], [22, 22]])
-    assert_array_equal(v.lookup([[10, 1]], [10, 10]), [[10, 10]])
+@pytest.mark.parametrize(
+    "raw, voxel_dimensions, coordinates, outer_value, expected",
+    [
+        (
+            [[[11, 11], [12, 12]], [[21, 21], [22, 22]]],
+            (2, 2),
+            [[1, 1], [3, 3]],
+            None,
+            [[11, 11], [22, 22]],
+        ),
+        (
+            [[[11, 11], [12, 12]], [[21, 21], [22, 22]]],
+            (2, 2),
+            [[10, 1]],
+            [10, 10],
+            [[10, 10]],
+        ),
+        (
+            np.zeros((1, 1, 1)),
+            (1, 1, 1),
+            [(-1, -1, -1)],
+            0,
+            [0],
+        ),
+        (
+            np.zeros((1, 1, 1, 1)),
+            (1, 1, 1),
+            [(-1, -1, -1)],
+            0,
+            [(0,)],
+        ),
+        (
+            np.zeros((1, 1, 1, 2)),
+            (1, 1, 1),
+            [(-1, -1, -1)],
+            (0, 0),
+            [(0, 0)],
+        ),
+    ],
+)
+def test_lookup_vector_data(raw, voxel_dimensions, coordinates, outer_value, expected):
+    voxel_data = test_module.VoxelData(np.array(raw), voxel_dimensions)
+    assert_array_equal(voxel_data.lookup(coordinates, outer_value), expected)
 
 
 def test_positions_to_indices():
