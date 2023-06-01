@@ -28,9 +28,10 @@ def test_lookup():
 
 
 def test_lookup_vector_data():
-    raw = np.array([[[11], [12]], [[21], [22]]])
+    raw = np.array([[[11, 11], [12, 12]], [[21, 21], [22, 22]]])
     v = test_module.VoxelData(raw, (2, 2))
-    assert_array_equal(v.lookup([[1, 1], [3, 3]]), [[11], [22]])
+    assert_array_equal(v.lookup([[1, 1], [3, 3]]), [[11, 11], [22, 22]])
+    assert_array_equal(v.lookup([[10, 1]], [10, 10]), [[10, 10]])
 
 
 def test_positions_to_indices():
@@ -312,11 +313,6 @@ def test_roi_mask():
     actual = field.lookup([[1.], [3]])
     assert actual.dtype == 'bool'
     assert_array_equal(actual, [True, False])
-
-
-def test_lookup_non_scalar():
-    assert test_module.VoxelData(np.zeros((1,1,1,1)),(1,1,1)).lookup((-1,-1,-1),0) is not None
-    assert test_module.VoxelData(np.zeros((1,1,1,2)),(1,1,1)).lookup((-1,-1,-1),(0,0)) is not None
 
 
 def test_roi_mask_raises():
