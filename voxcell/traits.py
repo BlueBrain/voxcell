@@ -105,12 +105,7 @@ class SpatialDistribution:
 
         unique_assigned = preassigned.drop_duplicates()
         for values_comb in unique_assigned.values:
-
-            if len(values_comb) == 1:
-                values_comb = values_comb[0]
-                hashable = values_comb
-            else:
-                hashable = tuple(values_comb)
+            hashable = tuple(values_comb)
 
             if hashable in subsections:
                 subdist = subsections[hashable]
@@ -179,6 +174,9 @@ class SpatialDistribution:
         """
         grouped_distributions = {}
         for attr_values, traits in self.traits.groupby(attributes):
+            # this is backwards compatibility: https://github.com/pandas-dev/pandas/issues/42795
+            if len(attributes) == 1:
+                attr_values = tuple(attr_values)
 
             dists = self.distributions.iloc[traits.index]
 

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 3.1.5
+-------------
+
+- Fix outer value lookup with vector data (#19)
+- Fix compatibility with groupby from pandas 2.0
+
 Version 3.1.4
 -------------
 - switch hemisphere constants to be in line with Allen Institute
