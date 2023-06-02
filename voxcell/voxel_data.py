@@ -176,7 +176,11 @@ class VoxelData:
         voxel_idx = self.positions_to_indices(positions, strict=outer_value is None)
         outer_mask = np.any(voxel_idx == VoxelData.OUT_OF_BOUNDS, axis=-1)
         if np.any(outer_mask):
-            result = np.full(voxel_idx.shape[:-1], outer_value)
+            result = np.full(
+                voxel_idx.shape[:-1] + self.payload_shape,
+                outer_value,
+                dtype=self.raw.dtype
+            )
             inner_mask = np.logical_not(outer_mask)  # pylint: disable=assignment-from-no-return
             result[inner_mask] = self._lookup_by_indices(voxel_idx[inner_mask])
         else:
