@@ -43,6 +43,7 @@ class RegionMap:
         self._data = {}
         self._children = {}
         self._parent = {}
+        self._level = {}
 
     def get(self, _id, attr, with_ascendants=False):
         """Get attribute value associated with region ID.
@@ -182,6 +183,7 @@ class RegionMap:
             result._data[_id] = data
             result._parent[_id] = parent_id
             result._children[_id] = [c['id'] for c in children]
+            result._level[_id] = 0 if parent_id is None else result._level[parent_id] + 1
             for c in children:
                 include(c, _id)
         result = cls()
@@ -210,47 +212,71 @@ class RegionMap:
 
         Args:
             attr (str): attribute of interest
-            values: iterable of tuples of the form: (attr_value, value)
+            values: iterable of tuples of the form: (attr_value, group_value)
 
         Returns:
-            List of (attr_value, value); signifying that all children under the node
-            with `attr_value` have the same `value`
+            List of (attr_value, group_value); signifying that all children under the node
+            with `attr_value` have the same `group_value`
         """
-        if attr == 'id':
-            id_values = dict(values)
-        else:
-            id_values = {}
-            for k, v in values:
-                id_ = self.find(k, attr)
 
-                if len(id_) == 0:
-                    raise VoxcellError(f"Value not found: {k} == {v}")
-                if len(id_) > 1:
-                    raise VoxcellError(f"Multiple values found for: {k} == {v}")
+        def _get_id(k, attr):
+            """Return the id corresponding to the given attr."""
+            if attr == "id":
+                return k
+            id_ = self.find(k, attr)
+            if len(id_) == 0:
+                raise VoxcellError(f"Value not found: {k} == {v}")
+            if len(id_) > 1:
+                raise VoxcellError(f"Multiple values found for: {k} == {v}")
+            return next(iter(id_))
 
-                id_values[next(iter(id_))] = v
+        def _all_equal(collection):
+            """Return True if all the items are equal, False otherwise."""
+            prev = None
+            for n, item in enumerate(collection):
+                if n > 0 and item != prev:
+                    return False
+                prev = item
+            return True
 
-        SEEN = "SEEN"
-        for k, v in list(id_values.items()):
-            for a in self._ascendants(_id=k):
-                if a not in id_values:
-                    id_values[a] = SEEN
-                elif id_values[a] != SEEN and id_values[a] != v:
-                    raise VoxcellError(
-                        "A parent was set with a different value than one of its descendants")
+        def _safe_update(d, keys, value):
+            """Update the dict and its nested dicts with the given value.
 
-                if all(id_values[c] == v for c in self._children[a] if c != -1 and c in id_values):
-                    id_values[a] = v
+            Raises:
+                VoxcelError if the key already exists and the value is different.
+            """
+            for key in keys[:-1]:
+                d = d.setdefault(key, {})
+            key = keys[-1]
+            if key not in d:
+                d[key] = value
+            elif d[key] != value:
+                raise VoxcellError(
+                    f"Cannot overwrite existing key {key!r} "
+                    f"having value {d[key]!r} with the new value {value!r}"
+                )
 
-        ret = []
+        by_level = {}  # level -> parent -> id -> group_value
+        max_level = 0  # maximum level, counting from the root
+        for k, v in values:
+            k = _get_id(k, attr)
+            max_level = max(max_level, self._level[k])
+            keys = [self._level[k], self._parent[k], k]
+            _safe_update(by_level, keys, value=v)
 
-        def recurse_children(id_):
-            if id_values[id_] != SEEN:
-                ret.append((self.get(id_, attr, with_ascendants=False), id_values[id_]))
-            else:
-                for c in self._children[id_]:
-                    recurse_children(c)
+        # at the end of the loop, by_level will contain only: 0 -> None -> id -> group_value
+        # where the dict of ids contains the ids and values to be returned
+        for level in range(max_level, 0, -1):
+            level_dict = by_level.pop(level)
+            for parent, ids in level_dict.items():
+                if _all_equal(ids.values()):
+                    value = next(iter(ids.values()))
+                    keys = [level - 1, self._parent[parent], parent]
+                    _safe_update(by_level, keys, value=value)
+                else:
+                    for id_, value in ids.items():
+                        keys = [level - 1, self._parent[parent], id_]
+                        _safe_update(by_level, keys, value=value)
 
-        recurse_children(-1)
-
-        return ret
+        ids = by_level[0][None] if by_level else {}
+        return [(self.get(k, attr), v) for k, v in ids.items()]

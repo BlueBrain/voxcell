@@ -14,3 +14,6 @@ line_length = 100
 testpaths = [
     "tests",
 ]
+filterwarnings = [
+    "ignore::DeprecationWarning:nptyping",
+]

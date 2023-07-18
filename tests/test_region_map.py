@@ -76,9 +76,11 @@ def test_find_missing_attribute():
     with pytest.raises(VoxcellError):
         TEST_RMAP.find(1, attr='no-such-attribute')
 
+
 def test_find_missing_parents():
-    with pytest.raises(VoxcellError):
+    with pytest.raises(VoxcellError, match='ID 666 is unknown in the hierarchy'):
         TEST_RMAP.get(666, attr='fullname', with_ascendants=True)
+
 
 def test_get_basic():
     assert TEST_RMAP.get(4, 'name') == 'B'
@@ -189,80 +191,136 @@ def test_as_dataframe():
     assert df.loc[4].children_count == 0
 
 
-def test_get_common_node_groups():
-    res = TEST_RMAP.get_common_node_groups(
-        attr='id',
-        values=((4, 'red'), (2, 'red')))
-    assert res == [(-1, 'red'), ]
+@pytest.mark.parametrize(
+    "attr, values, expected",
+    [
+        (
+            "id",
+            [(4, "red"), (2, "red")],
+            [(-1, "red")],
+        ),
+        (
+            "id",
+            [(4, "blue"), (2, "red")],
+            [(2, "red"), (3, "blue")],
+        ),
+        (
+            "fullname",
+            [("bB", "red"), ("Bb", "red")],
+            [("The Root Node", "red")],
+        ),
+    ],
+)
+def test_get_common_node_groups_simple(attr, values, expected):
+    res = TEST_RMAP.get_common_node_groups(attr=attr, values=values)
+    assert res == expected
 
-    res = TEST_RMAP.get_common_node_groups(
-        attr='id',
-        values=((4, 'blue'), (2, 'red')))
-    assert sorted(res) == [(2, 'red'), (3, 'blue'), ]
 
-    with pytest.raises(VoxcellError):
+def test_get_common_node_groups_raises():
+    with pytest.raises(VoxcellError, match="Cannot overwrite existing key 1"):
         TEST_RMAP.get_common_node_groups(
-            attr='id',
-            values=((1, 'green'), (4, 'red'), (2, 'red')))
+            attr="id",
+            values=[(1, "green"), (4, "red"), (2, "red")],
+        )
 
-    with pytest.raises(VoxcellError):
+    with pytest.raises(VoxcellError, match="Value not found: does-not-exist == green"):
         TEST_RMAP.get_common_node_groups(
-            attr='name',
-            values=(('does-not-exist', 'green'), ))
+            attr="name",
+            values=[("does-not-exist", "green")],
+        )
 
-    with pytest.raises(VoxcellError):
+    with pytest.raises(VoxcellError, match="Multiple values found for: B == green"):
         TEST_RMAP.get_common_node_groups(
-            attr='name',
-            values=(('B', 'green'), ))
+            attr="name",
+            values=[("B", "green")],
+        )
 
-    res = TEST_RMAP.get_common_node_groups(
-        attr='fullname',
-        values=(('bB', 'red'), ('Bb', 'red')))
-    assert res == [('The Root Node', 'red'), ]
 
-    rm = test_module.RegionMap.from_dict({
-            'id': -1,
-            'children': [
+@pytest.mark.parametrize(
+    "attr, values, expected",
+    [
+        (
+            "id",
+            [],
+            [],
+        ),
+        (
+            "id",
+            [(-1, "blue")],
+            [(-1, "blue")],
+        ),
+        (
+            "id",
+            [(110, "blue")],
+            [(-1, "blue")],
+        ),
+        (
+            "id",
+            [(11, "blue"), (10, "red")],
+            [(10, "red"), (11, "blue")],
+        ),
+        (
+            "id",
+            [(110, "blue"), (111, "blue"), (113, "blue"), (10, "red")],
+            [(10, "red"), (11, "blue")],
+        ),
+        (
+            "id",
+            [(110, "blue"), (111, "blue"), (113, "blue"), (10, "blue")],
+            [(-1, "blue")],
+        ),
+        (
+            "id",
+            [
+                (110, "blue"),
+                (111, "blue"),
+                (113, "blue"),
+                (100, "blue"),
+                (101, "blue"),
+                (103, "blue"),
+            ],
+            [(-1, "blue")],
+        ),
+        (
+            "id",
+            [
+                (100, "blue"),
+                (101, "blue"),
+                (110, "red"),
+                (111, "blue"),
+                (113, "blue"),
+                (12, "green"),
+            ],
+            [(10, "blue"), (12, "green"), (110, "red"), (111, "blue"), (113, "blue")],
+        ),
+    ],
+)
+def test_get_common_node_groups_complex(attr, values, expected):
+    rm = test_module.RegionMap.from_dict(
+        {
+            "id": -1,
+            "children": [
                 {
-                    'id': 10,
-                    'children': [
-                        {'id': 100},
-                        {'id': 101},
-                        {'id': 103},
+                    "id": 10,
+                    "children": [
+                        {"id": 100},
+                        {"id": 101},
+                        {"id": 103},
                     ],
                 },
                 {
-                    'id': 11,
-                    'children': [
-                        {'id': 110},
-                        {'id': 111},
-                        {'id': 113},
+                    "id": 11,
+                    "children": [
+                        {"id": 110},
+                        {"id": 111},
+                        {"id": 113},
                     ],
-                }
-            ]
-        })
-    res = rm.get_common_node_groups(
-        attr='id',
-        values=((11, 'blue'), (10, 'red')))
-    assert sorted(res) == [(10, 'red'), (11, 'blue'), ]
-
-    res = rm.get_common_node_groups(
-        attr='id',
-        values=((110, 'blue'), (111, 'blue'), (113, 'blue'), (10, 'red')))
-    assert sorted(res) == [(10, 'red'), (11, 'blue'), ]
-
-    res = rm.get_common_node_groups(
-        attr='id',
-        values=((110, 'blue'), (111, 'blue'), (113, 'blue'), (10, 'blue')))
-    assert sorted(res) == [(-1, 'blue'),]
-
-    res = rm.get_common_node_groups(
-        attr='id',
-        values=((110, 'blue'),
-                (111, 'blue'),
-                (113, 'blue'),
-                (100, 'blue'),
-                (101, 'blue'),
-                (103, 'blue'),
-                ))
-    assert sorted(res) == [(-1, 'blue'),]
+                },
+                {
+                    "id": 12,
+                },
+            ],
+        }
+    )
+    res = rm.get_common_node_groups(attr=attr, values=values)
+    assert sorted(res) == sorted(expected)
