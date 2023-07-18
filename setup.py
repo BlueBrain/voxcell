@@ -26,7 +26,7 @@ setup(
         'scipy>=1.2.0',
     ],
     packages=find_packages(),
-    python_requires='>=3.7',
+    python_requires='>=3.8',
 
     setup_requires=[
         'setuptools_scm',
