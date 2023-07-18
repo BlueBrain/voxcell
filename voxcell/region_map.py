@@ -12,6 +12,9 @@ from voxcell.utils.common import all_equal, safe_update
 
 L = logging.getLogger(__name__)
 
+# sentinel signals that hierarchy grouping isn't possible anymore
+SENTINEL = "__SENTINEL__"
+
 
 class Matcher:
     """Helper class for value search."""
@@ -231,6 +234,9 @@ class RegionMap:
                 raise VoxcellError(f"Multiple values found for: {k} == {v}")
             return next(iter(id_))
 
+        def _extend_result(result, ids):
+            result.extend((self.get(id_, attr), v) for id_, v in ids.items() if id_ != SENTINEL)
+
         by_level = {}  # level -> parent -> id -> group_value
         max_level = 0  # maximum level, counting from the root
         for k, v in values:
@@ -239,19 +245,17 @@ class RegionMap:
             keys = [self._level[k], self._parent[k], k]
             safe_update(by_level, keys, value=v)
 
-        # at the end of the loop, by_level will contain only: 0 -> None -> id -> group_value
-        # where the dict of ids contains the ids and values to be returned
-        for level in range(max_level, 0, -1):
-            level_dict = by_level.pop(level)
-            for parent, ids in level_dict.items():
-                if all_equal(ids.values()):
+        result = []
+        for level in range(max_level, -1, -1):
+            for parent, ids in by_level.pop(level, {}).items():
+                if level == 0:
+                    _extend_result(result, ids)
+                elif SENTINEL not in ids and all_equal(ids.values()):
                     value = next(iter(ids.values()))
                     keys = [level - 1, self._parent[parent], parent]
                     safe_update(by_level, keys, value=value)
                 else:
-                    for id_, value in ids.items():
-                        keys = [level - 1, self._parent[parent], id_]
-                        safe_update(by_level, keys, value=value)
-
-        ids = by_level[0][None] if by_level else {}
-        return [(self.get(k, attr), v) for k, v in ids.items()]
+                    keys = [level - 1, self._parent[parent], SENTINEL]
+                    safe_update(by_level, keys, value=True)
+                    _extend_result(result, ids)
+        return result
