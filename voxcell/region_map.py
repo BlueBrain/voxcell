@@ -8,6 +8,7 @@ import re
 import pandas as pd
 
 from voxcell.exceptions import VoxcellError
+from voxcell.utils.common import all_equal, safe_update
 
 L = logging.getLogger(__name__)
 
@@ -230,53 +231,27 @@ class RegionMap:
                 raise VoxcellError(f"Multiple values found for: {k} == {v}")
             return next(iter(id_))
 
-        def _all_equal(collection):
-            """Return True if all the items are equal, False otherwise."""
-            prev = None
-            for n, item in enumerate(collection):
-                if n > 0 and item != prev:
-                    return False
-                prev = item
-            return True
-
-        def _safe_update(d, keys, value):
-            """Update the dict and its nested dicts with the given value.
-
-            Raises:
-                VoxcelError if the key already exists and the value is different.
-            """
-            for key in keys[:-1]:
-                d = d.setdefault(key, {})
-            key = keys[-1]
-            if key not in d:
-                d[key] = value
-            elif d[key] != value:
-                raise VoxcellError(
-                    f"Cannot overwrite existing key {key!r} "
-                    f"having value {d[key]!r} with the new value {value!r}"
-                )
-
         by_level = {}  # level -> parent -> id -> group_value
         max_level = 0  # maximum level, counting from the root
         for k, v in values:
             k = _get_id(k, attr)
             max_level = max(max_level, self._level[k])
             keys = [self._level[k], self._parent[k], k]
-            _safe_update(by_level, keys, value=v)
+            safe_update(by_level, keys, value=v)
 
         # at the end of the loop, by_level will contain only: 0 -> None -> id -> group_value
         # where the dict of ids contains the ids and values to be returned
         for level in range(max_level, 0, -1):
             level_dict = by_level.pop(level)
             for parent, ids in level_dict.items():
-                if _all_equal(ids.values()):
+                if all_equal(ids.values()):
                     value = next(iter(ids.values()))
                     keys = [level - 1, self._parent[parent], parent]
-                    _safe_update(by_level, keys, value=value)
+                    safe_update(by_level, keys, value=value)
                 else:
                     for id_, value in ids.items():
                         keys = [level - 1, self._parent[parent], id_]
-                        _safe_update(by_level, keys, value=value)
+                        safe_update(by_level, keys, value=value)
 
         ids = by_level[0][None] if by_level else {}
         return [(self.get(k, attr), v) for k, v in ids.items()]
