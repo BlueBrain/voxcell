@@ -10,7 +10,6 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_almost_equal, assert_array_equal
 from pandas.api.types import CategoricalDtype
-from pandas.api.types import is_categorical_dtype as is_cat
 from pandas.testing import assert_frame_equal, assert_series_equal
 
 import voxcell.cell_collection as test_module
@@ -18,6 +17,10 @@ from voxcell import VoxcellError
 
 DATA_PATH = Path(__file__).parent / 'data'
 SONATA_DATA_PATH = DATA_PATH / 'sonata'
+
+
+def is_cat(series):
+    return isinstance(series.dtype, pd.CategoricalDtype)
 
 
 def euler_to_matrix(bank, attitude, heading):
