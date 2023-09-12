@@ -73,7 +73,7 @@ def _load_property(properties, name, values, library_group=None):
 
 def _is_string_enum(series):
     """Whether ``series`` contains enum of strings."""
-    is_cat_str = (pd.api.types.is_categorical_dtype(series) and
+    is_cat_str = (isinstance(series.dtype, pd.CategoricalDtype) and
                   series.dtype.categories.dtype == object)
     return series.dtype == object or is_cat_str
 

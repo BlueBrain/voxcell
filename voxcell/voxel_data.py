@@ -56,7 +56,7 @@ class VoxelData:
     @property
     def voxel_volume(self):
         """Voxel volume."""
-        return abs(np.product(self.voxel_dimensions))
+        return abs(np.prod(self.voxel_dimensions))
 
     @property
     def ndim(self):
