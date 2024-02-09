@@ -73,7 +73,7 @@ The development of this software was supported by funding to the Blue Brain Proj
 
 For license and authors, see LICENSE.txt and AUTHORS.txt respectively.
 
-Copyright © 2022 Blue Brain Project/EPFL
+Copyright (c) 2022-2024 Blue Brain Project/EPFL
 
 .. _`Allen Institute for Brain Science (AIBS)`: https://alleninstitute.org/what-we-do/brain-science/
 .. _`Mouse Brain Atlas Ontology's StructureGraph`: http://api.brain-map.org/api/v2/structure_graph_download/1.json
