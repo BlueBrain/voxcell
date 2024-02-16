@@ -409,6 +409,43 @@ class ROIMask(VoxelData):
         self.raw = self.raw.astype(bool)
 
 
+class FastApplyToIndexVoxels:
+    """Class for efficient access to indices of unique values of the values array.
+
+    Example:
+        fativ = FastApplyToIndexVoxels(br.raw)
+        values_and_funcs= [(i, np.sum if i % 2 else np.mean) for i in fativ.values[:10]]
+        list(fativ.apply(values_and_funcs, density.raw))
+    """
+
+    def __init__(self, values):
+        values = values.ravel()
+        uniques, counts = np.unique(values, return_counts=True)
+
+        offsets = np.empty(len(counts) + 1, dtype=np.uint64)
+        offsets[0] = 0
+        offsets[1:] = np.cumsum(counts)
+
+        self._indices = np.argsort(values, kind="stable")
+        self._offsets = offsets
+        self._mapping = {v: i for i, v in enumerate(uniques)}
+
+    @property
+    def values(self):
+        return list(self._mapping.keys())
+
+    def _get_group_indices_by_value(self, value):
+        """Return the values array indices corresponding to the 'value'."""
+        group_index = self._mapping[value]
+        return self._indices[self._offsets[group_index] : self._offsets[group_index + 1]]
+
+    def apply(self, values_and_funcs, voxel_data):
+        flat_data = voxel_data.ravel()
+        for value, func in values_and_funcs:
+            idx = self._get_group_indices_by_value(value)
+            yield func(flat_data[idx])
+
+
 def values_to_region_attribute(values, region_map, attr="acronym"):
     """Convert region ids to the corresponding region attribute.
 
