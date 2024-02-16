@@ -419,7 +419,10 @@ class FastApplyToIndexVoxels:
     """
 
     def __init__(self, values):
-        values = values.ravel()
+
+        self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
+
+        values = values.ravel(order=self._order)
         uniques, counts = np.unique(values, return_counts=True)
 
         offsets = np.empty(len(counts) + 1, dtype=np.uint64)
@@ -432,18 +435,35 @@ class FastApplyToIndexVoxels:
 
     @property
     def values(self):
-        return list(self._mapping.keys())
+        return list(self._mapping)
 
     def _get_group_indices_by_value(self, value):
         """Return the values array indices corresponding to the 'value'."""
         group_index = self._mapping[value]
         return self._indices[self._offsets[group_index] : self._offsets[group_index + 1]]
 
+    def _ravel(self, voxel_data):
+        return voxel_data.ravel(order=self._order)
+
     def apply(self, values_and_funcs, voxel_data):
-        flat_data = voxel_data.ravel()
+        flat_data = self._ravel(voxel_data)
         for value, func in values_and_funcs:
             idx = self._get_group_indices_by_value(value)
             yield func(flat_data[idx])
+
+    def assign(self, index_voxel_values, voxel_data, copy=True):
+
+        shape = voxel_data.shape
+        flat_data = self._ravel(voxel_data)
+
+        if copy and not flat_data.flags.owndata:
+            flat_data = flat_data.copy(order="K")
+
+        for index_value, voxel_value in index_voxel_values:
+            idx = self._get_group_indices_by_value(index_value)
+            flat_data[idx] = voxel_value
+
+        return flat_data.reshape(shape, order=self._order)
 
 
 def values_to_region_attribute(values, region_map, attr="acronym"):
