@@ -8,8 +8,12 @@ import re
 import pandas as pd
 
 from voxcell.exceptions import VoxcellError
+from voxcell.utils.common import all_equal, safe_update
 
 L = logging.getLogger(__name__)
+
+# sentinel signals that hierarchy grouping isn't possible anymore
+SENTINEL = "__SENTINEL__"
 
 
 class Matcher:
@@ -43,6 +47,7 @@ class RegionMap:
         self._data = {}
         self._children = {}
         self._parent = {}
+        self._level = {}
 
     def get(self, _id, attr, with_ascendants=False):
         """Get attribute value associated with region ID.
@@ -153,6 +158,9 @@ class RegionMap:
 
     def _ascendants(self, _id):
         """List of ascendants for a given region ID (itself included; sorted "upwards")."""
+        if _id not in self._parent:
+            raise VoxcellError(f"ID {_id} is unknown in the hierarchy")
+
         x = _id
         result = []
         while x is not None:
@@ -179,6 +187,7 @@ class RegionMap:
             result._data[_id] = data
             result._parent[_id] = parent_id
             result._children[_id] = [c['id'] for c in children]
+            result._level[_id] = 0 if parent_id is None else result._level[parent_id] + 1
             for c in children:
                 include(c, _id)
         result = cls()
@@ -201,3 +210,52 @@ class RegionMap:
             content = content['msg'][0]
 
         return cls.from_dict(content)
+
+    def get_common_node_groups(self, attr, values):
+        """Traverse hierarchy, and attempt to group nodes that have the same values.
+
+        Args:
+            attr (str): attribute of interest
+            values: iterable of tuples of the form: (attr_value, group_value)
+
+        Returns:
+            List of (attr_value, group_value); signifying that all children under the node
+            with `attr_value` have the same `group_value`
+        """
+
+        def _get_id(k, attr):
+            """Return the id corresponding to the given attr."""
+            if attr == "id":
+                return k
+            id_ = self.find(k, attr)
+            if len(id_) == 0:
+                raise VoxcellError(f"Value not found: {k} == {v}")
+            if len(id_) > 1:
+                raise VoxcellError(f"Multiple values found for: {k} == {v}")
+            return next(iter(id_))
+
+        def _extend_result(result, ids):
+            result.extend((self.get(id_, attr), v) for id_, v in ids.items() if id_ != SENTINEL)
+
+        by_level = {}  # level -> parent -> id -> group_value
+        max_level = 0  # maximum level, counting from the root
+        for k, v in values:
+            k = _get_id(k, attr)
+            max_level = max(max_level, self._level[k])
+            keys = [self._level[k], self._parent[k], k]
+            safe_update(by_level, keys, value=v)
+
+        result = []
+        for level in range(max_level, -1, -1):
+            for parent, ids in by_level.pop(level, {}).items():
+                if level == 0:
+                    _extend_result(result, ids)
+                elif SENTINEL not in ids and all_equal(ids.values()):
+                    value = next(iter(ids.values()))
+                    keys = [level - 1, self._parent[parent], parent]
+                    safe_update(by_level, keys, value=value)
+                else:
+                    keys = [level - 1, self._parent[parent], SENTINEL]
+                    safe_update(by_level, keys, value=True)
+                    _extend_result(result, ids)
+        return result
