@@ -409,3 +409,14 @@ def test_offset_and_voxel_dimensions_type():
 
     voxel_data = test_module.VoxelData(np.ones((2, 2, 2)), voxel_dimensions=(3, 4, 5))
     assert voxel_data.offset.dtype == np.float32
+
+
+def test_ValueToIndexVoxels():
+    br = np.array([[1, 1, 1], [1, 2, 2], [3, 3, 3]])
+    vtiv = test_module.ValueToIndexVoxels(br)
+    res = vtiv.apply((3, 1), np.mean, br)
+    assert list(res) == [3., 1.]
+
+    res = vtiv.apply((3, 1), (np.sum, np.mean), br)
+    assert list(res) == [9, 1.0]
+

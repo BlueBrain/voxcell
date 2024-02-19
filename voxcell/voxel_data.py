@@ -1,4 +1,5 @@
 """Access to volumetric data."""
+import itertools as it
 from functools import reduce
 
 import nrrd
@@ -409,17 +410,20 @@ class ROIMask(VoxelData):
         self.raw = self.raw.astype(bool)
 
 
-class FastApplyToIndexVoxels:
-    """Class for efficient access to indices of unique values of the values array.
+class ValueToIndexVoxels:
+    """Efficient access to indices of unique values of the values array.
+
+    Useful for when one has an "annotations volume" or "brain region volume" that has
+    regions indicated by unique values, and these are used to create masks.  Often,
+    it's faster to avoid mask creation, and use indices directly
 
     Example:
-        fativ = FastApplyToIndexVoxels(br.raw)
-        values_and_funcs= [(i, np.sum if i % 2 else np.mean) for i in fativ.values[:10]]
-        list(fativ.apply(values_and_funcs, density.raw))
+        vtiv = ValueToIndexVoxels(br.raw)
+        values, funcs = zip(*((i, np.sum if i % 2 else np.mean) for i in vtiv.values[:10]))
+        list(vtiv.apply(values, funcs, density.raw))
     """
 
     def __init__(self, values):
-
         self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
 
         values = values.ravel(order=self._order)
@@ -435,35 +439,59 @@ class FastApplyToIndexVoxels:
 
     @property
     def values(self):
+        """List of values that are found in the original volume."""
         return list(self._mapping)
 
-    def _get_group_indices_by_value(self, value):
-        """Return the values array indices corresponding to the 'value'."""
+    def value_to_1d_indices(self, value):
+        """Return the indices array indices corresponding to the 'value'.
+
+        Note: These are 1D indices, so the assumption is they are applied to a volume
+        who has been ValueToIndexVoxels::ravel(volume)
+        """
+        if value not in self._mapping:
+            return np.array([], dtype=np.uint64)
+
         group_index = self._mapping[value]
         return self._indices[self._offsets[group_index] : self._offsets[group_index + 1]]
 
-    def _ravel(self, voxel_data):
+    def ravel(self, voxel_data):
+        """Ensures `voxel_data` matches the layout that the 1D indices can be used."""
         return voxel_data.ravel(order=self._order)
 
-    def apply(self, values_and_funcs, voxel_data):
-        flat_data = self._ravel(voxel_data)
-        for value, func in values_and_funcs:
-            idx = self._get_group_indices_by_value(value)
+    def apply(self, values, funcs, voxel_data):
+        """For pairs of `values` and `funcs`, apply the func as if a mask was created from `value`
+
+        Args
+            values(iterable of value): values to be found in original values array
+            funcs(iterable of funcs): if only a single function is provided, it is used for all `values`
+            voxel_data(np.array): Array on which to apply function based on desired `values`
+        """
+        flat_data = self.ravel(voxel_data)
+        if hasattr(funcs, '__call__'):
+            funcs = (funcs, )
+        for value, func in zip(values, it.cycle(funcs)):
+            idx = self.value_to_1d_indices(value)
             yield func(flat_data[idx])
 
-    def assign(self, index_voxel_values, voxel_data, copy=True):
+    def assign(self, index_voxel_values, voxel_data, inplace=False):
+        """
 
-        shape = voxel_data.shape
-        flat_data = self._ravel(voxel_data)
+        Args
+            values(iterable of value): values to be found in original values array
+            funcs(iterable of funcs): if only a single function is provided, it is used for all `values`
+            voxel_data(np.array): Array on which to apply function based on desired `values`
+        """
+        original_shape = voxel_data.shape
+        flat_data = self.ravel(voxel_data)
 
-        if copy and not flat_data.flags.owndata:
+        if not inplace:
             flat_data = flat_data.copy(order="K")
 
         for index_value, voxel_value in index_voxel_values:
-            idx = self._get_group_indices_by_value(index_value)
+            idx = self.value_to_1d_indices(index_value)
             flat_data[idx] = voxel_value
 
-        return flat_data.reshape(shape, order=self._order)
+        return flat_data.reshape(original_shape, order=self._order)
 
 
 def values_to_region_attribute(values, region_map, attr="acronym"):
