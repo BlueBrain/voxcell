@@ -424,6 +424,11 @@ class ValueToIndexVoxels:
     """
 
     def __init__(self, values):
+        """Initialize.
+
+        Args:
+            values(np.array): volume with each voxel marked with a value; usually to group regions
+        """
         self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
 
         values = values.ravel(order=self._order)
@@ -452,18 +457,19 @@ class ValueToIndexVoxels:
             return np.array([], dtype=np.uint64)
 
         group_index = self._mapping[value]
-        return self._indices[self._offsets[group_index] : self._offsets[group_index + 1]]
+        return self._indices[self._offsets[group_index]:self._offsets[group_index + 1]]
 
     def ravel(self, voxel_data):
         """Ensures `voxel_data` matches the layout that the 1D indices can be used."""
         return voxel_data.ravel(order=self._order)
 
     def apply(self, values, funcs, voxel_data):
-        """For pairs of `values` and `funcs`, apply the func as if a mask was created from `value`
+        """For pairs of `values` and `funcs`, apply the func as if a mask was created from `value`.
 
-        Args
+        Args:
             values(iterable of value): values to be found in original values array
-            funcs(iterable of funcs): if only a single function is provided, it is used for all `values`
+            funcs(iterable of funcs): if only a single function is provided,
+            it is used for all `values`
             voxel_data(np.array): Array on which to apply function based on desired `values`
         """
         flat_data = self.ravel(voxel_data)
@@ -474,12 +480,12 @@ class ValueToIndexVoxels:
             yield func(flat_data[idx])
 
     def assign(self, index_voxel_values, voxel_data, inplace=False):
-        """
+        """Assign.
 
-        Args
-            values(iterable of value): values to be found in original values array
-            funcs(iterable of funcs): if only a single function is provided, it is used for all `values`
+        Args:
+            index_voxel_values(iterable of value): values to be found in original values array
             voxel_data(np.array): Array on which to apply function based on desired `values`
+            inplace(bool): whether `voxel_data` is modified inplace
         """
         original_shape = voxel_data.shape
         flat_data = self.ravel(voxel_data)
