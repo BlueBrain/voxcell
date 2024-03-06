@@ -153,6 +153,9 @@ class RegionMap:
 
     def _ascendants(self, _id):
         """List of ascendants for a given region ID (itself included; sorted "upwards")."""
+        if _id not in self._parent:
+            raise VoxcellError(f"ID {_id} is unknown in the hierarchy")
+
         x = _id
         result = []
         while x is not None:
@@ -201,3 +204,53 @@ class RegionMap:
             content = content['msg'][0]
 
         return cls.from_dict(content)
+
+    def get_common_node_groups(self, attr, values):
+        """Traverse hierarchy, and attempt to group nodes that have the same values.
+
+        Args:
+            attr (str): attribute of interest
+            values: iterable of tuples of the form: (attr_value, value)
+
+        Returns:
+            List of (attr_value, value); signifying that all children under the node
+            with `attr_value` have the same `value`
+        """
+        if attr == 'id':
+            id_values = dict(values)
+        else:
+            id_values = {}
+            for k, v in values:
+                id_ = self.find(k, attr)
+
+                if len(id_) == 0:
+                    raise VoxcellError(f"Value not found: {k} == {v}")
+                if len(id_) > 1:
+                    raise VoxcellError(f"Multiple values found for: {k} == {v}")
+
+                id_values[next(iter(id_))] = v
+
+        SEEN = "SEEN"
+        for k, v in list(id_values.items()):
+            for a in self._ascendants(_id=k):
+                if a not in id_values:
+                    id_values[a] = SEEN
+                elif id_values[a] != SEEN and id_values[a] != v:
+                    raise VoxcellError(
+                        "A parent was set with a different value than one of its descendants")
+
+                if all(id_values[c] == v for c in self._children[a] if c != -1 and c in id_values):
+                    id_values[a] = v
+
+        ret = []
+
+        def recurse_children(id_):
+            if id_values[id_] != SEEN:
+                ret.append((self.get(id_, attr, with_ascendants=False), id_values[id_]))
+            else:
+                for c in self._children[id_]:
+                    recurse_children(c)
+
+        recurse_children(-1)
+
+        return ret
