@@ -442,11 +442,22 @@ class ValueToIndexVoxels:
         self._offsets = offsets
         self._indices = np.argsort(values, kind="stable")
         self._mapping = {v: i for i, v in enumerate(uniques)}
+        self._index_dtype = values.dtype
+
+    @property
+    def index_size(self):
+        """Return the size of the unique index values."""
+        return len(self._mapping)
+
+    @property
+    def index_dtype(self):
+        """Return the dytpe of the index values."""
+        return self._index_dtype
 
     @property
     def values(self):
         """Unique values that are found in the original volume."""
-        return np.fromiter(self._mapping, dtype=type(next(iter(self._mapping.values()))))
+        return np.fromiter(self._mapping, dtype=self.index_dtype)
 
     @property
     def codes(self):
@@ -507,10 +518,9 @@ class ValueToIndexVoxels:
 
     def indexed_sum(self, voxel_data):
         """Calculate the sum of voxel_data values using `values` as a index."""
-        index_values = self.values
         voxel_values = self.ravel(voxel_data)
 
-        sums = np.zeros(index_values.size, dtype=float)
+        sums = np.zeros(self.index_size, dtype=float)
 
         # add.at allows accumulating when the same index is encountered
         np.add.at(sums, self.codes, voxel_values)
@@ -519,9 +529,7 @@ class ValueToIndexVoxels:
 
     def indexed_count(self):
         """Calculate the voxel count of each value in `values`."""
-
-        index_values = self.values
-        counts = np.zeros(index_values.size, dtype=int)
+        counts = np.zeros(self.index_size, dtype=int)
 
         # add.at allows accumulating when the same index is encountered
         np.add.at(counts, self.codes, 1)
