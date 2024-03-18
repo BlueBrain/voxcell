@@ -461,7 +461,7 @@ class ValueToIndexVoxels:
 
     @property
     def codes(self):
-        "Codes to reconstruct the original volume from `values`"
+        """Codes to reconstruct the original volume from `values`."""
         return self._codes
 
     def value_to_1d_indices(self, value):
