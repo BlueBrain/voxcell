@@ -420,3 +420,10 @@ def test_ValueToIndexVoxels():
     res = vtiv.apply((3, 1), (np.sum, np.mean), br)
     assert list(res) == [9, 1.0]
 
+    br = np.array([[10., 20., 30.], [40., 50., 50.], [30., 50., 20.]])
+    res = vtiv.indexed_sum(br)
+    assert_almost_equal(res, [100., 100., 100.])
+
+    res = vtiv.indexed_count()
+    assert_array_equal(vtiv.values, [1, 2, 3])
+    assert_array_equal(res, [4, 2, 3])

@@ -432,20 +432,26 @@ class ValueToIndexVoxels:
         self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
 
         values = values.ravel(order=self._order)
-        uniques, counts = np.unique(values, return_counts=True)
+        uniques, codes, counts = np.unique(values, return_inverse=True, return_counts=True)
 
         offsets = np.empty(len(counts) + 1, dtype=np.uint64)
         offsets[0] = 0
         offsets[1:] = np.cumsum(counts)
 
-        self._indices = np.argsort(values, kind="stable")
+        self._codes = codes
         self._offsets = offsets
+        self._indices = np.argsort(values, kind="stable")
         self._mapping = {v: i for i, v in enumerate(uniques)}
 
     @property
     def values(self):
-        """List of values that are found in the original volume."""
-        return list(self._mapping)
+        """Unique values that are found in the original volume."""
+        return np.fromiter(self._mapping, dtype=type(next(iter(self._mapping.values()))))
+
+    @property
+    def codes(self):
+        "Codes to reconstruct the original volume from `values`"
+        return self._codes
 
     def value_to_1d_indices(self, value):
         """Return the indices array indices corresponding to the 'value'.
@@ -498,6 +504,29 @@ class ValueToIndexVoxels:
             flat_data[idx] = voxel_value
 
         return flat_data.reshape(original_shape, order=self._order)
+
+    def indexed_sum(self, voxel_data):
+        """Calculate the sum of voxel_data values using `values` as a index."""
+        index_values = self.values
+        voxel_values = self.ravel(voxel_data)
+
+        sums = np.zeros(index_values.size, dtype=float)
+
+        # add.at allows accumulating when the same index is encountered
+        np.add.at(sums, self.codes, voxel_values)
+
+        return sums
+
+    def indexed_count(self):
+        """Calculate the voxel count of each value in `values`."""
+
+        index_values = self.values
+        counts = np.zeros(index_values.size, dtype=int)
+
+        # add.at allows accumulating when the same index is encountered
+        np.add.at(counts, self.codes, 1)
+
+        return counts
 
 
 def values_to_region_attribute(values, region_map, attr="acronym"):
