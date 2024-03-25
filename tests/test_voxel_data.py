@@ -412,18 +412,31 @@ def test_offset_and_voxel_dimensions_type():
 
 
 def test_ValueToIndexVoxels():
-    br = np.array([[1, 1, 1], [1, 2, 2], [3, 3, 3]])
+    values = np.array([[1., 1., 1.], [1., 2., 2.], [3., 3., 3.]])
+    br = np.array([[1, 1, 1], [1, 2, 2], [3, 3, 3]], order='C')
     vtiv = test_module.ValueToIndexVoxels(br)
-    res = vtiv.apply((3, 1), np.mean, br)
-    assert list(res) == [3., 1.]
 
-    res = vtiv.apply((3, 1), (np.sum, np.mean), br)
-    assert list(res) == [9, 1.0]
+    npt.assert_array_equal(vtiv.value_to_1d_indices(1), [0, 1, 2, 3])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(2), [4, 5])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(3), [6, 7, 8])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(4), [])
 
-    br = np.array([[10., 20., 30.], [40., 50., 50.], [30., 50., 20.]])
-    res = vtiv.indexed_sum(br)
-    assert_almost_equal(res, [100., 100., 100.])
+    assert vtiv.index_size == 3
+    assert vtiv.index_dtype == np.int64
+    assert list(vtiv.values) == [1, 2, 3]
 
-    res = vtiv.indexed_count()
-    assert_array_equal(vtiv.values, [1, 2, 3])
-    assert_array_equal(res, [4, 2, 3])
+    for order in ('K', 'A', 'C', 'F'):
+        r = vtiv.ravel(np.array(values, order=order))
+        npt.assert_array_equal(r[vtiv.value_to_1d_indices(1)], [1., 1., 1., 1.])
+
+    br = np.array([[1, 1, 1], [1, 2, 2], [3, 3, 3]], order='F')
+    vtiv = test_module.ValueToIndexVoxels(br)
+
+    npt.assert_array_equal(vtiv.value_to_1d_indices(1), [0, 1, 3, 6])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(2), [4, 7])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(3), [2, 5, 8])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(4), [])
+
+    for order in ('K', 'A', 'C', 'F'):
+        r = vtiv.ravel(np.array(values, order=order))
+        npt.assert_array_equal(r[vtiv.value_to_1d_indices(1)], [1., 1., 1., 1.])

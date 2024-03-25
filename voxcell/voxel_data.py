@@ -1,5 +1,4 @@
 """Access to volumetric data."""
-import itertools as it
 from functools import reduce
 
 import nrrd
@@ -418,9 +417,11 @@ class ValueToIndexVoxels:
     it's faster to avoid mask creation, and use indices directly
 
     Example:
-        vtiv = ValueToIndexVoxels(br.raw)
-        values, funcs = zip(*((i, np.sum if i % 2 else np.mean) for i in vtiv.values[:10]))
-        list(vtiv.apply(values, funcs, density.raw))
+        # To calculate the cell count based on densities of a certain ID in the brain_regions volume
+        vtiv = ValueToIndexVoxels(brain_regions.raw)
+        density_copy = vtiv.ravel(density.raw.copy())
+        indices = vtiv.value_to_1d_indices(value=id_)
+        cell_count = np.sum(density_copy[indices]) * voxel_volume)
     """
 
     def __init__(self, values):
@@ -432,13 +433,12 @@ class ValueToIndexVoxels:
         self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
 
         values = values.ravel(order=self._order)
-        uniques, codes, counts = np.unique(values, return_inverse=True, return_counts=True)
+        uniques, counts = np.unique(values, return_counts=True)
 
         offsets = np.empty(len(counts) + 1, dtype=np.uint64)
         offsets[0] = 0
         offsets[1:] = np.cumsum(counts)
 
-        self._codes = codes
         self._offsets = offsets
         self._indices = np.argsort(values, kind="stable")
         self._mapping = {v: i for i, v in enumerate(uniques)}
@@ -459,11 +459,6 @@ class ValueToIndexVoxels:
         """Unique values that are found in the original volume."""
         return np.fromiter(self._mapping, dtype=self.index_dtype)
 
-    @property
-    def codes(self):
-        """Codes to reconstruct the original volume from `values`."""
-        return self._codes
-
     def value_to_1d_indices(self, value):
         """Return the indices array indices corresponding to the 'value'.
 
@@ -479,62 +474,6 @@ class ValueToIndexVoxels:
     def ravel(self, voxel_data):
         """Ensures `voxel_data` matches the layout that the 1D indices can be used."""
         return voxel_data.ravel(order=self._order)
-
-    def apply(self, values, funcs, voxel_data):
-        """For pairs of `values` and `funcs`, apply the func as if a mask was created from `value`.
-
-        Args:
-            values(iterable of value): values to be found in original values array
-            funcs(iterable of funcs): if only a single function is provided,
-            it is used for all `values`
-            voxel_data(np.array): Array on which to apply function based on desired `values`
-        """
-        flat_data = self.ravel(voxel_data)
-        if hasattr(funcs, '__call__'):
-            funcs = (funcs, )
-        for value, func in zip(values, it.cycle(funcs)):
-            idx = self.value_to_1d_indices(value)
-            yield func(flat_data[idx])
-
-    def assign(self, index_voxel_values, voxel_data, inplace=False):
-        """Assign.
-
-        Args:
-            index_voxel_values(iterable of value): values to be found in original values array
-            voxel_data(np.array): Array on which to apply function based on desired `values`
-            inplace(bool): whether `voxel_data` is modified inplace
-        """
-        original_shape = voxel_data.shape
-        flat_data = self.ravel(voxel_data)
-
-        if not inplace:
-            flat_data = flat_data.copy(order="K")
-
-        for index_value, voxel_value in index_voxel_values:
-            idx = self.value_to_1d_indices(index_value)
-            flat_data[idx] = voxel_value
-
-        return flat_data.reshape(original_shape, order=self._order)
-
-    def indexed_sum(self, voxel_data):
-        """Calculate the sum of voxel_data values using `values` as a index."""
-        voxel_values = self.ravel(voxel_data)
-
-        sums = np.zeros(self.index_size, dtype=float)
-
-        # add.at allows accumulating when the same index is encountered
-        np.add.at(sums, self.codes, voxel_values)
-
-        return sums
-
-    def indexed_count(self):
-        """Calculate the voxel count of each value in `values`."""
-        counts = np.zeros(self.index_size, dtype=int)
-
-        # add.at allows accumulating when the same index is encountered
-        np.add.at(counts, self.codes, 1)
-
-        return counts
 
 
 def values_to_region_attribute(values, region_map, attr="acronym"):
