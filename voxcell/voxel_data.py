@@ -409,6 +409,73 @@ class ROIMask(VoxelData):
         self.raw = self.raw.astype(bool)
 
 
+class ValueToIndexVoxels:
+    """Efficient access to indices of unique values of the values array.
+
+    Useful for when one has an "annotations volume" or "brain region volume" that has
+    regions indicated by unique values, and these are used to create masks.  Often,
+    it's faster to avoid mask creation, and use indices directly
+
+    Example:
+        # To calculate the cell count based on densities of a certain ID in the brain_regions volume
+        vtiv = ValueToIndexVoxels(brain_regions.raw)
+        density_copy = vtiv.ravel(density.raw.copy())
+        indices = vtiv.value_to_1d_indices(value=id_)
+        cell_count = np.sum(density_copy[indices]) * voxel_volume)
+    """
+
+    def __init__(self, values):
+        """Initialize.
+
+        Args:
+            values(np.array): volume with each voxel marked with a value; usually to group regions
+        """
+        self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
+
+        values = values.ravel(order=self._order)
+        uniques, counts = np.unique(values, return_counts=True)
+
+        offsets = np.empty(len(counts) + 1, dtype=np.uint64)
+        offsets[0] = 0
+        offsets[1:] = np.cumsum(counts)
+
+        self._offsets = offsets
+        self._indices = np.argsort(values, kind="stable")
+        self._mapping = {v: i for i, v in enumerate(uniques)}
+        self._index_dtype = values.dtype
+
+    @property
+    def index_size(self):
+        """Return the size of the unique index values."""
+        return len(self._mapping)
+
+    @property
+    def index_dtype(self):
+        """Return the dytpe of the index values."""
+        return self._index_dtype
+
+    @property
+    def values(self):
+        """Unique values that are found in the original volume."""
+        return np.fromiter(self._mapping, dtype=self.index_dtype)
+
+    def value_to_1d_indices(self, value):
+        """Return the indices array indices corresponding to the 'value'.
+
+        Note: These are 1D indices, so the assumption is they are applied to a volume
+        who has been ValueToIndexVoxels::ravel(volume)
+        """
+        if value not in self._mapping:
+            return np.array([], dtype=self._indices.dtype)
+
+        group_index = self._mapping[value]
+        return self._indices[self._offsets[group_index]:self._offsets[group_index + 1]]
+
+    def ravel(self, voxel_data):
+        """Ensures `voxel_data` matches the layout that the 1D indices can be used."""
+        return voxel_data.ravel(order=self._order)
+
+
 def values_to_region_attribute(values, region_map, attr="acronym"):
     """Convert region ids to the corresponding region attribute.
 

@@ -409,3 +409,34 @@ def test_offset_and_voxel_dimensions_type():
 
     voxel_data = test_module.VoxelData(np.ones((2, 2, 2)), voxel_dimensions=(3, 4, 5))
     assert voxel_data.offset.dtype == np.float32
+
+
+def test_ValueToIndexVoxels():
+    values = np.array([[1., 1., 1.], [1., 2., 2.], [3., 3., 3.]])
+    br = np.array([[1, 1, 1], [1, 2, 2], [3, 3, 3]], order='C')
+    vtiv = test_module.ValueToIndexVoxels(br)
+
+    npt.assert_array_equal(vtiv.value_to_1d_indices(1), [0, 1, 2, 3])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(2), [4, 5])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(3), [6, 7, 8])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(4), [])
+
+    assert vtiv.index_size == 3
+    assert vtiv.index_dtype == np.int64
+    assert list(vtiv.values) == [1, 2, 3]
+
+    for order in ('K', 'A', 'C', 'F'):
+        r = vtiv.ravel(np.array(values, order=order))
+        npt.assert_array_equal(r[vtiv.value_to_1d_indices(1)], [1., 1., 1., 1.])
+
+    br = np.array([[1, 1, 1], [1, 2, 2], [3, 3, 3]], order='F')
+    vtiv = test_module.ValueToIndexVoxels(br)
+
+    npt.assert_array_equal(vtiv.value_to_1d_indices(1), [0, 1, 3, 6])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(2), [4, 7])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(3), [2, 5, 8])
+    npt.assert_array_equal(vtiv.value_to_1d_indices(4), [])
+
+    for order in ('K', 'A', 'C', 'F'):
+        r = vtiv.ravel(np.array(values, order=order))
+        npt.assert_array_equal(r[vtiv.value_to_1d_indices(1)], [1., 1., 1., 1.])
