@@ -466,7 +466,7 @@ class ValueToIndexVoxels:
         who has been ValueToIndexVoxels::ravel(volume)
         """
         if value not in self._mapping:
-            return np.array([], dtype=np.uint64)
+            return np.array([], dtype=self._indices.dtype)
 
         group_index = self._mapping[value]
         return self._indices[self._offsets[group_index]:self._offsets[group_index + 1]]
