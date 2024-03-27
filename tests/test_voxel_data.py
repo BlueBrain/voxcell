@@ -442,7 +442,6 @@ def test_ValueToIndexVoxels():
         npt.assert_array_equal(r[vtiv.value_to_1d_indices(1)], [1., 1., 1., 1.])
 
 
-
 def test_ValueToIndexVoxels__raveling():
 
     # c-contiguous index values
