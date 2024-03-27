@@ -431,6 +431,7 @@ class ValueToIndexVoxels:
             values(np.array): volume with each voxel marked with a value; usually to group regions
         """
         self._order = "C" if values.flags["C_CONTIGUOUS"] else "F"
+        self._shape = values.shape
 
         values = values.ravel(order=self._order)
         uniques, counts = np.unique(values, return_counts=True)
@@ -473,7 +474,23 @@ class ValueToIndexVoxels:
 
     def ravel(self, voxel_data):
         """Ensures `voxel_data` matches the layout that the 1D indices can be used."""
+        if voxel_data.shape != self._shape:
+            raise VoxcellError(
+                f"Shape mismatch:\n"
+                f"Index initial shape: {self._shape}\n"
+                f"Argument shape: {voxel_data.shape}"
+            )
         return voxel_data.ravel(order=self._order)
+
+    def unravel(self, raveled_voxel_array):
+        """Ensures `raveled_voxel_array` is reshaped with the contiguous order used to be raveled"""
+        if raveled_voxel_array.size != np.prod(self._shape):
+            raise VoxcellError(
+                "Array size mismatch:\n"
+                f"Index initial size: {np.prod(self._shape)}\n"
+                f"Argument size: {raveled_voxel_array.size}"
+            )
+        return raveled_voxel_array.reshape(self._shape, order=self._order)
 
 
 def values_to_region_attribute(values, region_map, attr="acronym"):
