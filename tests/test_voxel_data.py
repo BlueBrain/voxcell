@@ -440,3 +440,82 @@ def test_ValueToIndexVoxels():
     for order in ('K', 'A', 'C', 'F'):
         r = vtiv.ravel(np.array(values, order=order))
         npt.assert_array_equal(r[vtiv.value_to_1d_indices(1)], [1., 1., 1., 1.])
+
+
+def test_ValueToIndexVoxels__raveling():
+
+    # c-contiguous index values
+    index_values = np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+    index = test_module.ValueToIndexVoxels(index_values)
+    assert index._order == "C"
+    
+    # c-contiguous volume to ravel with a c-order index
+    c_values = np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+    c_raveled = index.ravel(c_values)
+    c_unraveled = index.unravel(c_raveled)
+
+    # check the reconstruction is correct
+    npt.assert_array_equal(c_unraveled, c_values)
+
+    # should not create a copy
+    assert c_raveled.base is c_values
+    assert c_unraveled.base is c_values
+
+    # f-contiguous volume to ravel with a c-order index
+    f_values = np.asfortranarray(c_values)
+    f_raveled = index.ravel(f_values)
+    f_unraveled = index.unravel(f_raveled)
+
+    # check the reconstruction is correct
+    npt.assert_array_equal(f_unraveled, f_values)
+
+    # should create a copy
+    assert f_raveled.base is None
+    # should not create a copy because 1d array are both C and F contiguous
+    assert f_unraveled.base is f_raveled
+
+    # f-contiguous index values
+    index_values = np.asfortranarray(index_values)
+    index = test_module.ValueToIndexVoxels(index_values)
+    assert index._order == "F"
+
+    # c-contiguous volume to ravel with a f-order index
+    c_values = np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+    c_raveled = index.ravel(c_values)
+    c_unraveled = index.unravel(c_raveled)
+
+    # check the reconstruction is correct
+    npt.assert_array_equal(c_unraveled, c_values)
+
+    # should create a copy
+    assert c_raveled.base is None
+    # should not create a copy because 1d array are both C and F contiguous
+    assert c_unraveled.base is c_raveled
+
+    # f-contiguous volume to ravel with a f-order index
+    f_values = np.asfortranarray(c_values)
+    f_raveled = index.ravel(f_values)
+    f_unraveled = index.unravel(f_raveled)
+
+    # check the reconstruction is correct
+    npt.assert_array_equal(f_unraveled, f_values)
+
+    # should not create a copy
+    assert f_raveled.base is f_values
+    assert f_unraveled.base is f_values
+
+
+def test_ValueToIndexVoxels__raises():
+
+    index_values = np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+    index = test_module.ValueToIndexVoxels(index_values)
+
+    data = np.array([[0., 1.], [1., 2]])
+
+    with pytest.raises(VoxcellError, match="Shape mismatch"):
+        index.ravel(data)
+
+    data = np.array([0., 1.])
+
+    with pytest.raises(VoxcellError, match="Array size mismatch"):
+        index.unravel(data)
