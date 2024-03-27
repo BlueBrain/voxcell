@@ -473,7 +473,7 @@ class ValueToIndexVoxels:
         return self._indices[self._offsets[group_index]:self._offsets[group_index + 1]]
 
     def ravel(self, voxel_data):
-        """Ensures `voxel_data` matches the layout that the 1D indices can be used."""
+        """Ensure `voxel_data` matches the layout that the 1D indices can be used."""
         if voxel_data.shape != self._shape:
             raise VoxcellError(
                 f"Shape mismatch:\n"
@@ -483,7 +483,7 @@ class ValueToIndexVoxels:
         return voxel_data.ravel(order=self._order)
 
     def unravel(self, raveled_voxel_array):
-        """Ensures `raveled_voxel_array` is reshaped with the contiguous order used to be raveled"""
+        """Ensure `raveled_voxel_array` is reshaped with the contiguous order used to be raveled."""
         if raveled_voxel_array.size != np.prod(self._shape):
             raise VoxcellError(
                 "Array size mismatch:\n"
