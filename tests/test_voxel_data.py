@@ -500,7 +500,7 @@ def test_ValueToIndexVoxels__raveling():
     # check the reconstruction is correct
     npt.assert_array_equal(f_unraveled, f_values)
 
-    # should create a copy
+    # should not create a copy
     assert f_raveled.base is f_values
     assert f_unraveled.base is f_values
 
