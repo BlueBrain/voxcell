@@ -1,4 +1,5 @@
 import json
+import os
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -6,8 +7,10 @@ import pytest
 import voxcell.region_map as test_module
 from voxcell.exceptions import VoxcellError
 
-TEST_RMAP = test_module.RegionMap.from_dict({
-    'id': -1,
+DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
+
+TEST_RMAP_DICT = {
+    'id': 0,
     'name': 'root',
     'fullname': 'The Root Node',
     'children': [
@@ -20,6 +23,7 @@ TEST_RMAP = test_module.RegionMap.from_dict({
                 'id': 2,
                 'name': 'B',
                 'fullname': 'Bb',
+                'children': [],
             },
             {
                 'id': 3,
@@ -30,12 +34,15 @@ TEST_RMAP = test_module.RegionMap.from_dict({
                         'id': 4,
                         'name': 'B',
                         'fullname': 'bB',
+                        'children': [],
                     }
                 ]
             }
         ]}
     ]
-})
+}
+
+TEST_RMAP = test_module.RegionMap.from_dict(TEST_RMAP_DICT)
 
 
 def test_find_basic():
@@ -156,6 +163,16 @@ def test_from_dict_duplicate_id():
         })
 
 
+def test_as_dict():
+    res = TEST_RMAP.as_dict()
+    assert res == TEST_RMAP_DICT
+
+    with open(os.path.join(DATA_PATH, "region_map.json")) as f:
+        initial_dict = json.load(f)
+    rmap = test_module.RegionMap.from_dict(initial_dict)
+    assert rmap.as_dict() == initial_dict
+
+
 def test_is_leaf_id():
     assert TEST_RMAP.is_leaf_id(1) is False
     assert TEST_RMAP.is_leaf_id(2) is True
@@ -165,13 +182,13 @@ def test_is_leaf_id():
 
 def test_is_leaf_id_non_existing_id():
     with pytest.raises(VoxcellError):
-        TEST_RMAP.is_leaf_id(0)  # non-existing id
+        TEST_RMAP.is_leaf_id(9999)  # non-existing id
 
 
 def test_as_dataframe():
     df = TEST_RMAP.as_dataframe()
-    assert df.loc[-1].parent_id == -1
-    assert df.loc[1].parent_id == -1
+    assert df.loc[0].parent_id == -1
+    assert df.loc[1].parent_id == 0
     assert df.loc[2].parent_id == 1
     assert df.loc[3].parent_id == 1
     assert df.loc[4].parent_id == 3
@@ -179,9 +196,29 @@ def test_as_dataframe():
     assert df.loc[1]['name'] == 'A'
     assert df.loc[1]['fullname'] == 'aA'
 
-    assert df.loc[-1].children_count == 1
+    assert df.loc[0].children_count == 1
     assert df.loc[1].children_count == 2
     assert df.loc[2].children_count == 0
     assert df.loc[3].children_count == 1
     assert df.loc[4].children_count == 0
 
+
+def test_from_dataframe():
+    # Test with a simple RegionMap
+    rmap = test_module.RegionMap.from_dataframe(TEST_RMAP.as_dataframe())
+    assert rmap._data == TEST_RMAP._data
+    assert rmap._parent == TEST_RMAP._parent
+    assert rmap._children == TEST_RMAP._children
+
+    # Test with more complex data
+    initial_rmap = test_module.RegionMap.load_json(os.path.join(DATA_PATH, "region_map.json"))
+    final_rmap = test_module.RegionMap.from_dataframe(initial_rmap.as_dataframe())
+    assert final_rmap._data == initial_rmap._data
+    assert final_rmap._parent == initial_rmap._parent
+    assert final_rmap._children == initial_rmap._children
+
+    # Test with multiple root nodes
+    rmap_df = initial_rmap.as_dataframe()
+    rmap_df.loc[8, "parent_id"] = -1
+    with pytest.raises(RuntimeError):
+        test_module.RegionMap.from_dataframe(rmap_df)
