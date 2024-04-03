@@ -5,6 +5,7 @@ import json
 import logging
 import re
 
+import numpy as np
 import pandas as pd
 
 from voxcell.exceptions import VoxcellError
@@ -147,13 +148,32 @@ class RegionMap:
         """Converts a DataFrame to a region_map.
 
         Note: the 'root' node should have a parent value of -1.
+
+        Note: if it is possible to cast all non-null values of a column with float dtype to int,
+            then it will be done.
         """
         nodes = hierarchy_df.to_dict(orient="index")
+        float_cols = hierarchy_df.dtypes.loc[hierarchy_df.dtypes == float].index.to_list()
+        dropna_float_cols = {
+            float_col: hierarchy_df[float_col].dropna()
+            for float_col in float_cols
+        }
+        float_int_cols = {
+            float_col
+            for float_col, col in dropna_float_cols.items()
+            if (col.astype(int) == col).all()
+        }
         root_idx = None
         for k, v in nodes.items():
             v["id"] = k
             v.pop("children_count", None)
             parent_id = v.pop("parent_id", None)
+            for float_col in float_cols:
+                if float_col in v:
+                    if np.isnan(v[float_col]):
+                        v[float_col] = None
+                    elif float_col in float_int_cols:
+                        v[float_col] = int(v[float_col])
             if parent_id == -1:
                 if root_idx is not None:
                     msg = (

@@ -1,10 +1,13 @@
 import json
+import os
 from unittest.mock import mock_open, patch
 
 import pytest
 
 import voxcell.region_map as test_module
 from voxcell.exceptions import VoxcellError
+
+DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
 TEST_RMAP = test_module.RegionMap.from_dict({
     'id': 0,
@@ -187,7 +190,15 @@ def test_as_dataframe():
 
 
 def test_from_dataframe():
+    # Test with a simple RegionMap
     rmap = test_module.RegionMap.from_dataframe(TEST_RMAP.as_dataframe())
     assert rmap._data == TEST_RMAP._data
     assert rmap._parent == TEST_RMAP._parent
     assert rmap._children == TEST_RMAP._children
+
+    # Test with more complex data
+    initial_rmap = test_module.RegionMap.load_json(os.path.join(DATA_PATH, "region_map.json"))
+    final_rmap = test_module.RegionMap.from_dataframe(initial_rmap.as_dataframe())
+    assert final_rmap._data == initial_rmap._data
+    assert final_rmap._parent == initial_rmap._parent
+    assert final_rmap._children == initial_rmap._children
