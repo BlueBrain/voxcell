@@ -143,15 +143,9 @@ class RegionMap:
         ret.loc[:, 'children_count'] = [len(self._children[_id]) for _id in ret.index.to_list()]
         return ret
 
-    @classmethod
-    def from_dataframe(cls, hierarchy_df):
-        """Converts a DataFrame to a region_map.
-
-        Note: the 'root' node should have a parent value of -1.
-
-        Note: if it is possible to cast all non-null values of a column with float dtype to int,
-            then it will be done.
-        """
+    @staticmethod
+    def dataframe_to_dict(hierarchy_df):
+        """Use a dataframe to create a dict that can then be used by RegionMap.from_dict()."""
         nodes = hierarchy_df.to_dict(orient="index")
         float_cols = hierarchy_df.dtypes.loc[hierarchy_df.dtypes == float].index.to_list()
         dropna_float_cols = {
@@ -192,7 +186,18 @@ class RegionMap:
 
         # Here the root element is extracted since each element is referenced at both the root of
         # the dict and in the children of another element
-        return cls.from_dict(nodes[root_idx])
+        return nodes[root_idx]
+
+    @classmethod
+    def from_dataframe(cls, hierarchy_df):
+        """Converts a DataFrame to a region_map.
+
+        Note: the 'root' node should have a parent value of -1.
+
+        Note: if it is possible to cast all non-null values of a column with float dtype to int,
+            then it will be done.
+        """
+        return cls.from_dict(cls.dataframe_to_dict(hierarchy_df))
 
     def _get(self, _id, attr):
         """Fetch attribute value for a given region ID."""
