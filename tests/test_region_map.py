@@ -202,3 +202,9 @@ def test_from_dataframe():
     assert final_rmap._data == initial_rmap._data
     assert final_rmap._parent == initial_rmap._parent
     assert final_rmap._children == initial_rmap._children
+
+    # Test with multiple root nodes
+    rmap_df = initial_rmap.as_dataframe()
+    rmap_df.loc[8, "parent_id"] = -1
+    with pytest.raises(RuntimeError):
+        test_module.RegionMap.from_dataframe(rmap_df)
