@@ -206,14 +206,7 @@ class RegionMap:
                 break
 
         def create_node(key):
-            return dict(
-                {
-                    "id": key,
-                },
-                **self._data[key],
-                **{
-                }
-            )
+            return copy.deepcopy(self._data[key])
 
         def add_children(data, key):
             data["children"] = []
