@@ -142,6 +142,38 @@ class RegionMap:
         ret.loc[:, 'children_count'] = [len(self._children[_id]) for _id in ret.index.to_list()]
         return ret
 
+    @classmethod
+    def from_dataframe(cls, hierarchy_df):
+        """Converts a DataFrame to a region_map.
+
+        Note: the 'root' node should have a parent value of -1.
+        """
+        nodes = hierarchy_df.to_dict(orient="index")
+        root_idx = None
+        for k, v in nodes.items():
+            v["id"] = k
+            v.pop("children_count", None)
+            parent_id = v.pop("parent_id", None)
+            if parent_id == -1:
+                if root_idx is not None:
+                    msg = (
+                        f"Only one node can be the root node with parent_id == -1 but the node "
+                        f"{root_idx} was already defined as root"
+                    )
+                    raise RuntimeError(msg)
+                root_idx = k
+                if "children" not in v:
+                    v["children"] = []
+                continue
+            parent_node = nodes[parent_id]
+            if "children" not in parent_node:
+                parent_node["children"] = []
+            parent_node["children"].append(v)
+
+        # Here the root element is extracted since each element is referenced at both the root of
+        # the dict and in the children of another element
+        return cls.from_dict(nodes[root_idx])
+
     def _get(self, _id, attr):
         """Fetch attribute value for a given region ID."""
         if _id not in self._data:

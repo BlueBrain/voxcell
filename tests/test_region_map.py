@@ -7,7 +7,7 @@ import voxcell.region_map as test_module
 from voxcell.exceptions import VoxcellError
 
 TEST_RMAP = test_module.RegionMap.from_dict({
-    'id': -1,
+    'id': 0,
     'name': 'root',
     'fullname': 'The Root Node',
     'children': [
@@ -165,13 +165,13 @@ def test_is_leaf_id():
 
 def test_is_leaf_id_non_existing_id():
     with pytest.raises(VoxcellError):
-        TEST_RMAP.is_leaf_id(0)  # non-existing id
+        TEST_RMAP.is_leaf_id(9999)  # non-existing id
 
 
 def test_as_dataframe():
     df = TEST_RMAP.as_dataframe()
-    assert df.loc[-1].parent_id == -1
-    assert df.loc[1].parent_id == -1
+    assert df.loc[0].parent_id == -1
+    assert df.loc[1].parent_id == 0
     assert df.loc[2].parent_id == 1
     assert df.loc[3].parent_id == 1
     assert df.loc[4].parent_id == 3
@@ -179,9 +179,15 @@ def test_as_dataframe():
     assert df.loc[1]['name'] == 'A'
     assert df.loc[1]['fullname'] == 'aA'
 
-    assert df.loc[-1].children_count == 1
+    assert df.loc[0].children_count == 1
     assert df.loc[1].children_count == 2
     assert df.loc[2].children_count == 0
     assert df.loc[3].children_count == 1
     assert df.loc[4].children_count == 0
 
+
+def test_from_dataframe():
+    rmap = test_module.RegionMap.from_dataframe(TEST_RMAP.as_dataframe())
+    assert rmap._data == TEST_RMAP._data
+    assert rmap._parent == TEST_RMAP._parent
+    assert rmap._children == TEST_RMAP._children
