@@ -13,6 +13,51 @@ from voxcell.exceptions import VoxcellError
 L = logging.getLogger(__name__)
 
 
+def _dataframe_to_dict(hierarchy_df):
+    """Use a dataframe to create a dict that can then be used by RegionMap.from_dict()."""
+    nodes = hierarchy_df.to_dict(orient="index")
+    float_cols = hierarchy_df.dtypes.loc[hierarchy_df.dtypes == float].index.to_list()
+    dropna_float_cols = {
+        float_col: hierarchy_df[float_col].dropna()
+        for float_col in float_cols
+    }
+    float_int_cols = {
+        float_col
+        for float_col, col in dropna_float_cols.items()
+        if (col.astype(int) == col).all()
+    }
+    root_idx = None
+    for k, v in nodes.items():
+        v["id"] = k
+        v.pop("children_count", None)
+        parent_id = v.pop("parent_id", None)
+        for float_col in float_cols:
+            if float_col in v:
+                if np.isnan(v[float_col]):
+                    v[float_col] = None
+                elif float_col in float_int_cols:
+                    v[float_col] = int(v[float_col])
+        if parent_id == -1:
+            if root_idx is not None:
+                msg = (
+                    f"Only one node can be the root node with parent_id == -1 but the node "
+                    f"{root_idx} was already defined as root"
+                )
+                raise RuntimeError(msg)
+            root_idx = k
+            if "children" not in v:
+                v["children"] = []
+            continue
+        parent_node = nodes[parent_id]
+        if "children" not in parent_node:
+            parent_node["children"] = []
+        parent_node["children"].append(v)
+
+    # Here the root element is extracted since each element is referenced at both the root of
+    # the dict and in the children of another element
+    return nodes[root_idx]
+
+
 class Matcher:
     """Helper class for value search."""
     def __init__(self, value, ignore_case=False):
@@ -143,51 +188,6 @@ class RegionMap:
         ret.loc[:, 'children_count'] = [len(self._children[_id]) for _id in ret.index.to_list()]
         return ret
 
-    @staticmethod
-    def dataframe_to_dict(hierarchy_df):
-        """Use a dataframe to create a dict that can then be used by RegionMap.from_dict()."""
-        nodes = hierarchy_df.to_dict(orient="index")
-        float_cols = hierarchy_df.dtypes.loc[hierarchy_df.dtypes == float].index.to_list()
-        dropna_float_cols = {
-            float_col: hierarchy_df[float_col].dropna()
-            for float_col in float_cols
-        }
-        float_int_cols = {
-            float_col
-            for float_col, col in dropna_float_cols.items()
-            if (col.astype(int) == col).all()
-        }
-        root_idx = None
-        for k, v in nodes.items():
-            v["id"] = k
-            v.pop("children_count", None)
-            parent_id = v.pop("parent_id", None)
-            for float_col in float_cols:
-                if float_col in v:
-                    if np.isnan(v[float_col]):
-                        v[float_col] = None
-                    elif float_col in float_int_cols:
-                        v[float_col] = int(v[float_col])
-            if parent_id == -1:
-                if root_idx is not None:
-                    msg = (
-                        f"Only one node can be the root node with parent_id == -1 but the node "
-                        f"{root_idx} was already defined as root"
-                    )
-                    raise RuntimeError(msg)
-                root_idx = k
-                if "children" not in v:
-                    v["children"] = []
-                continue
-            parent_node = nodes[parent_id]
-            if "children" not in parent_node:
-                parent_node["children"] = []
-            parent_node["children"].append(v)
-
-        # Here the root element is extracted since each element is referenced at both the root of
-        # the dict and in the children of another element
-        return nodes[root_idx]
-
     @classmethod
     def from_dataframe(cls, hierarchy_df):
         """Converts a DataFrame to a region_map.
@@ -197,7 +197,7 @@ class RegionMap:
         Note: if it is possible to cast all non-null values of a column with float dtype to int,
             then it will be done.
         """
-        return cls.from_dict(cls.dataframe_to_dict(hierarchy_df))
+        return cls.from_dict(_dataframe_to_dict(hierarchy_df))
 
     def _get(self, _id, attr):
         """Fetch attribute value for a given region ID."""
