@@ -44,7 +44,8 @@
                 "graph_order": 3,
                 "st_level": null,
                 "hemisphere_id": 3,
-                "parent_structure_id": 567
+                "parent_structure_id": 567,
+                "children": []
             }
             ]
         }

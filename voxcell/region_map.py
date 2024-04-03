@@ -197,6 +197,35 @@ class RegionMap:
         include(copy.deepcopy(d), None)
         return result
 
+    def as_dict(self):
+        """Converts a region_map to a dict."""
+        root_idx = None
+        for k, v in self._parent.items():
+            if v is None:
+                root_idx = k
+                break
+
+        def create_node(key):
+            return dict(
+                {
+                    "id": key,
+                },
+                **self._data[key],
+                **{
+                }
+            )
+
+        def add_children(data, key):
+            data["children"] = []
+            for i in self._children[key]:
+                new_node = create_node(i)
+                add_children(new_node, i)
+                data["children"].append(new_node)
+
+        res = create_node(root_idx)
+        add_children(res, root_idx)
+        return res
+
     @classmethod
     def load_json(cls, filepath):
         """Construct RegionMap from JSON file.

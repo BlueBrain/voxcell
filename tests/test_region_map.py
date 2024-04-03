@@ -9,7 +9,7 @@ from voxcell.exceptions import VoxcellError
 
 DATA_PATH = os.path.join(os.path.dirname(__file__), 'data')
 
-TEST_RMAP = test_module.RegionMap.from_dict({
+TEST_RMAP_DICT = {
     'id': 0,
     'name': 'root',
     'fullname': 'The Root Node',
@@ -23,6 +23,7 @@ TEST_RMAP = test_module.RegionMap.from_dict({
                 'id': 2,
                 'name': 'B',
                 'fullname': 'Bb',
+                'children': [],
             },
             {
                 'id': 3,
@@ -33,12 +34,15 @@ TEST_RMAP = test_module.RegionMap.from_dict({
                         'id': 4,
                         'name': 'B',
                         'fullname': 'bB',
+                        'children': [],
                     }
                 ]
             }
         ]}
     ]
-})
+}
+
+TEST_RMAP = test_module.RegionMap.from_dict(TEST_RMAP_DICT)
 
 
 def test_find_basic():
@@ -157,6 +161,16 @@ def test_from_dict_duplicate_id():
                 }
             ]
         })
+
+
+def test_as_dict():
+    res = TEST_RMAP.as_dict()
+    assert res == TEST_RMAP_DICT
+
+    with open(os.path.join(DATA_PATH, "region_map.json")) as f:
+        initial_dict = json.load(f)
+    rmap = test_module.RegionMap.from_dict(initial_dict)
+    assert rmap.as_dict() == initial_dict
 
 
 def test_is_leaf_id():
