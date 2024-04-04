@@ -461,7 +461,7 @@ class ValueToIndexVoxels:
         return np.fromiter(self._mapping, dtype=self.index_dtype)
 
     def value_to_1d_indices(self, value):
-        """Return the indices array indices corresponding to the 'value'.
+        """Return the indices array corresponding to the 'value'.
 
         Note: These are 1D indices, so the assumption is they are applied to a volume
         who has been ValueToIndexVoxels::ravel(volume)
@@ -471,6 +471,20 @@ class ValueToIndexVoxels:
 
         group_index = self._mapping[value]
         return self._indices[self._offsets[group_index]:self._offsets[group_index + 1]]
+
+    def value_to_indices(self, values):
+        """Return the ND-indices array corresponding to the 'values'.
+
+        Note: The given 'values' can be given as one scalar value or as a list of values. In both
+            case a list of ND-indices will be returned.
+        """
+        values = np.atleast_1d(values)
+        flat_indices = np.concatenate(
+            [self.value_to_1d_indices(i) for i in values]
+        )
+        return np.array(
+            np.unravel_index(flat_indices, self._shape, order=self._order)
+        ).T
 
     def ravel(self, voxel_data):
         """Ensure `voxel_data` matches the layout that the 1D indices can be used."""

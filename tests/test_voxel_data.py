@@ -421,6 +421,18 @@ def test_ValueToIndexVoxels():
     npt.assert_array_equal(vtiv.value_to_1d_indices(3), [6, 7, 8])
     npt.assert_array_equal(vtiv.value_to_1d_indices(4), [])
 
+    npt.assert_array_equal(vtiv.value_to_indices(1), [[0, 0], [0, 1], [0, 2], [1, 0]])
+    npt.assert_array_equal(vtiv.value_to_indices(2), [[1, 1], [1, 2]])
+    npt.assert_array_equal(vtiv.value_to_indices(3), [[2, 0], [2, 1], [2, 2]])
+    npt.assert_array_equal(
+        vtiv.value_to_indices(4),
+        np.zeros_like([], shape=(0, 2), dtype=vtiv._indices.dtype),
+    )
+    npt.assert_array_equal(
+        vtiv.value_to_indices(range(1, 5)),
+        [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+    )
+
     assert vtiv.index_size == 3
     assert vtiv.index_dtype == np.int64
     assert list(vtiv.values) == [1, 2, 3]
@@ -436,6 +448,18 @@ def test_ValueToIndexVoxels():
     npt.assert_array_equal(vtiv.value_to_1d_indices(2), [4, 7])
     npt.assert_array_equal(vtiv.value_to_1d_indices(3), [2, 5, 8])
     npt.assert_array_equal(vtiv.value_to_1d_indices(4), [])
+
+    npt.assert_array_equal(vtiv.value_to_indices(1), [[0, 0], [1, 0], [0, 1], [0, 2]])
+    npt.assert_array_equal(vtiv.value_to_indices(2), [[1, 1], [1, 2]])
+    npt.assert_array_equal(vtiv.value_to_indices(3), [[2, 0], [2, 1], [2, 2]])
+    npt.assert_array_equal(
+        vtiv.value_to_indices(4),
+        np.zeros_like([], shape=(0, 2), dtype=vtiv._indices.dtype),
+    )
+    npt.assert_array_equal(
+        vtiv.value_to_indices(range(1, 5)),
+        [[0, 0], [1, 0], [0, 1], [0, 2], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+    )
 
     for order in ('K', 'A', 'C', 'F'):
         r = vtiv.ravel(np.array(values, order=order))
