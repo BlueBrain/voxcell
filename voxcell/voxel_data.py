@@ -478,10 +478,12 @@ class ValueToIndexVoxels:
         Note: The given 'values' can be given as one scalar value or as a list of values. In both
             case a list of ND-indices will be returned.
         """
-        values = np.atleast_1d(values)
-        flat_indices = np.concatenate(
-            [self.value_to_1d_indices(i) for i in values]
-        )
+        if np.isscalar(values):
+            flat_indices = self.value_to_1d_indices(values)
+        else:
+            flat_indices = np.concatenate(
+                [self.value_to_1d_indices(i) for i in values]
+            )
         return np.array(
             np.unravel_index(flat_indices, self._shape, order=self._order)
         ).T
