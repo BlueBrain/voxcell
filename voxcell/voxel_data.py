@@ -475,6 +475,12 @@ class ValueToIndexVoxels:
     def value_to_indices(self, values):
         """Return the ND-indices array corresponding to the 'values'.
 
+        This can be convenient to get the positions of the given values in the VoxelData space:
+            raw = np.array([[11, 12], [21, 22]])
+            v = VoxelData(raw, voxel_dimensions=(2, 3), offset=np.array([2, 2]))
+            vtiv = ValueToIndexVoxels(v.raw)
+            positions = v.indices_to_positions(vtiv.value_to_indices(11))
+
         Note: The given 'values' can be given as one scalar value or as a list of values. In both
             case a list of ND-indices will be returned.
         """
