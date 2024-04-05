@@ -432,6 +432,10 @@ def test_ValueToIndexVoxels():
         vtiv.value_to_indices(range(1, 5)),
         [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
     )
+    npt.assert_array_equal(
+        vtiv.value_to_indices(range(10, 15)),  # All values are missing in the input array
+        np.zeros_like([], shape=(0, 2), dtype=vtiv._indices.dtype),
+    )
 
     assert vtiv.index_size == 3
     assert vtiv.index_dtype == np.int64
@@ -459,6 +463,10 @@ def test_ValueToIndexVoxels():
     npt.assert_array_equal(
         vtiv.value_to_indices(range(1, 5)),
         [[0, 0], [1, 0], [0, 1], [0, 2], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]],
+    )
+    npt.assert_array_equal(
+        vtiv.value_to_indices(range(10, 15)),  # All values are missing in the input array
+        np.zeros_like([], shape=(0, 2), dtype=vtiv._indices.dtype),
     )
 
     for order in ('K', 'A', 'C', 'F'):
