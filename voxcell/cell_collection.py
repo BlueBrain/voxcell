@@ -159,8 +159,12 @@ class CellCollection:
         if self.positions is not None:
             self.positions = np.delete(self.positions, idx_unassigned, 0)
 
-    def as_dataframe(self):
-        """Return a dataframe with all cell properties."""
+    def as_dataframe(self, index_offset=1):
+        """Return a dataframe with all cell properties.
+
+        Args:
+            index_offset: index offset (0 or 1). The default may change to 0 in a future version.
+        """
         result = self.properties.copy()
         if self.positions is not None:
             result['x'] = self.positions[:, 0]
@@ -169,17 +173,24 @@ class CellCollection:
         if self.orientations is not None:
             result['orientation'] = list(self.orientations)
 
-        result.index = 1 + np.arange(len(result))
+        result.index = np.arange(index_offset, len(result) + index_offset)
 
         result.columns = map(str, result.columns)
 
         return result
 
     @classmethod
-    def from_dataframe(cls, df):
-        """Return a CellCollection object from a dataframe of cell properties."""
-        if not (df.index == 1 + np.arange(len(df))).all():
-            raise VoxcellError(f"Index != 1..{len(df)} (got: {df.index.values})")
+    def from_dataframe(cls, df, index_offset=1):
+        """Return a CellCollection object from a dataframe of cell properties.
+
+        Args:
+            df: Pandas DataFrame containing the cell properties, with index starting from 0 or 1.
+            index_offset: index offset (0 or 1). The default may change to 0 in a future version.
+        """
+        if not (df.index == np.arange(index_offset, len(df) + index_offset)).all():
+            raise VoxcellError(
+                f"Index != {index_offset}..{len(df) + index_offset - 1} (got: {df.index.values})"
+            )
         result = cls()
         if 'x' in df:
             result.positions = df[['x', 'y', 'z']].values

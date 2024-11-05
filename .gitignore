@@ -4,6 +4,7 @@ coverage.xml
 *.egg-info
 .coverage
 doc/build
+build
 venv
 .tox
 .idea

@@ -295,19 +295,27 @@ def test_remove_unassigned_3():
     assert cells.orientations is None
 
 
-def test_as_dataframe():
+@pytest.mark.parametrize(
+    ("index_offset", "df_index"),
+    [
+        (0, [0, 1, 2]),
+        (1, [1, 2, 3]),
+    ]
+)
+def test_as_dataframe(index_offset, df_index):
     cells = test_module.CellCollection()
     cells.positions = np.random.random((3, 3))
     cells.orientations = random_orientations(3)
     cells.properties['foo'] = np.array(['a', 'b', 'c'])
-    df = cells.as_dataframe()
+    df = cells.as_dataframe(index_offset=index_offset)
+
     assert sorted(df.columns) == ['foo', 'orientation', 'x', 'y', 'z']
     assert_array_equal(df['x'], cells.positions[:, 0])
     assert_array_equal(np.stack(df['orientation']), cells.orientations)
     assert_array_equal(df['foo'].values, cells.properties['foo'].values)
 
     # check that dataframe is indexed by GIDs
-    assert_array_equal(df.index.values, [1, 2, 3])
+    assert_array_equal(df.index.values, df_index)
 
     # check that data is copied
     df['foo'] = ['q', 'w', 'v']
@@ -384,26 +392,41 @@ def test_add_properties():
         cells.add_properties(properties1, overwrite=False)
 
 
-def test_from_dataframe_invalid_index():
+@pytest.mark.parametrize(
+    ("index_offset", "df_index"),
+    [
+        (1, [0, 1]),
+        (0, [1, 2]),
+    ]
+)
+def test_from_dataframe_invalid_index(index_offset, df_index):
     df = pd.DataFrame({
         'prop-a': ['a', 'b'],
-    })
-    with pytest.raises(VoxcellError):
-        test_module.CellCollection.from_dataframe(df)
+    }, index=df_index)
+    with pytest.raises(VoxcellError, match="Index !="):
+        test_module.CellCollection.from_dataframe(df, index_offset=index_offset)
 
 
-def test_from_dataframe_no_positions():
+@pytest.mark.parametrize(
+    ("index_offset", "df_index"),
+    [
+        (0, [0, 1]),
+        (1, [1, 2]),
+    ]
+)
+def test_from_dataframe_no_positions(index_offset, df_index):
     df = pd.DataFrame({
         'prop-a': ['a', 'b'],
-    }, index=[1, 2])
+    }, index=df_index)
 
-    cells = test_module.CellCollection.from_dataframe(df)
+    cells = test_module.CellCollection.from_dataframe(df, index_offset=index_offset)
     assert cells.positions is None
     assert cells.orientations is None
     assert_frame_equal(cells.properties, df.reset_index(drop=True))
 
 
-def test_to_from_dataframe():
+@pytest.mark.parametrize("index_offset", [0, 1])
+def test_to_from_dataframe(index_offset):
     cells = test_module.CellCollection()
     cells.positions = random_positions(3)
     cells.orientations = random_orientations(3)
@@ -411,7 +434,8 @@ def test_to_from_dataframe():
     cells.properties['cat'] = pd.Categorical.from_codes(
         codes=np.zeros(3, dtype=np.uint), categories=['a'])
 
-    cells2 = test_module.CellCollection.from_dataframe(cells.as_dataframe())
+    df = cells.as_dataframe(index_offset=index_offset)
+    cells2 = test_module.CellCollection.from_dataframe(df, index_offset=index_offset)
     assert_almost_equal(cells.positions, cells2.positions)
     assert_almost_equal(cells.orientations, cells2.orientations)
     assert_frame_equal(cells.properties, cells2.properties)
@@ -473,6 +497,8 @@ def test_sonata_multipopulation():
         A = test_module.CellCollection.load_sonata("nodes.h5", population_name="A")
         B = test_module.CellCollection.load_sonata("nodes.h5", population_name="B")
         assert_frame_equal(A.as_dataframe(), B.as_dataframe())
+        assert_frame_equal(A.as_dataframe(index_offset=0), B.as_dataframe(index_offset=0))
+        assert_frame_equal(A.as_dataframe(index_offset=1), B.as_dataframe(index_offset=1))
 
 
 def test_check_types():
