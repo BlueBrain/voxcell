@@ -10,6 +10,8 @@ max-line-length=100
 [DESIGN]
 # Maximum number of arguments for function / method
 max-args=8
+# Maximum number of positional arguments for function / method.
+max-positional-arguments=6
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
 ignored-argument-names=_.*

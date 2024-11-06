@@ -1,6 +1,33 @@
 Changelog
 =========
 
+Version 3.1.10
+-------------
+
+- Allow to specify ``index_offset`` (0 or 1) in ``CellCollection.as_dataframe()`` and ``CellCollection.from_dataframe()`` (#34)
+
+Version 3.1.9
+-------------
+
+- Add the VoxelData.value_to_indices() method (#33)
+
+Version 3.1.8
+-------------
+
+- Add unravel method to ValueToIndexVoxels (#31)
+- Add RegionMap.from_dataframe() and RegionMap.as_dict() methods (#32)
+
+Version 3.1.7
+-------------
+
+- Add ValueToIndexVoxels to simplify using indices instead of masks (#30)
+
+Version 3.1.6
+-------------
+
+- Update read the docs (#25)
+- Fix warnings (#27)
+
 Version 3.1.5
 -------------
 
