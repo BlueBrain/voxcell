@@ -134,6 +134,7 @@ class VoxelData:
         # from http://teem.sourceforge.net/nrrd/format.html#space
         space_directions = np.diag(self.voxel_dimensions)
         dim_defect = len(self.raw.shape) - self.ndim
+        # test
         if dim_defect > 0:
             # The nrrd specifications require that
             # we prepend a None for each of the extra axes
