@@ -193,6 +193,7 @@ def test_save_nrrd_with_extra_axes():
         vd.save_nrrd(f.name)
         f.flush()
         f.seek(0)
+        nrrd.SPACE_DIRECTIONS_TYPE = 'double matrix'
         _, header = nrrd.read(f.name)
         # pynrrd will convert None into np.array([np.nan, np.nan, np.nan])
         assert_array_equal(header['space directions'],
@@ -210,6 +211,7 @@ def test_save_nrrd_vector_field():
         vd.save_nrrd(f.name)
         f.flush()
         f.seek(0)
+        nrrd.SPACE_DIRECTIONS_TYPE = 'double matrix'
         _, header = nrrd.read(f.name)
         # pynrrd's reader will convert None into np.array([np.nan, np.nan, np.nan])
         assert_array_equal (header['space directions'],
@@ -480,7 +482,7 @@ def test_ValueToIndexVoxels__raveling():
     index_values = np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
     index = test_module.ValueToIndexVoxels(index_values)
     assert index._order == "C"
-    
+
     # c-contiguous volume to ravel with a c-order index
     c_values = np.array([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
     c_raveled = index.ravel(c_values)

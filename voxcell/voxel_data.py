@@ -140,6 +140,7 @@ class VoxelData:
             # before specifying the volume 3D axes.
             # For instance, a volume of orientations (3D direction vectors or quaternions)
             # or of RGB colors (3D int vectors) requires an initial None value.
+            nrrd.SPACE_DIRECTIONS_TYPE = 'double vector list'
             space_directions = [None] * dim_defect + list(space_directions)
         header = {
             'space dimension': self.ndim,
