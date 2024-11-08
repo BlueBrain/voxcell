@@ -193,11 +193,12 @@ def test_save_nrrd_with_extra_axes():
         vd.save_nrrd(f.name)
         f.flush()
         f.seek(0)
+        nrrd.SPACE_DIRECTIONS_TYPE = 'double matrix'
         _, header = nrrd.read(f.name)
         # pynrrd will convert None into np.array([np.nan, np.nan, np.nan])
         assert_array_equal(header['space directions'],
             [
-                (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
+                [np.nan] * 3, [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
             ])
         assert 'kinds' not in header
 
@@ -210,11 +211,12 @@ def test_save_nrrd_vector_field():
         vd.save_nrrd(f.name)
         f.flush()
         f.seek(0)
+        nrrd.SPACE_DIRECTIONS_TYPE = 'double matrix'
         _, header = nrrd.read(f.name)
         # pynrrd's reader will convert None into np.array([np.nan, np.nan, np.nan])
         assert_array_equal (header['space directions'],
             [
-                (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
+                [np.nan] * 3, (1.0, 0.0, 0.0), (0.0, 2.0, 0.0), (0.0, 0.0, 3.0)
             ])
         assert_array_equal(header['kinds'], ['vector', 'domain', 'domain', 'domain'])
 
