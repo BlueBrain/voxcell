@@ -136,11 +136,11 @@ class VoxelData:
         dim_defect = len(self.raw.shape) - self.ndim
         if dim_defect > 0:
             # The nrrd specifications require that
-            # we prepend a None for each of the extra axes
+            # we prepend a nan array for each of the extra axes
             # before specifying the volume 3D axes.
             # For instance, a volume of orientations (3D direction vectors or quaternions)
-            # or of RGB colors (3D int vectors) requires an initial None value.
-            space_directions = [None] * dim_defect + list(space_directions)
+            # or of RGB colors (3D int vectors) requires an initial nan array.
+            space_directions = [[np.nan] * self.ndim] * dim_defect + list(space_directions)
         header = {
             'space dimension': self.ndim,
             'space directions': space_directions,
