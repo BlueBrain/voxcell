@@ -21,7 +21,7 @@ setup(
         'h5py>=3.1.0',
         'numpy>=1.9',
         'pandas>=0.24.2',
-        'pynrrd>=0.4.0',
+        'pynrrd>=1.1.0',
         'requests>=2.18',
         'scipy>=1.2.0',
     ],
