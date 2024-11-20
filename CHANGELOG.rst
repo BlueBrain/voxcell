@@ -2,7 +2,7 @@ Changelog
 =========
 
 Version 3.1.10
--------------
+--------------
 
 - Allow to specify ``index_offset`` (0 or 1) in ``CellCollection.as_dataframe()`` and ``CellCollection.from_dataframe()`` (#34)
 - Fix nrrd header format (#38)
